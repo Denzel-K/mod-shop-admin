@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
 import { headers } from 'next/headers';
-import ModelViewer from '@/components/viewer/ModelViewer';
-import ScaleEditor from '@/components/asset/ScaleEditor';
+import AssetViewerPanel from '@/components/asset/AssetViewerPanel';
 import Link from 'next/link';
 
 async function getAssetAbsolute(baseUrl: string, id: string) {
@@ -61,22 +60,17 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
       {/* Viewer section */}
       <main className="px-6 py-6">
         <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-          {/* Responsive canvas container: 70vh on desktop, 60vh on mobile */}
+          {/* Responsive container: 70vh on desktop, 60vh on mobile */}
           <div className="w-full h-[60vh] md:h-[70vh]">
             <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading viewer…</div>}>
-              <ModelViewer url={asset.modelUrl} scale={asset.scale || 0.01} />
+              <AssetViewerPanel
+                url={asset.modelUrl}
+                assetId={asset._id}
+                initialScale={asset.scale || 1.0}
+                assetName={asset.name}
+                assetFormat={asset.format}
+              />
             </Suspense>
-          </div>
-
-          {/* Instructions */}
-          <div className="p-4 border-t border-slate-800 flex flex-wrap items-center gap-4 text-xs text-slate-400">
-            <span className="border border-slate-700 rounded px-2 py-1 bg-slate-800/60">Left Click + Drag: Rotate</span>
-            <span className="border border-slate-700 rounded px-2 py-1 bg-slate-800/60">Right Click + Drag: Pan</span>
-            <span className="border border-slate-700 rounded px-2 py-1 bg-slate-800/60">Scroll: Zoom</span>
-            <span className="ml-auto flex items-center gap-3">
-              <span>Scale:</span>
-              <ScaleEditor id={asset._id} initialScale={asset.scale || 1.0} inlineReadOnlyInitially />
-            </span>
           </div>
         </div>
       </main>
