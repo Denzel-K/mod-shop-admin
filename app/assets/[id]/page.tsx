@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { headers } from 'next/headers';
 import ModelViewer from '@/components/viewer/ModelViewer';
+import ScaleEditor from '@/components/asset/ScaleEditor';
 import Link from 'next/link';
 
 async function getAssetAbsolute(baseUrl: string, id: string) {
@@ -72,7 +73,10 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             <span className="border border-slate-700 rounded px-2 py-1 bg-slate-800/60">Left Click + Drag: Rotate</span>
             <span className="border border-slate-700 rounded px-2 py-1 bg-slate-800/60">Right Click + Drag: Pan</span>
             <span className="border border-slate-700 rounded px-2 py-1 bg-slate-800/60">Scroll: Zoom</span>
-            <span className="ml-auto">Standard scale: {asset.scale || 0.01}</span>
+            <span className="ml-auto flex items-center gap-3">
+              <span>Scale:</span>
+              <ScaleEditor id={asset._id} initialScale={asset.scale || 1.0} />
+            </span>
           </div>
         </div>
       </main>

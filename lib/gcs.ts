@@ -11,6 +11,16 @@ if (!projectId || !clientEmail || !privateKey || !bucketName) {
   throw new Error('Missing GCS configuration. Ensure GCP_PROJECT_ID, GCP_CLIENT_EMAIL, GCP_PRIVATE_KEY, and GCS_BUCKET are set.');
 }
 
+export async function deleteObjectFromGCS(objectPath: string): Promise<boolean> {
+  try {
+    const file = bucket.file(objectPath);
+    await file.delete({ ignoreNotFound: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const storage = new Storage({
   projectId,
   credentials: {
