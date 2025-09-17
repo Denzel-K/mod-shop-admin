@@ -1,152 +1,337 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { LogOut, Upload, Database, Settings, Users } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Plus, Upload, LogOut, ImageIcon, FileBox } from 'lucide-react';
+
+type Asset = {
+  _id: string;
+  name: string;
+  description?: string;
+  thumbnailUrl: string;
+  modelUrl: string;
+  format: 'glb' | 'gltf';
+  scale?: number;
+};
 
 export default function Dashboard() {
-  const [admin, setAdmin] = useState<{ fullname: string; email: string } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [showUpload, setShowUpload] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    // Check if user is authenticated by trying to access a protected route
-    // For now, we'll just show the dashboard
-    setIsLoading(false);
-  }, []);
-
-  const handleLogout = async () => {
+  const fetchAssets = async () => {
+    setLoading(true);
     try {
-      const response = await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
-
-      if (response.ok) {
-        router.push('/');
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
+      const res = await fetch('/api/assets', { cache: 'no-store' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch assets');
+      setAssets(data.assets || []);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to fetch assets');
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-cyan-400">Loading...</div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    fetchAssets();
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/');
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
-      {/* Header */}
-      <header className="border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                MOD SHOP
-              </h1>
-              <span className="text-slate-400">Admin Portal</span>
-            </div>
-            <Button
-              onClick={handleLogout}
-              variant="outline"
-              className="border-slate-600/50 text-slate-300 hover:bg-slate-700/50 hover:text-white"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+    <div className="min-h-screen bg-slate-950">
+      {/* Top Bar */}
+      <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-xl">
+        <div className="px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_24px] shadow-cyan-400/50" />
+            <h1 className="text-white text-xl font-semibold tracking-wide">Mod Shop Library</h1>
+            <span className="text-xs text-slate-400 border border-slate-700 rounded px-1.5 py-0.5">3D Models</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setShowUpload(true)} className="bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700">
+              <Plus className="w-4 h-4 mr-2" /> Upload Model
+            </Button>
+            <Button onClick={handleLogout} variant="outline" className="bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white">
+              <LogOut className="w-4 h-4 mr-2" /> Logout
             </Button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-white mb-2">Welcome to the Admin Portal</h2>
-          <p className="text-slate-400">Manage your 3D assets and content for the Mod Shop platform</p>
-        </div>
-
-        {/* Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Asset Management */}
-          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-6 shadow-2xl shadow-cyan-500/10 hover:shadow-cyan-500/20 transition-all duration-300 cursor-pointer group">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-xl">
-                <Upload className="w-6 h-6 text-cyan-400" />
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-white">0</div>
-                <div className="text-xs text-slate-400">Assets</div>
-              </div>
+      {/* Content */}
+      <main className="px-4 sm:px-6 lg:px-8 py-6">
+        {/* Empty/Loading States */}
+        {loading ? (
+          <div className="min-h-[50vh]">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden"
+                >
+                  <div className="aspect-[4/3] bg-slate-800 animate-pulse" />
+                  <div className="p-4 space-y-2">
+                    <div className="h-4 w-2/3 bg-slate-800 rounded animate-pulse" />
+                    <div className="h-3 w-1/3 bg-slate-800 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Asset Upload</h3>
-            <p className="text-slate-400 text-sm">Upload and manage 3D models, textures, and other assets</p>
           </div>
-
-          {/* Database Management */}
-          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-blue-500/20 rounded-2xl p-6 shadow-2xl shadow-blue-500/10 hover:shadow-blue-500/20 transition-all duration-300 cursor-pointer group">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-blue-400/20 to-purple-500/20 rounded-xl">
-                <Database className="w-6 h-6 text-blue-400" />
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-white">0</div>
-                <div className="text-xs text-slate-400">Records</div>
-              </div>
+        ) : assets.length === 0 ? (
+          <div className="min-h-[50vh] flex flex-col items-center justify-center text-center">
+            <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mb-4">
+              <FileBox className="w-8 h-8 text-slate-500" />
             </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Database</h3>
-            <p className="text-slate-400 text-sm">View and manage asset metadata and relationships</p>
-          </div>
-
-          {/* User Management */}
-          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-purple-500/20 rounded-2xl p-6 shadow-2xl shadow-purple-500/10 hover:shadow-purple-500/20 transition-all duration-300 cursor-pointer group">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-purple-400/20 to-pink-500/20 rounded-xl">
-                <Users className="w-6 h-6 text-purple-400" />
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-white">1</div>
-                <div className="text-xs text-slate-400">Admins</div>
-              </div>
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">User Management</h3>
-            <p className="text-slate-400 text-sm">Manage admin accounts and permissions</p>
-          </div>
-
-          {/* Settings */}
-          <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-green-500/20 rounded-2xl p-6 shadow-2xl shadow-green-500/10 hover:shadow-green-500/20 transition-all duration-300 cursor-pointer group">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 bg-gradient-to-br from-green-400/20 to-emerald-500/20 rounded-xl">
-                <Settings className="w-6 h-6 text-green-400" />
-              </div>
-            </div>
-            <h3 className="text-lg font-semibold text-white mb-2">Settings</h3>
-            <p className="text-slate-400 text-sm">Configure platform settings and preferences</p>
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mt-12">
-          <h3 className="text-xl font-semibold text-white mb-6">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="h-16 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all duration-300">
-              <Upload className="w-5 h-5 mr-2" />
-              Upload New Asset
-            </Button>
-            <Button className="h-16 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all duration-300">
-              <Database className="w-5 h-5 mr-2" />
-              Browse Library
-            </Button>
-            <Button className="h-16 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 transition-all duration-300">
-              <Settings className="w-5 h-5 mr-2" />
-              System Settings
+            <h2 className="text-white text-xl font-semibold">No models yet</h2>
+            <p className="text-slate-400 mt-1">Upload .glb or .gltf car models with a thumbnail to get started.</p>
+            <Button onClick={() => setShowUpload(true)} className="mt-4 bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700">
+              <Upload className="w-4 h-4 mr-2" /> Upload Model
             </Button>
           </div>
-        </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+            {assets.map((asset) => (
+              <Link
+                key={asset._id}
+                href={`/assets/${asset._id}`}
+                className="group block rounded-xl border border-slate-800 bg-slate-900/60 hover:bg-slate-900/80 transition-colors shadow-lg shadow-black/20 overflow-hidden"
+              >
+                <div className="relative aspect-[4/3] bg-slate-900">
+                  <Image
+                    src={asset.thumbnailUrl}
+                    alt={asset.name}
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 ring-0 group-hover:ring-2 ring-cyan-400/30 transition-all" />
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-white font-medium truncate" title={asset.name}>{asset.name}</h3>
+                    <span className="text-[10px] text-slate-400 uppercase border border-slate-700 rounded px-1 py-0.5">
+                      {asset.format}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </main>
+
+      {/* Upload Dialog (inline minimal) */}
+      {showUpload && (
+        <div className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => !isUploading && setShowUpload(false)}>
+          <div className="w-full max-w-2xl rounded-xl border border-slate-800 bg-slate-900 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+              <h4 className="text-white font-semibold">Upload 3D Model</h4>
+              
+            </div>
+            <UploadForm
+              onClose={() => setShowUpload(false)}
+              onUploaded={() => { setShowUpload(false); fetchAssets(); }}
+              setUploading={setIsUploading}
+            />
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function UploadForm({ onClose, onUploaded, setUploading }: { onClose: () => void; onUploaded: () => void; setUploading: (v: boolean) => void }) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [modelFile, setModelFile] = useState<File | null>(null);
+  const [thumbFile, setThumbFile] = useState<File | null>(null);
+  const [scaleOverride, setScaleOverride] = useState<string>('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [isModelDragOver, setIsModelDragOver] = useState(false);
+  const [isThumbDragOver, setIsThumbDragOver] = useState(false);
+  const [thumbPreviewUrl, setThumbPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (thumbFile) {
+      const url = URL.createObjectURL(thumbFile);
+      setThumbPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setThumbPreviewUrl(null);
+    }
+  }, [thumbFile]);
+
+  const canSubmit = useMemo(() => name && modelFile && thumbFile && !submitting, [name, modelFile, thumbFile, submitting]);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setUploading(true);
+    setError('');
+    try {
+      const fd = new FormData();
+      fd.set('name', name);
+      if (description) fd.set('description', description);
+      if (scaleOverride.trim()) fd.set('scale', scaleOverride.trim());
+      if (modelFile) fd.set('model', modelFile);
+      if (thumbFile) fd.set('thumbnail', thumbFile);
+
+      const res = await fetch('/api/assets', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        const msg: string = data?.error || 'Upload failed';
+        // Human friendly mapping for common issues
+        const friendly = /File size too large/i.test(msg)
+          ? 'The file exceeds the 10 MB Cloudinary limit. We will try saving it locally instead. Please retry.'
+          : msg;
+        throw new Error(friendly);
+      }
+      onUploaded();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setSubmitting(false);
+      setUploading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={submit} className="p-5 space-y-5">
+      {error && (
+        <Alert className="bg-red-500/10 border-red-500/20 text-red-400">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="space-y-2">
+          <Label htmlFor="name" className="text-slate-300">Name</Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Nissan GTR R35" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" required />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-slate-300">Auto-scaling</Label>
+          <div className="text-xs text-slate-400 border border-slate-700 rounded-lg p-3 bg-slate-800/40">
+            We automatically compute a display scale from the model’s bounding box so cars render uniformly.
+            No manual scale input needed.
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="scale" className="text-slate-300">Scale override (optional)</Label>
+          <Input
+            id="scale"
+            type="number"
+            min="0.0001"
+            step="0.0001"
+            value={scaleOverride}
+            onChange={(e) => setScaleOverride(e.target.value)}
+            placeholder="e.g. 100"
+            className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500"
+          />
+          <p className="text-xs text-slate-500">If provided, this value will be used instead of the auto-computed scale.</p>
+        </div>
+        <div className="md:col-span-2 space-y-2">
+          <Label htmlFor="description" className="text-slate-300">Description (optional)</Label>
+          <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short description" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-slate-300">Model (.glb/.gltf)</Label>
+          <div
+            className={`border border-dashed rounded-lg p-4 bg-slate-800/40 transition-colors ${
+              isModelDragOver ? 'border-cyan-500/60 bg-slate-800/60' : 'border-slate-700'
+            }`}
+            onDragOver={(e) => { e.preventDefault(); setIsModelDragOver(true); }}
+            onDragLeave={() => setIsModelDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsModelDragOver(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file && /\.(glb|gltf)$/i.test(file.name)) setModelFile(file);
+            }}
+          >
+            <div className="text-sm text-slate-400">
+              {modelFile ? (
+                <div className="flex items-center justify-between">
+                  <span className="truncate">{modelFile.name}</span>
+                  <button type="button" className="text-cyan-400 hover:text-cyan-300 text-xs" onClick={() => setModelFile(null)}>Change</button>
+                </div>
+              ) : (
+                <>
+                  <p>Drag & drop your .glb or .gltf file here</p>
+                  <p className="text-xs mt-1">or click to browse</p>
+                </>
+              )}
+            </div>
+            <input
+              accept=".glb,.gltf"
+              type="file"
+              onChange={(e) => setModelFile(e.target.files?.[0] || null)}
+              className="sr-only"
+              id="model-input"
+            />
+            <label htmlFor="model-input" className="block mt-3 text-center text-xs text-slate-300 underline cursor-pointer">Choose file</label>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label className="text-slate-300">Thumbnail (image)</Label>
+          <div
+            className={`border border-dashed rounded-lg p-4 bg-slate-800/40 transition-colors ${
+              isThumbDragOver ? 'border-cyan-500/60 bg-slate-800/60' : 'border-slate-700'
+            }`}
+            onDragOver={(e) => { e.preventDefault(); setIsThumbDragOver(true); }}
+            onDragLeave={() => setIsThumbDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsThumbDragOver(false);
+              const file = e.dataTransfer.files?.[0];
+              if (file && file.type.startsWith('image/')) setThumbFile(file);
+            }}
+          >
+            {thumbPreviewUrl ? (
+              <div className="flex items-center gap-4">
+                <Image src={thumbPreviewUrl} alt="Thumbnail preview" width={128} height={80} className="h-20 w-32 object-cover rounded border border-slate-700" />
+                <div className="text-sm text-slate-400 truncate">{thumbFile?.name}</div>
+                <button type="button" className="ml-auto text-cyan-400 hover:text-cyan-300 text-xs" onClick={() => setThumbFile(null)}>Change</button>
+              </div>
+            ) : (
+              <div className="text-sm text-slate-400">
+                <p>Drag & drop an image here</p>
+                <p className="text-xs mt-1">or click to browse</p>
+              </div>
+            )}
+            <input
+              accept="image/*"
+              type="file"
+              onChange={(e) => setThumbFile(e.target.files?.[0] || null)}
+              className="sr-only"
+              id="thumb-input"
+            />
+            <label htmlFor="thumb-input" className="block mt-3 text-center text-xs text-slate-300 underline cursor-pointer">Choose file</label>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-end gap-3 pt-2">
+        <Button type="button" onClick={onClose} disabled={submitting} variant="outline" className="bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50">Cancel</Button>
+        <Button type="submit" disabled={!canSubmit} className="bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-50 flex items-center gap-2">
+          {submitting && <span className="inline-block h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />}
+          {submitting ? 'Uploading…' : 'Upload'}
+        </Button>
+      </div>
+    </form>
   );
 }

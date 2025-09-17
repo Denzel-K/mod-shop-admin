@@ -89,7 +89,7 @@ export default function Home() {
       {/* Footer */}
       <div className="absolute bottom-0 left-0 right-0 z-10">
         <div className="text-center py-6 text-slate-500 text-sm">
-          <p>© 2024 Mod Shop Admin Portal. Powered by cutting-edge 3D technology.</p>
+          <p>© 2025 Mod Shop Admin Portal. Powered by cutting-edge 3D technology.</p>
         </div>
       </div>
     </div>
