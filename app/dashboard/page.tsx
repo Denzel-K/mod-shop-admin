@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Plus, Upload, LogOut, ImageIcon, FileBox } from 'lucide-react';
+import { Plus, Upload, LogOut, Eye, Pencil, Trash2, FileBox } from 'lucide-react';
 
 type Asset = {
   _id: string;
@@ -126,9 +126,33 @@ export default function Dashboard() {
                     <h3 className="text-white font-medium truncate" title={asset.name}>{asset.name}</h3>
                     <span className="text-[10px] text-slate-400 uppercase border border-slate-700 rounded px-1 py-0.5">{asset.format}</span>
                   </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <Button size="sm" variant="outline" className="h-8 px-3 bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700" onClick={() => { setEditingAsset(asset); setShowUpload(true); }}>Edit</Button>
-                    <Button size="sm" variant="destructive" className="h-8 px-3 bg-red-600 hover:bg-red-500" onClick={() => setDeletingId(asset._id)}>Delete</Button>
+                </div>
+                {/* Action Bar */}
+                <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-slate-800 bg-slate-900/70">
+                  <Link
+                    href={`/assets/${asset._id}`}
+                    className="inline-flex items-center gap-1 text-slate-300 hover:text-white transition-colors px-2 py-1 rounded hover:bg-slate-800/60"
+                    title="View"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Link>
+                  <div className="ml-auto flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setEditingAsset(asset); setShowUpload(true); }}
+                      className="inline-flex items-center gap-1 text-slate-300 hover:text-white transition-colors px-2 py-1 rounded hover:bg-slate-800/60 border border-transparent hover:border-slate-700"
+                      title="Edit"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeletingId(asset._id)}
+                      className="inline-flex items-center gap-1 text-red-400 hover:text-white transition-colors px-2 py-1 rounded hover:bg-red-600/20 border border-transparent hover:border-red-600/40"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
               </div>

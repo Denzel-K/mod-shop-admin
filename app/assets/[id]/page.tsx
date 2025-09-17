@@ -75,7 +75,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             <span className="border border-slate-700 rounded px-2 py-1 bg-slate-800/60">Scroll: Zoom</span>
             <span className="ml-auto flex items-center gap-3">
               <span>Scale:</span>
-              <ScaleEditor id={asset._id} initialScale={asset.scale || 1.0} />
+              <ScaleEditor id={asset._id} initialScale={asset.scale || 1.0} inlineReadOnlyInitially />
             </span>
           </div>
         </div>
