@@ -2,16 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Asset from '@/models/Asset';
 import { NodeIO } from '@gltf-transform/core';
-import fs from 'fs';
-import path from 'path';
+import { getStorageService } from '@/lib/enhanced-storage';
+import {
+  FileValidator,
+  FormDataParser,
+  UploadProgressTracker,
+  generateSafeFilename,
+  getContentTypeForExtension,
+} from '@/lib/upload-utils';
 
 export const runtime = 'nodejs';
 
-type GCSUploadResult = {
-  url: string;
-  path: string;
-  bytes: number;
-};
+// Increase body size limit for large file uploads
+export const maxDuration = 300; // 5 minutes for large uploads
 
 // GET /api/assets - list assets
 export async function GET() {
@@ -27,63 +30,87 @@ export async function GET() {
 
 // POST /api/assets - upload new model (multipart/form-data)
 export async function POST(req: NextRequest) {
+  let uploadId: string | null = null;
+  
   try {
     await connectDB();
+    const storageService = getStorageService();
 
-    const form = await req.formData();
-    const name = String(form.get('name') || '').trim();
-    const description = String(form.get('description') || '').trim();
-    const modelFile = form.get('model');
-    const thumbFile = form.get('thumbnail');
+    // Parse form data
+    const { fields, files } = await FormDataParser.parseMultipartForm(req);
+    
+    // Extract and validate required fields
+    const name = FormDataParser.getRequiredField(fields, 'name');
+    const description = FormDataParser.getOptionalField(fields, 'description');
+    const scaleOverride = FormDataParser.getOptionalField(fields, 'scale');
+    
+    // Extract and validate required files
+    const modelFile = FormDataParser.getRequiredFile(files, 'model');
+    const thumbFile = FormDataParser.getRequiredFile(files, 'thumbnail');
 
-    if (!name || !modelFile || !thumbFile || !(modelFile instanceof File) || !(thumbFile instanceof File)) {
-      return NextResponse.json({ error: 'name, model (.glb/.gltf) and thumbnail image are required' }, { status: 400 });
+    // Create or attach to upload tracking
+    const clientUploadId = fields.get('uploadId');
+    if (clientUploadId && typeof clientUploadId === 'string' && clientUploadId.startsWith('upload_')) {
+      uploadId = clientUploadId;
+      // Initialize progress entry if not present
+      if (!UploadProgressTracker.getProgress(uploadId)) {
+        UploadProgressTracker.createUpload(modelFile.name);
+      }
+    } else {
+      uploadId = UploadProgressTracker.createUpload(modelFile.name);
+    }
+    UploadProgressTracker.updateProgress(uploadId, 5, 'uploading');
+
+    // Validate files
+    let validatedModel, validatedThumb;
+    try {
+      validatedModel = await FileValidator.validateModelFile(modelFile);
+      validatedThumb = await FileValidator.validateImageFile(thumbFile);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'File validation failed';
+      UploadProgressTracker.setError(uploadId, errorMsg);
+      return NextResponse.json({ error: errorMsg, uploadId }, { status: 400 });
     }
 
-    const modelExt = modelFile.name.toLowerCase().endsWith('.gltf') ? 'gltf' : modelFile.name.toLowerCase().endsWith('.glb') ? 'glb' : '';
-    if (!modelExt) {
-      return NextResponse.json({ error: 'Model must be a .glb or .gltf file' }, { status: 400 });
-    }
+    UploadProgressTracker.updateProgress(uploadId, 15, 'processing');
 
     // Auto-scale computation (defaults to 1.0 if computation not possible)
     let computedScale = 1.0;
 
-    // Decide storage provider
-    const useGcp = String(process.env.USE_GCP).toLowerCase() === 'true';
-    console.log('[upload] USE_GCP =', useGcp);
+    // Generate safe filenames
+    const timestamp = Date.now();
+    const modelSafeBase = generateSafeFilename(name, timestamp);
+    const modelFilename = `${modelSafeBase}.${validatedModel.extension}`;
+    const thumbSafeBase = generateSafeFilename(name, timestamp);
+    const thumbFilename = `${thumbSafeBase}.${validatedThumb.extension}`;
 
-    // Upload model to selected storage
-    const modelArrayBuffer = await modelFile.arrayBuffer();
-    const modelBuffer = Buffer.from(modelArrayBuffer);
-    const modelTimestamp = Date.now();
-    const modelSafeBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'model';
-    const modelFilename = `${modelSafeBase}-${modelTimestamp}.${modelExt}`;
-    let modelUpload: GCSUploadResult;
-    if (useGcp) {
-      const { uploadBufferToGCS } = await import('@/lib/gcs');
-      const modelDest = `mod-shop/models/${modelFilename}`;
-      console.log('[upload] model -> GCS', modelDest);
-      const modelUploadInfo = await uploadBufferToGCS({
-        buffer: modelBuffer,
-        destination: modelDest,
-        contentType: modelExt === 'glb' ? 'model/gltf-binary' : 'model/gltf+json',
+    console.log(`[Enhanced Upload] Processing ${name}: model=${modelFilename}, thumb=${thumbFilename}`);
+
+    // Upload model with enhanced storage service
+    UploadProgressTracker.updateProgress(uploadId, 25, 'uploading');
+    let modelUpload;
+    try {
+      modelUpload = await storageService.upload({
+        buffer: validatedModel.buffer,
+        destination: `mod-shop/models/${modelFilename}`,
+        contentType: getContentTypeForExtension(validatedModel.extension),
+        retryAttempts: 3,
       });
-      modelUpload = { url: modelUploadInfo.publicUrl, path: modelUploadInfo.gcsPath, bytes: modelUploadInfo.size };
-    } else {
-      const modelsDir = path.join(process.cwd(), 'public', 'models');
-      await fs.promises.mkdir(modelsDir, { recursive: true });
-      const modelDiskPath = path.join(modelsDir, modelFilename);
-      await fs.promises.writeFile(modelDiskPath, modelBuffer);
-      console.log('[upload] model -> local', modelDiskPath);
-      modelUpload = { url: `/models/${modelFilename}`, path: `local:${modelFilename}`, bytes: modelBuffer.byteLength };
+      console.log(`[Enhanced Upload] Model uploaded via ${modelUpload.provider}: ${modelUpload.url}`);
+    } catch (error) {
+      const errorMsg = `Model upload failed: ${error instanceof Error ? error.message : 'unknown error'}`;
+      UploadProgressTracker.setError(uploadId, errorMsg);
+      return NextResponse.json({ error: errorMsg, uploadId }, { status: 500 });
     }
 
+    UploadProgressTracker.updateProgress(uploadId, 50, 'processing');
+
     // Attempt auto-scaling using glTF-Transform by reading the uploaded buffer directly
-    if (modelExt === 'glb') {
+    if (validatedModel.extension === 'glb') {
       try {
         const io = new NodeIO();
         // Read document from the original uploaded buffer
-        const doc = await io.readBinary(modelBuffer);
+        const doc = await io.readBinary(validatedModel.buffer);
         const root = doc.getRoot();
         const min = [Infinity, Infinity, Infinity];
         const max = [-Infinity, -Infinity, -Infinity];
@@ -110,49 +137,44 @@ export async function POST(req: NextRequest) {
         if (maxDim > 0) {
           computedScale = Math.max(0.001, Math.min(100, targetMaxDim / maxDim));
         }
-      } catch {
+        console.log(`[Enhanced Upload] Computed scale: ${computedScale} (maxDim: ${maxDim})`);
+      } catch (error) {
+        console.warn('[Enhanced Upload] Auto-scaling failed:', error);
         // Fallback to default if parsing fails
         computedScale = 1.0;
       }
     }
 
     // Optional scale override from form
-    const scaleOverrideRaw = String(form.get('scale') || '').trim();
-    if (scaleOverrideRaw) {
-      const so = Number(scaleOverrideRaw);
+    if (scaleOverride) {
+      const so = Number(scaleOverride);
       if (Number.isFinite(so) && so > 0) {
         computedScale = Math.max(0.0001, Math.min(10000, so));
+        console.log(`[Enhanced Upload] Scale override applied: ${computedScale}`);
       }
     }
 
-    // Upload thumbnail to selected storage as image
-    const thumbArrayBuffer = await thumbFile.arrayBuffer();
-    const thumbBuffer = Buffer.from(thumbArrayBuffer);
-    const thumbTimestamp = Date.now();
-    const thumbSafeBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || 'thumbnail';
-    const thumbExtFromName = (thumbFile.name?.split('.').pop() || '').toLowerCase();
-    const thumbExt = thumbExtFromName || (thumbFile.type.split('/')[1] || 'jpg');
-    const thumbFilename = `${thumbSafeBase}-${thumbTimestamp}.${thumbExt}`;
-    let thumbUpload: GCSUploadResult;
-    if (useGcp) {
-      const { uploadBufferToGCS } = await import('@/lib/gcs');
-      const thumbDest = `mod-shop/thumbnails/${thumbFilename}`;
-      console.log('[upload] thumb -> GCS', thumbDest);
-      const thumbUploadInfo = await uploadBufferToGCS({
-        buffer: thumbBuffer,
-        destination: thumbDest,
-        contentType: thumbFile.type || `image/${thumbExt}`,
+    UploadProgressTracker.updateProgress(uploadId, 70, 'uploading');
+
+    // Upload thumbnail with enhanced storage service
+    let thumbUpload;
+    try {
+      thumbUpload = await storageService.upload({
+        buffer: validatedThumb.buffer,
+        destination: `mod-shop/thumbnails/${thumbFilename}`,
+        contentType: getContentTypeForExtension(validatedThumb.extension),
+        retryAttempts: 3,
       });
-      thumbUpload = { url: thumbUploadInfo.publicUrl, path: thumbUploadInfo.gcsPath, bytes: thumbUploadInfo.size };
-    } else {
-      const thumbsDir = path.join(process.cwd(), 'public', 'thumbnails');
-      await fs.promises.mkdir(thumbsDir, { recursive: true });
-      const thumbDiskPath = path.join(thumbsDir, thumbFilename);
-      await fs.promises.writeFile(thumbDiskPath, thumbBuffer);
-      console.log('[upload] thumb -> local', thumbDiskPath);
-      thumbUpload = { url: `/thumbnails/${thumbFilename}`, path: `local:${thumbFilename}`, bytes: thumbBuffer.byteLength };
+      console.log(`[Enhanced Upload] Thumbnail uploaded via ${thumbUpload.provider}: ${thumbUpload.url}`);
+    } catch (error) {
+      const errorMsg = `Thumbnail upload failed: ${error instanceof Error ? error.message : 'unknown error'}`;
+      UploadProgressTracker.setError(uploadId, errorMsg);
+      return NextResponse.json({ error: errorMsg, uploadId }, { status: 500 });
     }
 
+    UploadProgressTracker.updateProgress(uploadId, 90, 'processing');
+
+    // Create asset record
     const asset = await Asset.create({
       name,
       description: description || undefined,
@@ -160,14 +182,45 @@ export async function POST(req: NextRequest) {
       modelPublicId: modelUpload.path,
       thumbnailUrl: thumbUpload.url,
       thumbnailPublicId: thumbUpload.path,
-      format: modelExt,
+      format: validatedModel.extension as 'glb' | 'gltf',
       sizeBytes: modelUpload.bytes,
       scale: computedScale,
     });
 
-    return NextResponse.json({ asset }, { status: 201 });
+    UploadProgressTracker.complete(uploadId);
+    console.log(`[Enhanced Upload] Asset created successfully: ${asset._id}`);
+
+    // Get storage stats for monitoring
+    const storageStats = await storageService.getUploadStats();
+    
+    return NextResponse.json({ 
+      asset, 
+      uploadId,
+      storageStats: {
+        provider: modelUpload.provider,
+        activeUploads: storageStats.activeUploads,
+        gcpConfigured: storageStats.gcpConfigured,
+      }
+    }, { status: 201 });
   } catch (error) {
-    console.error('Create asset error:', error);
-    return NextResponse.json({ error: 'Failed to upload asset' }, { status: 500 });
+    console.error('[Enhanced Upload] Create asset error:', error);
+    
+    if (uploadId) {
+      UploadProgressTracker.setError(uploadId, error instanceof Error ? error.message : 'Unknown error');
+    }
+    
+    const errorMessage = error instanceof Error ? error.message : 'Failed to upload asset';
+    return NextResponse.json({ 
+      error: errorMessage, 
+      uploadId,
+      details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+    }, { status: 500 });
+  } finally {
+    // Cleanup upload tracking after a delay
+    if (uploadId) {
+      setTimeout(() => {
+        UploadProgressTracker.cleanup(uploadId!);
+      }, 60000); // Clean up after 1 minute
+    }
   }
 }

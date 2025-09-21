@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, Upload, LogOut, Eye, Pencil, Trash2, FileBox } from 'lucide-react';
+import { toast } from 'sonner';
 
 type Asset = {
   _id: string;
@@ -189,8 +190,20 @@ export default function Dashboard() {
               <Button className="bg-red-600 hover:bg-red-500" onClick={async () => {
                 const id = deletingId; setDeletingId(null);
                 if (!id) return;
-                await fetch(`/api/assets/${id}`, { method: 'DELETE' });
-                fetchAssets();
+                const t = toast.loading('Deleting asset…');
+                try {
+                  const res = await fetch(`/api/assets/${id}`, { method: 'DELETE' });
+                  if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data?.error || 'Failed to delete asset');
+                  }
+                  toast.success('Asset deleted');
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'Delete failed');
+                } finally {
+                  toast.dismiss(t);
+                  fetchAssets();
+                }
               }}>Yes, delete</Button>
             </div>
           </div>
@@ -211,6 +224,10 @@ function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClose: () 
   const [isModelDragOver, setIsModelDragOver] = useState(false);
   const [isThumbDragOver, setIsThumbDragOver] = useState(false);
   const [thumbPreviewUrl, setThumbPreviewUrl] = useState<string | null>(null);
+  const [uploadId, setUploadId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'completed' | 'failed'>('idle');
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (thumbFile) {
@@ -242,26 +259,71 @@ function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClose: () 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, description, scale: scaleOverride ? Number(scaleOverride) : undefined }),
         });
+        // JSON parsing moved below for consistency
+        if (!res.ok) {
+          // Parse JSON to extract error below
+        } else {
+          toast.success('Asset updated');
+        }
       } else {
+        // Client-side basic validation
+        if (modelFile && !/\.(glb|gltf)$/i.test(modelFile.name)) {
+          throw new Error('Model must be a .glb or .gltf file');
+        }
+        if (thumbFile && !thumbFile.type.startsWith('image/')) {
+          throw new Error('Thumbnail must be an image');
+        }
+
+        // Generate client uploadId and start progress polling
+        const newUploadId = `upload_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+        setUploadId(newUploadId);
+        setUploadProgress(0);
+        setUploadStatus('uploading');
+
+        if (pollRef.current) clearInterval(pollRef.current);
+        pollRef.current = setInterval(async () => {
+          try {
+            const pr = await fetch(`/api/uploads/progress/${newUploadId}`, { cache: 'no-store' });
+            if (pr.ok) {
+              const pj = await pr.json();
+              const pg = pj?.progress?.progress ?? 0;
+              const st = pj?.progress?.status ?? 'uploading';
+              setUploadProgress(pg);
+              setUploadStatus(st);
+              if (st === 'completed' || st === 'failed') {
+                if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+              }
+            }
+          } catch {}
+        }, 900);
+
         const fd = new FormData();
         fd.set('name', name);
         if (description) fd.set('description', description);
         if (scaleOverride.trim()) fd.set('scale', scaleOverride.trim());
         if (modelFile) fd.set('model', modelFile);
         if (thumbFile) fd.set('thumbnail', thumbFile);
+        fd.set('uploadId', newUploadId);
         res = await fetch('/api/assets', { method: 'POST', body: fd });
       }
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const msg: string = data?.error || (isEdit ? 'Save failed' : 'Upload failed');
         throw new Error(msg);
       }
+      if (!isEdit) {
+        const provider = data?.storageStats?.provider || 'storage';
+        toast.success(`Upload complete via ${provider.toUpperCase()}`);
+      }
       onUploaded();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
+      toast.error(err instanceof Error ? err.message : 'Upload failed');
+      setUploadStatus('failed');
     } finally {
       setSubmitting(false);
       setUploading(false);
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
     }
   };
 
@@ -388,6 +450,18 @@ function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClose: () 
           {submitting ? (isEdit ? 'Saving…' : 'Uploading…') : (isEdit ? 'Save changes' : 'Upload')}
         </Button>
       </div>
+      {!isEdit && uploadId && (
+        <div className="pt-2">
+          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+            <span>Upload progress</span>
+            <span>{Math.round(uploadProgress)}%</span>
+          </div>
+          <div className="h-2 w-full bg-slate-800 rounded">
+            <div className="h-2 bg-cyan-500 rounded transition-all" style={{ width: `${Math.max(0, Math.min(100, uploadProgress))}%` }} />
+          </div>
+          <div className="text-xs text-slate-500 mt-1">{uploadStatus === 'uploading' ? 'Uploading…' : uploadStatus === 'processing' ? 'Processing…' : uploadStatus === 'completed' ? 'Completed' : uploadStatus === 'failed' ? 'Failed' : ''}</div>
+        </div>
+      )}
     </form>
   );
 }

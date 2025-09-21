@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Raleway, Ubuntu_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 const raleway = Raleway({
   variable: "--font-raleway",
@@ -31,6 +32,7 @@ export default function RootLayout({
         className={`${raleway.variable} ${ubuntuMono.variable} font-sans antialiased`}
       >
         {children}
+        <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
   );

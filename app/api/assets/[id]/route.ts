@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Asset, { type IAsset } from '@/models/Asset';
-import fs from 'fs';
-import path from 'path';
+import { getStorageService } from '@/lib/enhanced-storage';
 
 export const runtime = 'nodejs';
 
@@ -58,40 +57,44 @@ export async function DELETE(
     const asset = await Asset.findById(id).lean<IAsset | null>();
     if (!asset) return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
 
-    const useGcp = String(process.env.USE_GCP).toLowerCase() === 'true';
+    const storageService = getStorageService();
+    const deletionResults: { model: boolean; thumbnail: boolean } = {
+      model: false,
+      thumbnail: false,
+    };
 
-    // Delete stored files
+    // Delete stored files using enhanced storage service
     try {
-      // Model
+      // Delete model file
       if (typeof asset.modelPublicId === 'string') {
-        if (useGcp && !asset.modelPublicId.startsWith('local:')) {
-          const { deleteObjectFromGCS } = await import('@/lib/gcs');
-          await deleteObjectFromGCS(asset.modelPublicId);
-        } else if (asset.modelPublicId.startsWith('local:')) {
-          const fname = asset.modelPublicId.slice('local:'.length);
-          const p = path.join(process.cwd(), 'public', 'models', fname);
-          await fs.promises.unlink(p).catch(() => {});
-        }
+        deletionResults.model = await storageService.delete(asset.modelPublicId);
+        console.log(`[Enhanced Delete] Model deletion ${deletionResults.model ? 'successful' : 'failed'}: ${asset.modelPublicId}`);
       }
-      // Thumbnail
+      
+      // Delete thumbnail file
       if (typeof asset.thumbnailPublicId === 'string') {
-        if (useGcp && !asset.thumbnailPublicId.startsWith('local:')) {
-          const { deleteObjectFromGCS } = await import('@/lib/gcs');
-          await deleteObjectFromGCS(asset.thumbnailPublicId);
-        } else if (asset.thumbnailPublicId.startsWith('local:')) {
-          const fname = asset.thumbnailPublicId.slice('local:'.length);
-          const p = path.join(process.cwd(), 'public', 'thumbnails', fname);
-          await fs.promises.unlink(p).catch(() => {});
-        }
+        deletionResults.thumbnail = await storageService.delete(asset.thumbnailPublicId);
+        console.log(`[Enhanced Delete] Thumbnail deletion ${deletionResults.thumbnail ? 'successful' : 'failed'}: ${asset.thumbnailPublicId}`);
       }
     } catch (e) {
-      console.warn('File deletion warnings:', e);
+      console.warn('[Enhanced Delete] File deletion warnings:', e);
     }
 
+    // Delete asset record from database
     await Asset.findByIdAndDelete(id);
-    return NextResponse.json({ success: true }, { status: 200 });
+    
+    console.log(`[Enhanced Delete] Asset ${id} deleted successfully`);
+    
+    return NextResponse.json({ 
+      success: true, 
+      deletionResults,
+      message: 'Asset deleted successfully'
+    }, { status: 200 });
   } catch (error) {
-    console.error('Delete asset error:', error);
-    return NextResponse.json({ error: 'Failed to delete asset' }, { status: 500 });
+    console.error('[Enhanced Delete] Delete asset error:', error);
+    return NextResponse.json({ 
+      error: 'Failed to delete asset',
+      details: process.env.NODE_ENV === 'development' ? String(error) : undefined
+    }, { status: 500 });
   }
 }
