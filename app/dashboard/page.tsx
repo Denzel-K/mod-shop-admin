@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Upload, FileBox } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,6 +10,7 @@ import { TopBar } from '@/components/dashboard/TopBar';
 import { AssetCard } from '@/components/dashboard/AssetCard';
 import { UploadDialog } from '@/components/dashboard/UploadDialog';
 import { DeleteConfirm } from '@/components/dashboard/DeleteConfirm';
+import { FilterBar, type AssetFilters } from '@/components/dashboard/FilterBar';
 
 export default function Dashboard() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -19,24 +20,60 @@ export default function Dashboard() {
   const [showUpload, setShowUpload] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<AssetFilters>({});
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const fetchAssets = async () => {
+  const fetchAssets = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/assets', { cache: 'no-store' });
+      const params = new URLSearchParams();
+      if (filters.q) params.set('q', filters.q);
+      if (filters.make) params.set('make', filters.make);
+      if (filters.model) params.set('model', filters.model);
+      if (filters.year) params.set('year', String(filters.year));
+      if (filters.assetSource) params.set('assetSource', filters.assetSource);
+      if (filters.tag) params.set('tag', filters.tag);
+      const qs = params.toString();
+      const url = qs ? `/api/assets?${qs}` : '/api/assets';
+      const res = await fetch(url, { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to fetch assets');
       setAssets(data.assets || []);
+      // Persist filters in URL (without full reload)
+      router.replace(qs ? `${pathname}?${qs}` : pathname);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to fetch assets');
+      console.log('Error: ', error)
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters, router, pathname, error]);
 
   useEffect(() => {
+    // Initialize filters from current URL on first mount
+    const q = searchParams.get('q') || undefined;
+    const make = searchParams.get('make') || undefined;
+    const model = searchParams.get('model') || undefined;
+    const yearStr = searchParams.get('year') || undefined;
+    const assetSource = searchParams.get('assetSource') || undefined;
+    const tag = searchParams.get('tag') || undefined;
+    const initial: AssetFilters = {
+      q,
+      make,
+      model,
+      year: yearStr ? Number(yearStr) : undefined,
+      assetSource: (assetSource as AssetFilters['assetSource']) || undefined,
+      tag,
+    };
+    // Only set if any param present to avoid unnecessary state update
+    if (Object.values(initial).some((v) => v !== undefined)) {
+      setFilters(initial);
+    }
+    // Always fetch on mount
     fetchAssets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogout = async () => {
@@ -50,6 +87,7 @@ export default function Dashboard() {
 
       {/* Content */}
       <main className="px-4 sm:px-6 lg:px-8 py-6">
+        <FilterBar value={filters} onChange={(f) => { setFilters(f); }} onApply={fetchAssets} />
         {/* Empty/Loading States */}
         {loading ? (
           <div className="min-h-[50vh]">

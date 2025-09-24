@@ -25,6 +25,24 @@ export function AssetCard({ asset, onEdit, onDelete }: { asset: Asset; onEdit: (
           <h3 className="text-white font-medium truncate" title={asset.name}>{asset.name}</h3>
           <span className="text-[10px] text-slate-400 uppercase border border-slate-700 rounded px-1 py-0.5">{asset.format}</span>
         </div>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          {asset.make && (
+            <span className="text-[10px] text-slate-300 border border-slate-700 rounded px-1.5 py-0.5">{asset.make}{asset.model ? ` • ${asset.model}` : ''}{asset.year ? ` • ${asset.year}` : ''}</span>
+          )}
+          {asset.assetSource && (
+            <span className="text-[10px] text-cyan-300 border border-cyan-700/50 rounded px-1 py-0.5 uppercase">{asset.assetSource}</span>
+          )}
+          {asset.tags && asset.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 ml-auto">
+              {asset.tags.slice(0, 2).map((t) => (
+                <span key={t} className="text-[10px] text-slate-300 border border-slate-700 rounded px-1 py-0.5">{t}</span>
+              ))}
+              {asset.tags.length > 2 && (
+                <span className="text-[10px] text-slate-400">+{asset.tags.length - 2}</span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
       {/* Action Bar */}
       <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-slate-800 bg-slate-900/70">

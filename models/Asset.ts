@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 
 export type AssetFormat = 'glb' | 'gltf';
 export type AssetSource = 'sketchfab' | 'turbosquid' | 'internal' | 'other';
@@ -9,6 +9,15 @@ export interface ICreatorCredits {
   profileUrl?: string;
   sourcePageUrl?: string;
   license?: string;
+}
+
+export type CuratorMode = 'self' | 'proxy' | 'automation' | 'import';
+
+export interface ICuratorInfo {
+  mode?: CuratorMode;
+  adminId?: mongoose.Types.ObjectId;
+  name?: string;
+  email?: string;
 }
 
 export interface IAssetMetadata {
@@ -22,7 +31,7 @@ export interface IAssetMetadata {
   other?: Record<string, string[]>;
 }
 
-export interface IAsset extends Document {
+export interface IAsset {
   name: string;
   description?: string;
   modelUrl: string;
@@ -42,6 +51,9 @@ export interface IAsset extends Document {
   tags?: string[];
   // Rich metadata for configurator
   metadata?: IAssetMetadata;
+  // Curator info
+  curatedBy?: ICuratorInfo;
+  curatedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -71,7 +83,17 @@ const MetadataSchema = new Schema<IAssetMetadata>(
   { _id: false }
 );
 
-const AssetSchema: Schema = new Schema(
+const CuratorSchema = new Schema<ICuratorInfo>(
+  {
+    mode: { type: String, enum: ['self', 'proxy', 'automation', 'import'], default: undefined },
+    adminId: { type: Schema.Types.ObjectId, ref: 'Admin', default: undefined },
+    name: { type: String, trim: true },
+    email: { type: String, trim: true },
+  },
+  { _id: false }
+);
+
+const AssetSchema: Schema<IAsset> = new Schema(
   {
     name: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
@@ -92,6 +114,9 @@ const AssetSchema: Schema = new Schema(
     variant: { type: String, trim: true },
     tags: [{ type: String, index: true }],
     metadata: { type: MetadataSchema, default: undefined },
+    // Curator fields
+    curatedBy: { type: CuratorSchema, default: undefined },
+    curatedAt: { type: Date, default: undefined },
   },
   { timestamps: true }
 );
@@ -99,5 +124,6 @@ const AssetSchema: Schema = new Schema(
 AssetSchema.index({ createdAt: -1 });
 AssetSchema.index({ name: 1 });
 AssetSchema.index({ make: 1, model: 1, year: 1 });
+AssetSchema.index({ 'curatedBy.adminId': 1 });
 
-export default mongoose.models.Asset || mongoose.model<IAsset>('Asset', AssetSchema);
+export default (mongoose.models.Asset as mongoose.Model<IAsset>) || mongoose.model<IAsset>('Asset', AssetSchema);

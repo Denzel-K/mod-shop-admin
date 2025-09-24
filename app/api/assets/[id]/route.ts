@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Asset, { type IAsset } from '@/models/Asset';
+import Asset, { type IAsset, type ICuratorInfo, type CuratorMode } from '@/models/Asset';
 import { getStorageService } from '@/lib/enhanced-storage';
 
 export const runtime = 'nodejs';
@@ -30,7 +30,8 @@ export async function PATCH(
   try {
     await connectDB();
     const { id } = await params;
-    const body = await req.json().catch(() => ({} as unknown));
+    type PatchBody = Partial<IAsset> & { curator?: CuratorMode };
+    const body = (await req.json().catch(() => ({}))) as PatchBody;
     const updates: Partial<IAsset> = {};
     if (typeof body.name === 'string') updates.name = String(body.name).trim();
     if (typeof body.description === 'string') updates.description = String(body.description).trim() || undefined;
@@ -60,12 +61,29 @@ export async function PATCH(
     }
     if (typeof body.variant === 'string') updates.variant = body.variant.trim() || undefined;
     if (Array.isArray(body.tags)) {
-      updates.tags = Array.from(new Set(body.tags.map((t) => String(t).trim()).filter(Boolean)));
+      updates.tags = Array.from(new Set(body.tags.map((t: unknown) => String(t).trim()).filter(Boolean)));
     } else if (typeof body.tags === 'string') {
-      updates.tags = Array.from(new Set(String(body.tags).split(',').map((t) => t.trim()).filter(Boolean)));
+      updates.tags = Array.from(new Set(String(body.tags).split(',').map((t: string) => t.trim()).filter(Boolean)));
     }
     if (body.metadata && typeof body.metadata === 'object') {
       updates.metadata = body.metadata; // trust client; server schema enforces shape loosely
+    }
+
+    // Optional curator update
+    const allowedModes = new Set<CuratorMode>(['self', 'proxy', 'automation', 'import']);
+    if (typeof body.curator === 'string' && allowedModes.has(body.curator)) {
+      updates.curatedBy = { mode: body.curator };
+      updates.curatedAt = new Date();
+    } else if (body.curatedBy && typeof body.curatedBy === 'object') {
+      const cb = body.curatedBy as ICuratorInfo;
+      if (!cb.mode || allowedModes.has(cb.mode as CuratorMode)) {
+        updates.curatedBy = {
+          mode: cb.mode,
+          name: cb.name,
+          email: cb.email,
+        };
+        updates.curatedAt = new Date();
+      }
     }
 
     // Validation rule: if sketchfab source is set or remains sketchfab, ensure credits.text exists
