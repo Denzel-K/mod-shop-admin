@@ -273,7 +273,7 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
   };
 
   return (
-    <form onSubmit={submit} className="p-5 space-y-5">
+    <form onSubmit={submit} className="py-5 px-2 sm:px-4 md:px-6 space-y-5">
       {/* Hidden curator field for backend session binding */}
       <input type="hidden" name="curator" value="self" />
       {error && (
@@ -283,10 +283,21 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
       )}
       {/* Tabbed interface for curators to split responsibilities */}
       <Tabs defaultValue="primary" className="w-full">
-        <TabsList className="sticky top-0 z-10">
-          <TabsTrigger value="primary">Primary Info</TabsTrigger>
-          <TabsTrigger value="metadata">Metadata</TabsTrigger>
+        <TabsList className="sticky top-0 z-10 bg-transparent gap-2 border-[1.5px] border-slate-700 mb-4">
+          <TabsTrigger
+            value="primary"
+            className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:border-cyan-600 bg-slate-800/40 text-slate-200 border border-slate-700 hover:bg-slate-800 rounded-md px-3 py-1.5"
+          >
+            Primary Info
+          </TabsTrigger>
+          <TabsTrigger
+            value="metadata"
+            className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:border-cyan-600 bg-slate-800/40 text-slate-200 border border-slate-700 hover:bg-slate-800 rounded-md px-3 py-1.5"
+          >
+            Metadata
+          </TabsTrigger>
         </TabsList>
+
         <TabsContent value="primary" className="animate-in fade-in slide-in-from-top-1 duration-200">
           <PrimaryInfoTab
             isEdit={isEdit}

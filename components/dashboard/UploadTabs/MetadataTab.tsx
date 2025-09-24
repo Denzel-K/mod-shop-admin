@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ComboBox } from "@/components/dashboard/ComboBox";
@@ -134,11 +133,13 @@ export function MetadataTab(props: MetadataTabProps) {
 
       {/* Metadata entry mode */}
       <div className="md:col-span-2">
-        <div className="flex flex-wrap gap-2 text-xs text-slate-300 mb-2 items-center">
+        <div className="flex flex-wrap gap-2 text-xs text-slate-300 mb-2 items-center ">
           <span className="text-slate-400">Metadata input:</span>
-          <button type="button" onClick={() => setMetadataMode('chips')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='chips'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>Chips</button>
-          <button type="button" onClick={() => setMetadataMode('csv')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='csv'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>CSV</button>
-          <button type="button" onClick={() => setMetadataMode('json')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='json'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>JSON</button>
+          <div className="border-[1.5px] border-slate-700 px-2 py-[4px] rounded-md space-x-2">  
+            <button type="button" onClick={() => setMetadataMode('chips')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='chips'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>Chips</button>
+            <button type="button" onClick={() => setMetadataMode('csv')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='csv'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>CSV</button>
+            <button type="button" onClick={() => setMetadataMode('json')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='json'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>JSON</button>
+          </div>
         </div>
       </div>
 

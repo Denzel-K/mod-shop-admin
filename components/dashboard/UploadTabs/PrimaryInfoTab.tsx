@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export type PrimaryInfoProps = {
   isEdit: boolean;
@@ -85,13 +86,21 @@ export function PrimaryInfoTab(props: PrimaryInfoProps) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="assetSource" className="text-slate-300">Asset Source</Label>
-          <select id="assetSource" value={assetSource} onChange={(e) => setAssetSource(e.target.value)} className="w-full bg-slate-800/60 border border-slate-700 text-white rounded px-3 py-2">
-            <option value="">Select source</option>
-            <option value="sketchfab">Sketchfab</option>
-            <option value="turbosquid">TurboSquid</option>
-            <option value="internal">Internal</option>
-            <option value="other">Other</option>
-          </select>
+          <Select
+            value={assetSource || 'any'}
+            onValueChange={(val) => setAssetSource(val === 'any' ? '' : val)}
+          >
+            <SelectTrigger id="assetSource" className="bg-slate-800/60 border-slate-700 text-white">
+              <SelectValue placeholder="Select source" />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 text-slate-200 border-slate-700">
+              <SelectItem value="any">Select source</SelectItem>
+              <SelectItem value="sketchfab">Sketchfab</SelectItem>
+              <SelectItem value="turbosquid">TurboSquid</SelectItem>
+              <SelectItem value="internal">Internal</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
           {isSketchfab && (
             <p className="text-xs text-slate-500">Creator credit text is required for Sketchfab-sourced models.</p>
           )}

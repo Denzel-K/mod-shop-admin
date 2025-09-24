@@ -5,6 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { listMakes, listModels } from "@/lib/model-mapping";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type AssetFilters = {
   q?: string;
@@ -27,52 +38,139 @@ export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; o
   };
 
   return (
-    <div className="mb-4 rounded-xl border border-slate-800 bg-slate-900/70 p-3 sm:p-4">
+    <div className="mb-4 rounded-xl border border-slate-800 bg-slate-900/70 p-3 sm:p-4" role="region" aria-label="Asset filters">
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="space-y-1 col-span-2 sm:col-span-1 lg:col-span-2">
-          <Label className="text-slate-300" htmlFor="q">Search</Label>
-          <Input id="q" value={local.q || ''} onChange={(e) => set({ q: e.target.value })} placeholder="Name, make, model, tag" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-        </div>
+
+        {/* Make combobox */}
         <div className="space-y-1">
-          <Label className="text-slate-300" htmlFor="make">Make</Label>
-          <input list="makes" id="make" value={local.make || ''} onChange={(e) => set({ make: e.target.value })} placeholder="Any" className="w-full bg-slate-800/60 border border-slate-700 text-white rounded px-3 py-2" />
-          <datalist id="makes">
-            {makes.map((m) => (<option key={m} value={m} />))}
-          </datalist>
+          <Label className="text-slate-300">Make</Label>
+          <Combobox
+            value={local.make || ''}
+            onChange={(v) => {
+              // when make changes, clear model if it doesn't belong
+              const nextModel = v && local.model && listModels(v).includes(local.model) ? local.model : undefined;
+              set({ make: v || undefined, model: nextModel });
+            }}
+            options={makes}
+            placeholder="Any"
+          />
         </div>
+
+        {/* Model combobox */}
         <div className="space-y-1">
-          <Label className="text-slate-300" htmlFor="model">Model</Label>
-          <input list="models" id="model" value={local.model || ''} onChange={(e) => set({ model: e.target.value })} placeholder="Any" className="w-full bg-slate-800/60 border border-slate-700 text-white rounded px-3 py-2" />
-          <datalist id="models">
-            {models.map((m) => (<option key={m} value={m} />))}
-          </datalist>
+          <Label className="text-slate-300">Model</Label>
+          <Combobox
+            value={local.model || ''}
+            onChange={(v) => set({ model: v || undefined })}
+            options={models}
+            placeholder="Any"
+            disabled={!local.make && models.length === 0}
+          />
         </div>
+
         <div className="space-y-1">
           <Label className="text-slate-300" htmlFor="year">Year</Label>
-          <Input id="year" type="number" value={local.year || ''} onChange={(e) => set({ year: e.target.value ? Number(e.target.value) : undefined })} placeholder="Any" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
+          <Input id="year" inputMode="numeric" pattern="[0-9]*" type="number" value={local.year || ''} onChange={(e) => set({ year: e.target.value ? Number(e.target.value) : undefined })} placeholder="Any" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
         </div>
+
         <div className="space-y-1">
-          <Label className="text-slate-300" htmlFor="source">Source</Label>
-          <select id="source" value={local.assetSource || ''} onChange={(e) => {
-            const value = e.target.value as AssetFilters['assetSource'] | '';
-            set({ assetSource: value === '' ? undefined : value });
-          }} className="w-full bg-slate-800/60 border border-slate-700 text-white rounded px-3 py-2">
-            <option value="">Any</option>
-            <option value="sketchfab">Sketchfab</option>
-            <option value="turbosquid">TurboSquid</option>
-            <option value="internal">Internal</option>
-            <option value="other">Other</option>
-          </select>
+          <Label className="text-slate-300">Source</Label>
+          <Select
+            value={local.assetSource ?? 'any'}
+            onValueChange={(val) => set({ assetSource: (val === 'any' ? undefined : (val as AssetFilters['assetSource'])) })}
+          >
+            <SelectTrigger className="bg-slate-800/60 border-slate-700 text-white">
+              <SelectValue placeholder="Any" />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 text-slate-200 border-slate-700">
+              <SelectItem value="any">Any</SelectItem>
+              <SelectItem value="sketchfab">Sketchfab</SelectItem>
+              <SelectItem value="turbosquid">TurboSquid</SelectItem>
+              <SelectItem value="internal">Internal</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <div className="space-y-1">
-          <Label className="text-slate-300" htmlFor="tag">Tag</Label>
-          <Input id="tag" value={local.tag || ''} onChange={(e) => set({ tag: e.target.value })} placeholder="Any" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-        </div>
+
+        {/** Tag filter removed by design */}
       </div>
-      <div className="mt-3 flex items-center justify-end gap-2">
-        <Button variant="outline" className="bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700" onClick={() => { setLocal({}); onChange({}); onApply(); }}>Reset</Button>
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        <Button
+          variant="outline"
+          className="bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700"
+          onClick={() => { setLocal({}); onChange({}); onApply(); }}
+        >
+          Reset
+        </Button>
         <Button className="bg-cyan-600 hover:bg-cyan-500" onClick={onApply}>Apply Filters</Button>
       </div>
     </div>
+  );
+}
+
+function Combobox({
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find((o) => o === value) || '';
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disabled}
+          role="combobox"
+          aria-expanded={open}
+          className="w-full justify-between bg-slate-800/60 border-slate-700 text-white"
+        >
+          <span className="truncate mr-2">{selected || placeholder || "Select"}</span>
+          {selected && (
+            <X
+              className="h-4 w-4 opacity-70 hover:opacity-100 mr-1"
+              onClick={(e) => { e.stopPropagation(); onChange(''); }}
+            />
+          )}
+          <ChevronsUpDown className="ml-auto h-4 w-4 opacity-60" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-slate-900 border-slate-700" align="start">
+        <Command className="bg-transparent text-slate-200">
+          <CommandInput placeholder="Search..." className="placeholder-slate-500" />
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup>
+            <CommandItem
+              key="__any__"
+              value=""
+              onSelect={() => { onChange(''); setOpen(false); }}
+              className="text-slate-300"
+            >
+              <Check className={cn("mr-2 h-4 w-4", value ? "opacity-0" : "opacity-100")} /> Any
+            </CommandItem>
+            {options.map((opt) => (
+              <CommandItem
+                key={opt}
+                value={opt}
+                onSelect={(cur) => { onChange(cur === value ? '' : cur); setOpen(false); }}
+                className="text-slate-300"
+              >
+                <Check className={cn("mr-2 h-4 w-4", value === opt ? "opacity-100" : "opacity-0")} />
+                <span className="truncate">{opt}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

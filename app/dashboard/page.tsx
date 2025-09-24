@@ -11,6 +11,8 @@ import { AssetCard } from '@/components/dashboard/AssetCard';
 import { UploadDialog } from '@/components/dashboard/UploadDialog';
 import { DeleteConfirm } from '@/components/dashboard/DeleteConfirm';
 import { FilterBar, type AssetFilters } from '@/components/dashboard/FilterBar';
+import { Input } from '@/components/ui/input';
+import { X, Search as SearchIcon } from 'lucide-react';
 
 export default function Dashboard() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -21,6 +23,7 @@ export default function Dashboard() {
   const [editingAsset, setEditingAsset] = useState<Asset | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [filters, setFilters] = useState<AssetFilters>({});
+  const [searchQ, setSearchQ] = useState<string>('');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -29,12 +32,11 @@ export default function Dashboard() {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (filters.q) params.set('q', filters.q);
+      if (searchQ) params.set('q', searchQ);
       if (filters.make) params.set('make', filters.make);
       if (filters.model) params.set('model', filters.model);
       if (filters.year) params.set('year', String(filters.year));
       if (filters.assetSource) params.set('assetSource', filters.assetSource);
-      if (filters.tag) params.set('tag', filters.tag);
       const qs = params.toString();
       const url = qs ? `/api/assets?${qs}` : '/api/assets';
       const res = await fetch(url, { cache: 'no-store' });
@@ -49,7 +51,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [filters, router, pathname, error]);
+  }, [filters, searchQ, router, pathname, error]);
 
   useEffect(() => {
     // Initialize filters from current URL on first mount
@@ -58,9 +60,9 @@ export default function Dashboard() {
     const model = searchParams.get('model') || undefined;
     const yearStr = searchParams.get('year') || undefined;
     const assetSource = searchParams.get('assetSource') || undefined;
-    const tag = searchParams.get('tag') || undefined;
+    const tag = undefined;
     const initial: AssetFilters = {
-      q,
+      q, // kept in filters for compatibility, but search uses searchQ state
       make,
       model,
       year: yearStr ? Number(yearStr) : undefined,
@@ -71,6 +73,7 @@ export default function Dashboard() {
     if (Object.values(initial).some((v) => v !== undefined)) {
       setFilters(initial);
     }
+    if (q) setSearchQ(q);
     // Always fetch on mount
     fetchAssets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -87,6 +90,44 @@ export default function Dashboard() {
 
       {/* Content */}
       <main className="px-4 sm:px-6 lg:px-8 py-6">
+        {/* Search Bar (independent) */}
+        <section role="search" aria-label="Search assets" className="mb-3 sm:mb-4">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-2 sm:p-3">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative flex-1">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                <Input
+                  value={searchQ}
+                  onChange={(e) => setSearchQ(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') fetchAssets(); }}
+                  placeholder="Search by name, make, model, tags"
+                  className="pl-9 bg-slate-800/60 border-slate-700 text-white placeholder-slate-500"
+                  aria-label="Search query"
+                />
+                {searchQ && (
+                  <button
+                    type="button"
+                    aria-label="Clear search"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                    onClick={() => { setSearchQ(''); fetchAssets(); }}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" className="bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700" onClick={() => { setSearchQ(''); fetchAssets(); }}>
+                  Clear
+                </Button>
+                <Button className="bg-cyan-600 hover:bg-cyan-500" onClick={fetchAssets}>
+                  <SearchIcon className="w-4 h-4 mr-2" /> Search
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Filters (separate from search) */}
         <FilterBar value={filters} onChange={(f) => { setFilters(f); }} onApply={fetchAssets} />
         {/* Empty/Loading States */}
         {loading ? (
