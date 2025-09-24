@@ -43,7 +43,22 @@ export async function POST(req: NextRequest) {
     const name = FormDataParser.getRequiredField(fields, 'name');
     const description = FormDataParser.getOptionalField(fields, 'description');
     const scaleOverride = FormDataParser.getOptionalField(fields, 'scale');
-    
+    // New optional fields
+    const assetSourceRaw = FormDataParser.getOptionalField(fields, 'assetSource');
+    const make = FormDataParser.getOptionalField(fields, 'make');
+    const model = FormDataParser.getOptionalField(fields, 'model');
+    const yearRaw = FormDataParser.getOptionalField(fields, 'year');
+    const variant = FormDataParser.getOptionalField(fields, 'variant');
+    const tagsRaw = FormDataParser.getOptionalField(fields, 'tags');
+    const metadataRaw = FormDataParser.getOptionalField(fields, 'metadata');
+    const creatorCreditsRaw = FormDataParser.getOptionalField(fields, 'creatorCredits');
+    // Or accept dot-notated individual creator credits
+    const ccText = FormDataParser.getOptionalField(fields, 'creatorCredits.text') || FormDataParser.getOptionalField(fields, 'creditsText');
+    const ccName = FormDataParser.getOptionalField(fields, 'creatorCredits.creatorName') || FormDataParser.getOptionalField(fields, 'creatorName');
+    const ccProfile = FormDataParser.getOptionalField(fields, 'creatorCredits.profileUrl') || FormDataParser.getOptionalField(fields, 'creatorProfileUrl');
+    const ccSourcePage = FormDataParser.getOptionalField(fields, 'creatorCredits.sourcePageUrl') || FormDataParser.getOptionalField(fields, 'sourcePageUrl');
+    const ccLicense = FormDataParser.getOptionalField(fields, 'creatorCredits.license') || FormDataParser.getOptionalField(fields, 'license');
+
     // Extract and validate required files
     const modelFile = FormDataParser.getRequiredFile(files, 'model');
     const thumbFile = FormDataParser.getRequiredFile(files, 'thumbnail');
@@ -174,6 +189,59 @@ export async function POST(req: NextRequest) {
 
     UploadProgressTracker.updateProgress(uploadId, 90, 'processing');
 
+    // Parse new fields
+    const assetSource = assetSourceRaw && ['sketchfab','turbosquid','internal','other'].includes(assetSourceRaw) ? (assetSourceRaw) : undefined;
+    const year = yearRaw ? Number(yearRaw) : undefined;
+    const creatorCredits = (() => {
+      if (creatorCreditsRaw) {
+        try {
+          const parsed = JSON.parse(String(creatorCreditsRaw));
+          return {
+            text: typeof parsed.text === 'string' ? parsed.text.trim() : undefined,
+            creatorName: typeof parsed.creatorName === 'string' ? parsed.creatorName.trim() : undefined,
+            profileUrl: typeof parsed.profileUrl === 'string' ? parsed.profileUrl.trim() : undefined,
+            sourcePageUrl: typeof parsed.sourcePageUrl === 'string' ? parsed.sourcePageUrl.trim() : undefined,
+            license: typeof parsed.license === 'string' ? parsed.license.trim() : undefined,
+          };
+        } catch {}
+      }
+      if (ccText || ccName || ccProfile || ccSourcePage || ccLicense) {
+        return {
+          text: ccText?.trim() || undefined,
+          creatorName: ccName?.trim() || undefined,
+          profileUrl: ccProfile?.trim() || undefined,
+          sourcePageUrl: ccSourcePage?.trim() || undefined,
+          license: ccLicense?.trim() || undefined,
+        };
+      }
+      return undefined;
+    })();
+    const tags: string[] | undefined = (() => {
+      if (!tagsRaw) return undefined;
+      try {
+        const arr = JSON.parse(String(tagsRaw));
+        return Array.isArray(arr) ? Array.from(new Set(arr.map((t) => String(t).trim()).filter(Boolean))) : undefined;
+      } catch {
+        return Array.from(new Set(String(tagsRaw).split(',').map((t) => t.trim()).filter(Boolean)));
+      }
+    })();
+    const metadata = (() => {
+      if (!metadataRaw) return undefined;
+      try {
+        const obj = JSON.parse(String(metadataRaw));
+        return obj && typeof obj === 'object' ? obj : undefined;
+      } catch {
+        return undefined;
+      }
+    })();
+
+    // Validation: if Sketchfab, require at least credits text
+    if (assetSource === 'sketchfab' && !(creatorCredits && creatorCredits.text)) {
+      const errorMsg = 'creatorCredits.text is required when assetSource is sketchfab';
+      UploadProgressTracker.setError(uploadId!, errorMsg);
+      return NextResponse.json({ error: errorMsg, uploadId }, { status: 400 });
+    }
+
     // Create asset record
     const asset = await Asset.create({
       name,
@@ -185,6 +253,14 @@ export async function POST(req: NextRequest) {
       format: validatedModel.extension as 'glb' | 'gltf',
       sizeBytes: modelUpload.bytes,
       scale: computedScale,
+      assetSource,
+      creatorCredits,
+      make: make?.trim() || undefined,
+      model: model?.trim() || undefined,
+      year: Number.isFinite(year as number) ? year : undefined,
+      variant: variant?.trim() || undefined,
+      tags,
+      metadata,
     });
 
     UploadProgressTracker.complete(uploadId);

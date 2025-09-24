@@ -18,6 +18,13 @@ async function getAssetAbsolute(baseUrl: string, id: string) {
     modelUrl: string;
     format: 'glb' | 'gltf';
     scale?: number;
+    assetSource?: 'sketchfab' | 'turbosquid' | 'internal' | 'other';
+    creatorCredits?: { text?: string; creatorName?: string; profileUrl?: string; sourcePageUrl?: string; license?: string };
+    make?: string;
+    model?: string;
+    year?: number;
+    variant?: string;
+    tags?: string[];
   } | null;
 }
 
@@ -52,6 +59,12 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_24px] shadow-cyan-400/50" />
             <h1 className="text-white text-xl font-semibold tracking-wide">{asset.name}</h1>
             <span className="text-xs text-slate-400 border border-slate-700 rounded px-1.5 py-0.5 uppercase">{asset.format}</span>
+            {asset.make && (
+              <span className="text-xs text-slate-400 border border-slate-700 rounded px-1.5 py-0.5">{asset.make}{asset.model ? ` • ${asset.model}` : ''}{asset.year ? ` • ${asset.year}` : ''}</span>
+            )}
+            {asset.assetSource && (
+              <span className="text-[10px] text-cyan-300 border border-cyan-700/50 rounded px-1 py-0.5 uppercase">{asset.assetSource}</span>
+            )}
           </div>
           <Link href="/dashboard" className="text-slate-300 hover:text-white border border-slate-700 bg-slate-800/70 hover:bg-slate-700 rounded px-3 py-1.5 text-sm">Back to Library</Link>
         </div>
@@ -71,6 +84,38 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
                 assetFormat={asset.format}
               />
             </Suspense>
+          </div>
+        </div>
+        {/* Credits and tags */}
+        <div className="max-w-7xl mx-auto mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2 space-y-2">
+            {asset.description && (
+              <div className="text-slate-300 text-sm border border-slate-800 rounded-lg p-3 bg-slate-900/60">{asset.description}</div>
+            )}
+            {asset.creatorCredits && (asset.creatorCredits.text || asset.creatorCredits.creatorName) && (
+              <div className="text-slate-300 text-sm border border-slate-800 rounded-lg p-3 bg-slate-900/60">
+                <div className="font-semibold text-slate-200 mb-1">Creator Credits</div>
+                {asset.creatorCredits.text && <div className="mb-1">{asset.creatorCredits.text}</div>}
+                <div className="text-xs text-slate-400 space-x-3">
+                  {asset.creatorCredits.creatorName && <span>By {asset.creatorCredits.creatorName}</span>}
+                  {asset.creatorCredits.profileUrl && <a href={asset.creatorCredits.profileUrl} target="_blank" className="underline">Profile</a>}
+                  {asset.creatorCredits.sourcePageUrl && <a href={asset.creatorCredits.sourcePageUrl} target="_blank" className="underline">Source</a>}
+                  {asset.creatorCredits.license && <span>License: {asset.creatorCredits.license}</span>}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="space-y-2">
+            {asset.tags && asset.tags.length > 0 && (
+              <div className="border border-slate-800 rounded-lg p-3 bg-slate-900/60">
+                <div className="text-xs text-slate-400 mb-2">Tags</div>
+                <div className="flex flex-wrap gap-2">
+                  {asset.tags.map((t) => (
+                    <span key={t} className="text-xs text-slate-300 border border-slate-700 rounded px-2 py-0.5">{t}</span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>
