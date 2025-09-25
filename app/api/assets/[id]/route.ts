@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Asset, { type IAsset, type ICuratorInfo, type CuratorMode } from '@/models/Asset';
+import Asset, { type IAsset } from '@/models/Asset';
+import Admin from '@/models/Admin';
+import type { Types } from 'mongoose';
+import { verifyAdmin } from '@/lib/auth';
 import { getStorageService } from '@/lib/enhanced-storage';
 
 export const runtime = 'nodejs';
@@ -30,7 +33,7 @@ export async function PATCH(
   try {
     await connectDB();
     const { id } = await params;
-    type PatchBody = Partial<IAsset> & { curator?: CuratorMode };
+    type PatchBody = Partial<IAsset>;
     const body = (await req.json().catch(() => ({}))) as PatchBody;
     const updates: Partial<IAsset> = {};
     if (typeof body.name === 'string') updates.name = String(body.name).trim();
@@ -44,13 +47,9 @@ export async function PATCH(
       updates.assetSource = body.assetSource;
     }
     if (body.creatorCredits && typeof body.creatorCredits === 'object') {
-      const cc = body.creatorCredits;
+      const cc = body.creatorCredits as { text?: string };
       updates.creatorCredits = {
         text: typeof cc.text === 'string' ? cc.text.trim() : undefined,
-        creatorName: typeof cc.creatorName === 'string' ? cc.creatorName.trim() : undefined,
-        profileUrl: typeof cc.profileUrl === 'string' ? cc.profileUrl.trim() : undefined,
-        sourcePageUrl: typeof cc.sourcePageUrl === 'string' ? cc.sourcePageUrl.trim() : undefined,
-        license: typeof cc.license === 'string' ? cc.license.trim() : undefined,
       };
     }
     if (typeof body.make === 'string') updates.make = body.make.trim() || undefined;
@@ -69,22 +68,19 @@ export async function PATCH(
       updates.metadata = body.metadata; // trust client; server schema enforces shape loosely
     }
 
-    // Optional curator update
-    const allowedModes = new Set<CuratorMode>(['self', 'proxy', 'automation', 'import']);
-    if (typeof body.curator === 'string' && allowedModes.has(body.curator)) {
-      updates.curatedBy = { mode: body.curator };
-      updates.curatedAt = new Date();
-    } else if (body.curatedBy && typeof body.curatedBy === 'object') {
-      const cb = body.curatedBy as ICuratorInfo;
-      if (!cb.mode || allowedModes.has(cb.mode as CuratorMode)) {
-        updates.curatedBy = {
-          mode: cb.mode,
-          name: cb.name,
-          email: cb.email,
-        };
-        updates.curatedAt = new Date();
-      }
+    // Stamp curator from session
+    const auth = await verifyAdmin();
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized: admin session required' }, { status: 401 });
     }
+    const adminDoc = await Admin.findById(auth.adminId).lean<{ _id: Types.ObjectId; fullname: string; email: string } | null>();
+    updates.curatedBy = {
+      mode: 'self',
+      adminId: adminDoc?._id,
+      name: adminDoc?.fullname,
+      email: adminDoc?.email,
+    };
+    updates.curatedAt = new Date();
 
     // Validation rule: if sketchfab source is set or remains sketchfab, ensure credits.text exists
     if (updates.assetSource === 'sketchfab' || updates.creatorCredits?.text) {

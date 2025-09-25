@@ -19,7 +19,7 @@ async function getAssetAbsolute(baseUrl: string, id: string) {
     format: 'glb' | 'gltf';
     scale?: number;
     assetSource?: 'sketchfab' | 'turbosquid' | 'internal' | 'other';
-    creatorCredits?: { text?: string; creatorName?: string; profileUrl?: string; sourcePageUrl?: string; license?: string };
+    creatorCredits?: { text?: string };
     make?: string;
     model?: string;
     year?: number;
@@ -92,16 +92,10 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             {asset.description && (
               <div className="text-slate-300 text-sm border border-slate-800 rounded-lg p-3 bg-slate-900/60">{asset.description}</div>
             )}
-            {asset.creatorCredits && (asset.creatorCredits.text || asset.creatorCredits.creatorName) && (
+            {asset.creatorCredits && asset.creatorCredits.text && (
               <div className="text-slate-300 text-sm border border-slate-800 rounded-lg p-3 bg-slate-900/60">
                 <div className="font-semibold text-slate-200 mb-1">Creator Credits</div>
-                {asset.creatorCredits.text && <div className="mb-1">{asset.creatorCredits.text}</div>}
-                <div className="text-xs text-slate-400 space-x-3">
-                  {asset.creatorCredits.creatorName && <span>By {asset.creatorCredits.creatorName}</span>}
-                  {asset.creatorCredits.profileUrl && <a href={asset.creatorCredits.profileUrl} target="_blank" className="underline">Profile</a>}
-                  {asset.creatorCredits.sourcePageUrl && <a href={asset.creatorCredits.sourcePageUrl} target="_blank" className="underline">Source</a>}
-                  {asset.creatorCredits.license && <span>License: {asset.creatorCredits.license}</span>}
-                </div>
+                <div className="mb-1">{asset.creatorCredits.text}</div>
               </div>
             )}
           </div>

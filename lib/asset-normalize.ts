@@ -74,13 +74,7 @@ export function normalizeAssetInput(body: Record<string, unknown>): {
   year?: number;
   variant?: string;
   assetSource?: 'sketchfab' | 'turbosquid' | 'internal' | 'other';
-  creatorCredits?: {
-    text?: string;
-    creatorName?: string;
-    profileUrl?: string;
-    sourcePageUrl?: string;
-    license?: string;
-  };
+  creatorCredits?: { text?: string };
   tags?: string[];
   metadata?: MetadataMap;
   scale?: number;
@@ -100,10 +94,6 @@ export function normalizeAssetInput(body: Record<string, unknown>): {
     const cc = body.creatorCredits as Record<string, unknown>;
     out.creatorCredits = {
       text: typeof cc.text === 'string' ? cc.text.trim() : undefined,
-      creatorName: typeof cc.creatorName === 'string' ? cc.creatorName.trim() : undefined,
-      profileUrl: typeof cc.profileUrl === 'string' ? cc.profileUrl.trim() : undefined,
-      sourcePageUrl: typeof cc.sourcePageUrl === 'string' ? cc.sourcePageUrl.trim() : undefined,
-      license: typeof cc.license === 'string' ? cc.license.trim() : undefined,
     };
   }
   if (body.scale !== undefined) {
@@ -122,13 +112,7 @@ export function normalizeAssetInput(body: Record<string, unknown>): {
     year?: number;
     variant?: string;
     assetSource?: 'sketchfab' | 'turbosquid' | 'internal' | 'other';
-    creatorCredits?: {
-      text?: string;
-      creatorName?: string;
-      profileUrl?: string;
-      sourcePageUrl?: string;
-      license?: string;
-    };
+    creatorCredits?: { text?: string };
     tags?: string[];
     metadata?: MetadataMap;
     scale?: number;

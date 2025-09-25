@@ -34,10 +34,6 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
   // New fields
   const [assetSource, setAssetSource] = useState<string>('');
   const [creatorText, setCreatorText] = useState<string>('');
-  const [creatorName, setCreatorName] = useState<string>('');
-  const [creatorProfileUrl, setCreatorProfileUrl] = useState<string>('');
-  const [creatorSourcePageUrl, setCreatorSourcePageUrl] = useState<string>('');
-  const [creatorLicense, setCreatorLicense] = useState<string>('');
   const [make, setMake] = useState<string>('');
   const [model, setModel] = useState<string>('');
   const [year, setYear] = useState<string>('');
@@ -111,12 +107,8 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
             scale: scaleOverride ? Number(scaleOverride) : undefined,
             assetSource: assetSource || undefined,
             curator: 'self',
-            creatorCredits: (creatorText || creatorName || creatorProfileUrl || creatorSourcePageUrl || creatorLicense) ? {
+            creatorCredits: (creatorText) ? {
               text: creatorText || undefined,
-              creatorName: creatorName || undefined,
-              profileUrl: creatorProfileUrl || undefined,
-              sourcePageUrl: creatorSourcePageUrl || undefined,
-              license: creatorLicense || undefined,
             } : undefined,
             make: make || undefined,
             model: model || undefined,
@@ -224,20 +216,14 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
           if (Object.keys(obj).length) fd.set('metadata', JSON.stringify(obj));
         }
         // Creator credits serialization
-        if (creatorText || creatorName || creatorProfileUrl || creatorSourcePageUrl || creatorLicense) {
+        if (creatorText) {
           fd.set('creatorCredits', JSON.stringify({
             text: creatorText || undefined,
-            creatorName: creatorName || undefined,
-            profileUrl: creatorProfileUrl || undefined,
-            sourcePageUrl: creatorSourcePageUrl || undefined,
-            license: creatorLicense || undefined,
           }));
         }
         if (modelFile) fd.set('model', modelFile);
         if (thumbFile) fd.set('thumbnail', thumbFile);
         fd.set('uploadId', newUploadId);
-        // Hidden curator indicator for the backend to associate session user
-        fd.set('curator', 'self');
         res = await fetch('/api/assets', { method: 'POST', body: fd });
       }
       let data: ApiResponse = {};
@@ -274,8 +260,6 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
 
   return (
     <form onSubmit={submit} className="py-5 px-2 sm:px-4 md:px-6 space-y-5">
-      {/* Hidden curator field for backend session binding */}
-      <input type="hidden" name="curator" value="self" />
       {error && (
         <Alert className="bg-red-500/10 border-red-500/20 text-red-400">
           <AlertDescription>{error}</AlertDescription>
@@ -314,14 +298,6 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
             fieldErrors={fieldErrors}
             creatorText={creatorText}
             setCreatorText={setCreatorText}
-            creatorName={creatorName}
-            setCreatorName={setCreatorName}
-            creatorProfileUrl={creatorProfileUrl}
-            setCreatorProfileUrl={setCreatorProfileUrl}
-            creatorSourcePageUrl={creatorSourcePageUrl}
-            setCreatorSourcePageUrl={setCreatorSourcePageUrl}
-            creatorLicense={creatorLicense}
-            setCreatorLicense={setCreatorLicense}
             modelFile={modelFile}
             setModelFile={setModelFile}
             thumbFile={thumbFile}

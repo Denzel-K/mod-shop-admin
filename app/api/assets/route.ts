@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Asset, { type IAsset } from '@/models/Asset';
+import Admin from '@/models/Admin';
+import type { Types } from 'mongoose';
+import { verifyAdmin } from '@/lib/auth';
 import { NodeIO } from '@gltf-transform/core';
 import { getStorageService } from '@/lib/enhanced-storage';
 import {
@@ -82,12 +85,8 @@ export async function POST(req: NextRequest) {
     const tagsRaw = FormDataParser.getOptionalField(fields, 'tags');
     const metadataRaw = FormDataParser.getOptionalField(fields, 'metadata');
     const creatorCreditsRaw = FormDataParser.getOptionalField(fields, 'creatorCredits');
-    // Or accept dot-notated individual creator credits
+    // Or accept dot-notated individual creator credits (text only)
     const ccText = FormDataParser.getOptionalField(fields, 'creatorCredits.text') || FormDataParser.getOptionalField(fields, 'creditsText');
-    const ccName = FormDataParser.getOptionalField(fields, 'creatorCredits.creatorName') || FormDataParser.getOptionalField(fields, 'creatorName');
-    const ccProfile = FormDataParser.getOptionalField(fields, 'creatorCredits.profileUrl') || FormDataParser.getOptionalField(fields, 'creatorProfileUrl');
-    const ccSourcePage = FormDataParser.getOptionalField(fields, 'creatorCredits.sourcePageUrl') || FormDataParser.getOptionalField(fields, 'sourcePageUrl');
-    const ccLicense = FormDataParser.getOptionalField(fields, 'creatorCredits.license') || FormDataParser.getOptionalField(fields, 'license');
 
     // Extract and validate required files
     const modelFile = FormDataParser.getRequiredFile(files, 'model');
@@ -235,14 +234,8 @@ export async function POST(req: NextRequest) {
         if (creatorCreditsRaw) {
           try { return JSON.parse(String(creatorCreditsRaw)); } catch { /* fallthrough */ }
         }
-        if (ccText || ccName || ccProfile || ccSourcePage || ccLicense) {
-          return {
-            text: ccText,
-            creatorName: ccName,
-            profileUrl: ccProfile,
-            sourcePageUrl: ccSourcePage,
-            license: ccLicense,
-          };
+        if (ccText) {
+          return { text: ccText };
         }
         return undefined;
       })(),
@@ -255,10 +248,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: errorMsg, uploadId }, { status: 400 });
     }
 
-    // Curator info (optional)
-    const curatorModeRaw = FormDataParser.getOptionalField(fields, 'curator');
-    const allowedModes = new Set(['self', 'proxy', 'automation', 'import']);
-    const curatorMode = curatorModeRaw && allowedModes.has(curatorModeRaw) ? (curatorModeRaw as 'self'|'proxy'|'automation'|'import') : undefined;
+    // Curator info from session
+    const auth = await verifyAdmin();
+    if (!auth) {
+      const errorMsg = 'Unauthorized: admin session required';
+      UploadProgressTracker.setError(uploadId!, errorMsg);
+      return NextResponse.json({ error: errorMsg, uploadId }, { status: 401 });
+    }
+    const adminDoc = await Admin.findById(auth.adminId).lean<{ _id: Types.ObjectId; fullname: string; email: string } | null>();
 
     // Create asset record
     const asset = await Asset.create({
@@ -279,7 +276,13 @@ export async function POST(req: NextRequest) {
       variant: normalized.variant,
       tags: normalized.tags,
       metadata: normalized.metadata,
-      ...(curatorMode ? { curatedBy: { mode: curatorMode }, curatedAt: new Date() } : {}),
+      curatedBy: {
+        mode: 'self',
+        adminId: adminDoc?._id,
+        name: adminDoc?.fullname,
+        email: adminDoc?.email,
+      },
+      curatedAt: new Date(),
     });
 
     UploadProgressTracker.complete(uploadId);

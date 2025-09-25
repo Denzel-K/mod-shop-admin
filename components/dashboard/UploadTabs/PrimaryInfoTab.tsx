@@ -22,14 +22,6 @@ export type PrimaryInfoProps = {
   fieldErrors: Record<string, string>;
   creatorText: string;
   setCreatorText: (v: string) => void;
-  creatorName: string;
-  setCreatorName: (v: string) => void;
-  creatorProfileUrl: string;
-  setCreatorProfileUrl: (v: string) => void;
-  creatorSourcePageUrl: string;
-  setCreatorSourcePageUrl: (v: string) => void;
-  creatorLicense: string;
-  setCreatorLicense: (v: string) => void;
   // Files
   modelFile: File | null;
   setModelFile: (f: File | null) => void;
@@ -58,14 +50,6 @@ export function PrimaryInfoTab(props: PrimaryInfoProps) {
     fieldErrors,
     creatorText,
     setCreatorText,
-    creatorName,
-    setCreatorName,
-    creatorProfileUrl,
-    setCreatorProfileUrl,
-    creatorSourcePageUrl,
-    setCreatorSourcePageUrl,
-    creatorLicense,
-    setCreatorLicense,
     modelFile,
     setModelFile,
     thumbFile,
@@ -134,28 +118,12 @@ export function PrimaryInfoTab(props: PrimaryInfoProps) {
           <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short description" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
         </div>
         {/* Creator Credits */}
-        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="md:col-span-2 grid grid-cols-1 gap-5">
           <div className="space-y-2">
             <Label htmlFor="creatorText" className="text-slate-300">Creator Credits Text</Label>
             <Input id="creatorText" value={creatorText} onChange={(e) => setCreatorText(e.target.value)} placeholder="e.g. Model by Jane Doe on Sketchfab" className={`bg-slate-800/60 border ${sketchfabValid ? 'border-slate-700' : 'border-red-600'} text-white placeholder-slate-500`} />
             {!sketchfabValid && <p className="text-xs text-red-400">Creator credit text is required for Sketchfab assets.</p>}
             {fieldErrors.creatorText && <p className="text-xs text-red-400">{fieldErrors.creatorText}</p>}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="creatorName" className="text-slate-300">Creator Name</Label>
-            <Input id="creatorName" value={creatorName} onChange={(e) => setCreatorName(e.target.value)} placeholder="e.g. Jane Doe" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="creatorProfileUrl" className="text-slate-300">Creator Profile URL</Label>
-            <Input id="creatorProfileUrl" value={creatorProfileUrl} onChange={(e) => setCreatorProfileUrl(e.target.value)} placeholder="https://sketchfab.com/jane-doe" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="creatorSourcePageUrl" className="text-slate-300">Source Page URL</Label>
-            <Input id="creatorSourcePageUrl" value={creatorSourcePageUrl} onChange={(e) => setCreatorSourcePageUrl(e.target.value)} placeholder="https://sketchfab.com/3d-models/...." className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="creatorLicense" className="text-slate-300">License</Label>
-            <Input id="creatorLicense" value={creatorLicense} onChange={(e) => setCreatorLicense(e.target.value)} placeholder="e.g. CC BY 4.0" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
           </div>
         </div>
       </div>

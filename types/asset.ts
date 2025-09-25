@@ -7,10 +7,12 @@ export type Asset = {
   format: 'glb' | 'gltf';
   scale?: number;
   assetSource?: 'sketchfab' | 'turbosquid' | 'internal' | 'other';
-  creatorCredits?: { text?: string; creatorName?: string; profileUrl?: string; sourcePageUrl?: string; license?: string };
+  creatorCredits?: { text?: string };
   make?: string;
   model?: string;
   year?: number;
   variant?: string;
   tags?: string[];
+  curatedBy?: { mode?: 'self' | 'proxy' | 'automation' | 'import'; adminId?: string; name?: string; email?: string };
+  curatedAt?: string | Date;
 }

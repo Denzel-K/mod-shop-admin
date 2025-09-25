@@ -5,10 +5,6 @@ export type AssetSource = 'sketchfab' | 'turbosquid' | 'internal' | 'other';
 
 export interface ICreatorCredits {
   text?: string;
-  creatorName?: string;
-  profileUrl?: string;
-  sourcePageUrl?: string;
-  license?: string;
 }
 
 export type CuratorMode = 'self' | 'proxy' | 'automation' | 'import';
@@ -61,10 +57,6 @@ export interface IAsset {
 const CreditsSchema = new Schema<ICreatorCredits>(
   {
     text: { type: String, trim: true },
-    creatorName: { type: String, trim: true },
-    profileUrl: { type: String, trim: true },
-    sourcePageUrl: { type: String, trim: true },
-    license: { type: String, trim: true },
   },
   { _id: false }
 );
