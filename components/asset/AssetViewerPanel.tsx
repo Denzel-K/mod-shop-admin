@@ -4,21 +4,11 @@ import { useMemo, useState } from "react";
 import ModelViewer from "@/components/viewer/ModelViewer";
 import ScaleEditor from "@/components/asset/ScaleEditor";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 
-const ENV_PRESETS = [
-  "city",
-  "studio",
-  "sunset",
-  "dawn",
-  "warehouse",
-  "apartment",
-  "night",
-  "forest",
-  "park",
-  "lobby",
-] as const;
-
-type EnvPreset = (typeof ENV_PRESETS)[number];
+type EnvPreset = "city" | "studio" | "sunset" | "dawn" | "warehouse" | "apartment" | "night" | "forest" | "park" | "lobby";
 type PlatformStyle = "circle" | "rounded" | "grid";
 type GroundVariant = "plain" | "concrete" | "asphalt" | "carpet" | "studio";
 
@@ -36,11 +26,12 @@ export default function AssetViewerPanel({
   assetFormat?: string;
 }) {
   const [envPreset, setEnvPreset] = useState<EnvPreset>("city");
+  const [hdriBackground, setHdriBackground] = useState<boolean>(false);
+  const [envIntensity, setEnvIntensity] = useState<number>(1.25);
   const [platformStyle, setPlatformStyle] = useState<PlatformStyle>("circle");
   const [groundVariant, setGroundVariant] = useState<GroundVariant>("plain");
   const [autoRotateEnabled, setAutoRotateEnabled] = useState<boolean>(true);
   const [autoRotateSpeed, setAutoRotateSpeed] = useState<number>(0.52);
-  const [hdriBackground, setHdriBackground] = useState<boolean>(false);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
   const isMobile = useMemo(() => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 767px)").matches, []);
 
@@ -58,9 +49,10 @@ export default function AssetViewerPanel({
             url={url}
             scale={initialScale}
             envPreset={envPreset}
+            hdriBackground={hdriBackground}
+            envIntensity={envIntensity}
             platformStyle={platformStyle}
             groundVariant={groundVariant}
-            hdriBackground={hdriBackground}
             autoRotateEnabled={autoRotateEnabled}
             autoRotateSpeed={autoRotateSpeed}
           />
@@ -90,13 +82,18 @@ export default function AssetViewerPanel({
               <div
                 className={cn(
                   "absolute right-0 top-0 h-full w-[85%] max-w-sm bg-slate-900 border-l border-slate-800 shadow-xl",
-                  "transition-transform duration-300",
+                  // Cap height and enable smooth, contained scrolling on all sizes
+                  "max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth",
                   sidebarOpen ? "translate-x-0" : "translate-x-full"
                 )}
               >
                 <SidebarContent
                   envPreset={envPreset}
                   setEnvPreset={setEnvPreset}
+                  hdriBackground={hdriBackground}
+                  setHdriBackground={setHdriBackground}
+                  envIntensity={envIntensity}
+                  setEnvIntensity={setEnvIntensity}
                   platformStyle={platformStyle}
                   setPlatformStyle={setPlatformStyle}
                   groundVariant={groundVariant}
@@ -105,8 +102,6 @@ export default function AssetViewerPanel({
                   setAutoRotateEnabled={setAutoRotateEnabled}
                   autoRotateSpeed={autoRotateSpeed}
                   setAutoRotateSpeed={setAutoRotateSpeed}
-                  hdriBackground={hdriBackground}
-                  setHdriBackground={setHdriBackground}
                   assetId={assetId}
                   initialScale={initialScale}
                   assetName={assetName}
@@ -131,7 +126,9 @@ export default function AssetViewerPanel({
 
         {/* Right: Desktop sidebar */}
         <div className={cn(
-          "hidden md:block h-full border-l border-slate-800 bg-slate-900 overflow-y-auto",
+          "hidden md:block h-full border-l border-slate-800 bg-slate-900",
+          // Cap height and enable contained scrolling even on large screens
+          "max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth",
           "transition-[width] duration-300",
           sidebarOpen ? "w-[320px]" : "w-0"
         )}
@@ -140,6 +137,10 @@ export default function AssetViewerPanel({
             <SidebarContent
               envPreset={envPreset}
               setEnvPreset={setEnvPreset}
+              hdriBackground={hdriBackground}
+              setHdriBackground={setHdriBackground}
+              envIntensity={envIntensity}
+              setEnvIntensity={setEnvIntensity}
               platformStyle={platformStyle}
               setPlatformStyle={setPlatformStyle}
               groundVariant={groundVariant}
@@ -148,8 +149,6 @@ export default function AssetViewerPanel({
               setAutoRotateEnabled={setAutoRotateEnabled}
               autoRotateSpeed={autoRotateSpeed}
               setAutoRotateSpeed={setAutoRotateSpeed}
-              hdriBackground={hdriBackground}
-              setHdriBackground={setHdriBackground}
               assetId={assetId}
               initialScale={initialScale}
               assetName={assetName}
@@ -165,6 +164,10 @@ export default function AssetViewerPanel({
 function SidebarContent({
   envPreset,
   setEnvPreset,
+  hdriBackground,
+  setHdriBackground,
+  envIntensity,
+  setEnvIntensity,
   platformStyle,
   setPlatformStyle,
   groundVariant,
@@ -173,8 +176,6 @@ function SidebarContent({
   setAutoRotateEnabled,
   autoRotateSpeed,
   setAutoRotateSpeed,
-  hdriBackground,
-  setHdriBackground,
   assetId,
   initialScale,
   assetName,
@@ -182,6 +183,10 @@ function SidebarContent({
 }: {
   envPreset: EnvPreset;
   setEnvPreset: (v: EnvPreset) => void;
+  hdriBackground: boolean;
+  setHdriBackground: (v: boolean) => void;
+  envIntensity: number;
+  setEnvIntensity: (v: number) => void;
   platformStyle: PlatformStyle;
   setPlatformStyle: (v: PlatformStyle) => void;
   groundVariant: GroundVariant;
@@ -190,8 +195,6 @@ function SidebarContent({
   setAutoRotateEnabled: (v: boolean) => void;
   autoRotateSpeed: number;
   setAutoRotateSpeed: (v: number) => void;
-  hdriBackground: boolean;
-  setHdriBackground: (v: boolean) => void;
   assetId: string;
   initialScale: number;
   assetName?: string;
@@ -211,20 +214,39 @@ function SidebarContent({
         {assetFormat && <span className="uppercase border border-slate-700 rounded px-1 py-0.5">{assetFormat}</span>}
       </div>
 
-      {/* HDRI selector */}
-      <div className="space-y-2">
-        <label className="text-sm text-slate-300">HDRI preset</label>
-        <select
-          value={envPreset}
-          onChange={(e) => setEnvPreset(e.target.value as EnvPreset)}
-          className="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded px-3 py-2 outline-none focus:ring-2 ring-cyan-500"
-        >
-          {ENV_PRESETS.map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
+      {/* Environment */}
+      <div className="space-y-3">
+        <div className="text-sm text-slate-300">Environment</div>
+        <div className="grid gap-3">
+          <div className="grid gap-1">
+            <label className="text-xs text-slate-400">HDRI preset</label>
+            <Select value={envPreset} onValueChange={(v) => setEnvPreset(v as EnvPreset)}>
+              <SelectTrigger className="w-full bg-slate-800 text-slate-200 border border-slate-700">
+                <SelectValue placeholder="Select preset" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 text-slate-100 border-slate-700">
+                {(['city','studio','sunset','dawn','warehouse','apartment','night','forest','park','lobby'] as EnvPreset[]).map((p) => (
+                  <SelectItem key={p} value={p}>{p}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-slate-400">Use as background</span>
+            <Switch checked={hdriBackground} onCheckedChange={setHdriBackground} />
+          </div>
+          <div className="grid gap-1">
+            <label className="text-xs text-slate-400">Environment intensity</label>
+            <Slider
+              value={[envIntensity]}
+              onValueChange={(v) => setEnvIntensity(v[0] ?? envIntensity)}
+              min={0}
+              max={2}
+              step={0.01}
+            />
+            <div className="text-[10px] text-slate-500">{envIntensity.toFixed(2)}</div>
+          </div>
+        </div>
       </div>
 
       {/* Platform style */}
@@ -255,58 +277,35 @@ function SidebarContent({
       {/* Ground variant */}
       <div className="space-y-2">
         <label className="text-sm text-slate-300">Ground variant</label>
-        <select
-          value={groundVariant}
-          onChange={(e) => setGroundVariant(e.target.value as GroundVariant)}
-          className="w-full bg-slate-800 text-slate-200 border border-slate-700 rounded px-3 py-2 outline-none focus:ring-2 ring-cyan-500"
-        >
-          {(["plain", "concrete", "asphalt", "carpet", "studio"] as GroundVariant[]).map((p) => (
-            <option key={p} value={p}>
-              {p}
-            </option>
-          ))}
-        </select>
+        <Select value={groundVariant} onValueChange={(v) => setGroundVariant(v as GroundVariant)}>
+          <SelectTrigger className="w-full bg-slate-800 text-slate-200 border border-slate-700">
+            <SelectValue placeholder="Select ground" />
+          </SelectTrigger>
+          <SelectContent className="bg-slate-900 text-slate-100 border-slate-700">
+            {(["plain", "concrete", "asphalt", "carpet", "studio"] as GroundVariant[]).map((p) => (
+              <SelectItem key={p} value={p}>{p}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* HDRI options */}
-      <div className="space-y-2">
-        <label className="text-sm text-slate-300">HDRI options</label>
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-slate-400">Use HDRI as background</span>
-          <label className="inline-flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={hdriBackground}
-              onChange={(e) => setHdriBackground(e.target.checked)}
-              className="accent-cyan-500"
-            />
-          </label>
-        </div>
-      </div>
 
       {/* Auto rotate speed */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-sm text-slate-300">Auto-rotate</label>
-          <label className="inline-flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={autoRotateEnabled}
-              onChange={(e) => setAutoRotateEnabled(e.target.checked)}
-              className="accent-cyan-500"
-            />
+          <div className="inline-flex items-center gap-2 cursor-pointer">
+            <Switch checked={autoRotateEnabled} onCheckedChange={setAutoRotateEnabled} />
             <span className="text-xs text-slate-400">{autoRotateEnabled ? 'On' : 'Off'}</span>
-          </label>
+          </div>
         </div>
         <label className="text-sm text-slate-300">Speed</label>
-        <input
-          type="range"
+        <Slider
+          value={[autoRotateSpeed]}
+          onValueChange={(v) => setAutoRotateSpeed(v[0] ?? autoRotateSpeed)}
           min={0}
           max={30}
           step={0.02}
-          value={autoRotateSpeed}
-          onChange={(e) => setAutoRotateSpeed(parseFloat(e.target.value))}
-          className="w-full disabled:opacity-50"
           disabled={!autoRotateEnabled}
         />
         <div className="text-xs text-slate-400">{autoRotateSpeed.toFixed(2)} (0–30)</div>

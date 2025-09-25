@@ -54,7 +54,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
     <div className="min-h-screen bg-slate-950 text-slate-200">
       {/* Top bar */}
       <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-xl">
-        <div className="px-6 py-4 flex items-center justify-between">
+        <div className="px-6 py-4 flex items-center justify-between relative">
           <div className="flex items-center gap-3">
             <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_24px] shadow-cyan-400/50" />
             <h1 className="text-white text-xl font-semibold tracking-wide">{asset.name}</h1>
@@ -64,6 +64,14 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             )}
             {asset.assetSource && (
               <span className="text-[10px] text-cyan-300 border border-cyan-700/50 rounded px-1 py-0.5 uppercase">{asset.assetSource}</span>
+            )}
+            {asset.creatorCredits?.text && (
+              <details className="ml-2 cursor-pointer">
+                <summary className="list-none text-xs text-slate-300 border border-slate-700 rounded px-1.5 py-0.5 hover:bg-slate-800/50">Credits</summary>
+                <div className="absolute mt-2 w-[min(560px,90vw)] p-3 bg-slate-900/95 text-slate-200 border border-slate-700 rounded shadow-xl backdrop-blur supports-[backdrop-filter]:bg-slate-900/70">
+                  <div className="text-xs leading-relaxed whitespace-pre-wrap">{asset.creatorCredits.text}</div>
+                </div>
+              </details>
             )}
           </div>
           <Link href="/dashboard" className="text-slate-300 hover:text-white border border-slate-700 bg-slate-800/70 hover:bg-slate-700 rounded px-3 py-1.5 text-sm">Back to Library</Link>
@@ -86,17 +94,11 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             </Suspense>
           </div>
         </div>
-        {/* Credits and tags */}
+        {/* Tags */}
         <div className="max-w-7xl mx-auto mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2 space-y-2">
             {asset.description && (
               <div className="text-slate-300 text-sm border border-slate-800 rounded-lg p-3 bg-slate-900/60">{asset.description}</div>
-            )}
-            {asset.creatorCredits && asset.creatorCredits.text && (
-              <div className="text-slate-300 text-sm border border-slate-800 rounded-lg p-3 bg-slate-900/60">
-                <div className="font-semibold text-slate-200 mb-1">Creator Credits</div>
-                <div className="mb-1">{asset.creatorCredits.text}</div>
-              </div>
             )}
           </div>
           <div className="space-y-2">

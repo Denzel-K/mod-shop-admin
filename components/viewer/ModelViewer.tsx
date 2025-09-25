@@ -1,9 +1,10 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Bounds, useGLTF, Environment, Html, ContactShadows, Grid, useProgress, MeshReflectorMaterial } from '@react-three/drei';
+import { OrbitControls, Bounds, useGLTF, Html, ContactShadows, Grid, useProgress, MeshReflectorMaterial, Sky, Lightformer, Environment } from '@react-three/drei';
 import { Suspense, useMemo, useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { useThree, useFrame } from '@react-three/fiber';
 
 type EnvMapMat = THREE.Material & { envMapIntensity?: number };
 
@@ -39,7 +40,7 @@ function CarModel({ url, scale = 0.01, envMapIntensity = 1.0 }: { url: string; s
   }, [gltf.scene, computedScale]);
 
   return (
-    <group position-y={yOffset}>
+    <group position={[0, yOffset, 0]}>
       <primitive object={gltf.scene} scale={computedScale} />
     </group>
   );
@@ -76,21 +77,23 @@ type GroundVariant = 'plain' | 'concrete' | 'asphalt' | 'carpet' | 'studio';
 function Scene({
   url,
   scale,
-  envPreset,
   platformStyle,
   groundVariant,
-  hdriBackground,
   envMapIntensity,
+  envPreset,
+  hdriBackground,
+  envIntensity,
   autoRotateEnabled,
   autoRotateSpeed,
 }: {
   url: string;
   scale?: number;
-  envPreset: EnvPreset;
   platformStyle: PlatformStyle;
   groundVariant: GroundVariant;
-  hdriBackground: boolean;
   envMapIntensity: number;
+  envPreset: EnvPreset;
+  hdriBackground: boolean;
+  envIntensity: number;
   autoRotateEnabled: boolean;
   autoRotateSpeed: number;
 }) {
@@ -99,17 +102,23 @@ function Scene({
   const materialProps = useMemo(() => {
     switch (groundVariant) {
       case 'concrete':
-        return { color: '#1a1a1a', roughness: 0.95, metalness: 0.0 } as THREE.MeshStandardMaterialParameters;
+        return { color: '#2a2f36', roughness: 0.9, metalness: 0.05 } as THREE.MeshStandardMaterialParameters;
       case 'asphalt':
-        return { color: '#0f0f0f', roughness: 0.98, metalness: 0.0 };
+        return { color: '#24282e', roughness: 0.94, metalness: 0.03 };
       case 'carpet':
-        return { color: '#121212', roughness: 1.0, metalness: 0.0 };
+        return { color: '#2b2f36', roughness: 0.96, metalness: 0.02 };
       case 'studio':
-        return { color: '#101010', roughness: 0.6, metalness: 0.2 };
+        return { color: '#1a1f24', roughness: 0.55, metalness: 0.22 };
       default:
-        return { color: '#111111', roughness: 0.9, metalness: 0.2 };
+        return { color: '#1f2937', roughness: 0.88, metalness: 0.18 };
     }
   }, [groundVariant]);
+
+  const ambientIntensity = useMemo(() => {
+    // Drive overall scene brightness from envIntensity without relying on Environment.intensity
+    // Keeps values within a sensible range
+    return Math.min(0.2 + 0.4 * envIntensity, 1.0);
+  }, [envIntensity]);
 
   function RoundedRect({ width = 16, height = 10, radius = 1 }: { width?: number; height?: number; radius?: number }) {
     const shape = useMemo(() => {
@@ -137,22 +146,23 @@ function Scene({
 
   return (
     <>
-      {/* Black background */}
-      <color attach="background" args={["#000000"]} />
+      {/* Background and subtle depth fog */}
+      <color attach="background" args={[hdriBackground ? '#05070d' : '#05070d']} />
+      <fog attach="fog" args={[ '#0b1220', 30, 90 ]} />
 
-      {/* Lighting: soft ambient + a couple of point lights */}
-      <ambientLight intensity={0.35} />
-      <pointLight position={[6, 6, 6]} intensity={1.2} castShadow distance={30} decay={2} />
+      {/* Lighting: ambient + a couple of point lights */}
+      <ambientLight intensity={ambientIntensity} />
+      <pointLight position={[6, 6, 6]} intensity={0.9} castShadow distance={30} decay={2} />
       <pointLight position={[-6, 3, -4]} intensity={0.6} distance={25} decay={2} />
-      {/* Gentle rim light */}
-      <directionalLight position={[-5, 8, 2]} intensity={0.5} castShadow shadow-mapSize-width={2048} shadow-mapSize-height={2048} />
+      {/* Gentle rim light with shadows */}
+      <directionalLight position={[-5, 8, 2]} intensity={0.7} castShadow />
 
       <Suspense fallback={<Loader />}>
         <Bounds fit clip observe margin={1.2}>
           <CarModel url={url} scale={scale} envMapIntensity={envMapIntensity} />
         </Bounds>
-        {/* Reflections without affecting background */}
-        <Environment preset={envPreset} background={hdriBackground} blur={hdriBackground ? 0 : 0.25} />
+        {/* Capability-checked environment: HDRI preset when supported, fallback otherwise, with slow rotation */}
+        <SafeEnvironment preset={envPreset} background={hdriBackground} intensity={envIntensity} rotate />
         {/* Floor / platform variants */}
         <group ref={platformRef}>
           {platformStyle === 'circle' && (
@@ -179,12 +189,12 @@ function Scene({
                 resolution={1024}
                 mixBlur={1}
                 mixStrength={6}
-                roughness={0.4}
+                roughness={0.35}
                 depthScale={0.5}
                 minDepthThreshold={0.4}
                 maxDepthThreshold={1.4}
-                color="#0f0f10"
-                metalness={0.4}
+                color="#1a1f24"
+                metalness={0.35}
               />
             </mesh>
           )}
@@ -211,34 +221,47 @@ function Scene({
 export default function ModelViewer({
   url,
   scale,
-  envPreset = 'city',
   platformStyle = 'circle',
   groundVariant = 'plain',
+  envPreset = 'city',
   hdriBackground = false,
+  envIntensity = 1.25,
   envMapIntensity = 1.6,
   autoRotateEnabled = true,
   autoRotateSpeed = 0.52,
 }: {
   url: string;
   scale?: number;
-  envPreset?: EnvPreset;
   platformStyle?: PlatformStyle;
   groundVariant?: GroundVariant;
+  envPreset?: EnvPreset;
   hdriBackground?: boolean;
+  envIntensity?: number;
   envMapIntensity?: number;
   autoRotateEnabled?: boolean;
   autoRotateSpeed?: number;
 }) {
   return (
     <div className="relative w-full h-full">
-      <Canvas camera={{ position: [2.5, 1.6, 4.0], fov: 50 }} shadows>
+      <Canvas
+        camera={{ position: [2.5, 1.6, 4.0], fov: 50 }}
+        dpr={[1, 2]}
+        shadows
+        gl={{
+          powerPreference: 'high-performance',
+          antialias: true,
+          alpha: false,
+          preserveDrawingBuffer: false,
+        }}
+      >
         <Scene
           url={url}
           scale={scale}
-          envPreset={envPreset}
           platformStyle={platformStyle}
           groundVariant={groundVariant}
+          envPreset={envPreset}
           hdriBackground={hdriBackground}
+          envIntensity={envIntensity}
           envMapIntensity={envMapIntensity}
           autoRotateEnabled={autoRotateEnabled}
           autoRotateSpeed={autoRotateSpeed}
@@ -248,5 +271,41 @@ export default function ModelViewer({
   );
 }
 
-//
+// Capability-checked environment: HDRI presets when supported, fallback otherwise
+function SafeEnvironment({ preset, background, intensity, rotate }: { preset: EnvPreset; background: boolean; intensity: number; rotate?: boolean }) {
+  const { gl, scene } = useThree();
+  const groupRef = useRef<THREE.Group>(null);
 
+  useFrame(() => {
+    if (!rotate) return;
+    if (groupRef.current) groupRef.current.rotation.y += 0.002; // gentle, subtle rotation
+  });
+
+  const isWebGL2 = gl.capabilities.isWebGL2;
+  const ctx = gl.getContext();
+  const supportsFloat = !!ctx.getExtension('OES_texture_float');
+  const supportsFloatLinear = !!ctx.getExtension('OES_texture_float_linear');
+  const supportsHDR = isWebGL2 || (supportsFloat && supportsFloatLinear);
+
+  if (!supportsHDR) {
+    // Fallback: physically-correct sky + studio lightformers
+    scene.background = background ? new THREE.Color('#000000') : scene.background;
+    return (
+      <group ref={groupRef}>
+        <Sky distance={450000} sunPosition={[2, 2, 1]} inclination={0.52} azimuth={0.18} mieCoefficient={0.01} mieDirectionalG={0.9} rayleigh={1.0} turbidity={2} />
+        <ambientLight intensity={0.45 * intensity} />
+        <group position={[0, 5, 0]}>
+          <Lightformer intensity={1.6 * intensity} color={0xffffff} form="rect" position={[0, 2, 10]} scale={[10, 5, 1]} />
+          <Lightformer intensity={1.0 * intensity} color={0xffffff} form="rect" position={[5, 3, -8]} rotation={[0, Math.PI / 4, 0]} scale={[6, 3, 1]} />
+          <Lightformer intensity={1.0 * intensity} color={0xffffff} form="rect" position={[-5, 3, -8]} rotation={[0, -Math.PI / 4, 0]} scale={[6, 3, 1]} />
+        </group>
+      </group>
+    );
+  }
+
+  return (
+    <group ref={groupRef}>
+      <Environment preset={preset} background={background} blur={background ? 0 : 0.2} />
+    </group>
+  );
+}
