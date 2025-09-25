@@ -1,32 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import connectDB from '@/lib/db';
 import Admin from '@/models/Admin';
+import Invitation from '@/models/Invitation';
+import { verifyAdmin } from '@/lib/auth';
+import { sendInvitationEmail } from '@/lib/email';
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const { fullname, email, password } = await request.json();
-
-    // Validate required fields
-    if (!fullname || !email || !password) {
-      return NextResponse.json(
-        { error: 'Full name, email, and password are required' },
-        { status: 400 }
-      );
+    // Require inviter authentication
+    const auth = await verifyAdmin();
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Validate password strength
-    if (password.length < 8) {
+    const { fullname, email } = await request.json();
+
+    // Validate required fields
+    if (!fullname || !email) {
       return NextResponse.json(
-        { error: 'Password must be at least 8 characters long' },
+        { error: 'Full name and email are required' },
         { status: 400 }
       );
     }
 
     // Check if admin already exists
-    const existingAdmin = await Admin.findOne({ email: email.toLowerCase() });
+    const existingAdmin = await Admin.findOne({ email: email.toLowerCase().trim() });
     if (existingAdmin) {
       return NextResponse.json(
         { error: 'Admin with this email already exists' },
@@ -34,56 +35,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Upsert invitation (if a pending one exists, refresh token and expiry)
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    // Create new admin
-    const newAdmin = new Admin({
-      fullname: fullname.trim(),
-      email: email.toLowerCase().trim(),
-      password: hashedPassword,
-    });
+    const invitation = await Invitation.findOneAndUpdate(
+      { email: email.toLowerCase().trim(), acceptedAt: { $exists: false } },
+      {
+        email: email.toLowerCase().trim(),
+        fullname: fullname.trim(),
+        token,
+        expiresAt,
+        invitedBy: auth.adminId,
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
-    await newAdmin.save();
+    try {
+      await sendInvitationEmail(invitation.email, invitation.fullname, invitation.token);
+    } catch (emailError) {
+      console.error('Failed to send invitation email:', emailError);
+      // Do not delete invitation; allow re-send later
+      return NextResponse.json(
+        { error: 'Failed to send invitation email. Please try again later.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       {
-        message: 'Admin registered successfully',
-        admin: {
-          id: newAdmin._id,
-          fullname: newAdmin.fullname,
-          email: newAdmin.email,
-          createdAt: newAdmin.createdAt,
+        message: 'Invitation sent successfully',
+        invitation: {
+          id: invitation._id,
+          email: invitation.email,
+          fullname: invitation.fullname,
+          expiresAt: invitation.expiresAt,
         },
       },
       { status: 201 }
     );
   } catch (error: unknown) {
-    console.error('Registration error:', error);
-
-    // Handle mongoose validation errors
-    if (error instanceof Error && 'name' in error && error.name === 'ValidationError') {
-      const mongooseError = error as Error & { 
-        errors: Record<string, { message: string }> 
-      };
-      const validationErrors = Object.values(mongooseError.errors).map(
-        (err: { message: string }) => err.message
-      );
-      return NextResponse.json(
-        { error: 'Validation failed', details: validationErrors },
-        { status: 400 }
-      );
-    }
-
-    // Handle duplicate key error
-    if (error && typeof error === 'object' && 'code' in error && error.code === 11000) {
-      return NextResponse.json(
-        { error: 'Admin with this email already exists' },
-        { status: 409 }
-      );
-    }
-
+    console.error('Invitation creation error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

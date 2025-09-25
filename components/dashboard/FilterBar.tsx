@@ -38,48 +38,60 @@ export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; o
   };
 
   return (
-    <div className="mb-4 rounded-xl border border-slate-800 bg-slate-900/70 p-3 sm:p-4" role="region" aria-label="Asset filters">
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-
-        {/* Make combobox */}
-        <div className="space-y-1">
-          <Label className="text-slate-300">Make</Label>
+    <div role="region" aria-label="Asset filters" className="border-t border-slate-800 pt-3">
+      {/* Compact horizontal filter layout */}
+      <div className="flex flex-wrap items-end gap-3">
+        {/* Make */}
+        <div className="min-w-[120px]">
+          <Label className="text-xs text-slate-400 mb-1 block">Make</Label>
           <Combobox
             value={local.make || ''}
             onChange={(v) => {
-              // when make changes, clear model if it doesn't belong
               const nextModel = v && local.model && listModels(v).includes(local.model) ? local.model : undefined;
               set({ make: v || undefined, model: nextModel });
             }}
             options={makes}
             placeholder="Any"
+            compact
           />
         </div>
 
-        {/* Model combobox */}
-        <div className="space-y-1">
-          <Label className="text-slate-300">Model</Label>
+        {/* Model */}
+        <div className="min-w-[120px]">
+          <Label className="text-xs text-slate-400 mb-1 block">Model</Label>
           <Combobox
             value={local.model || ''}
             onChange={(v) => set({ model: v || undefined })}
             options={models}
             placeholder="Any"
             disabled={!local.make && models.length === 0}
+            compact
           />
         </div>
 
-        <div className="space-y-1">
-          <Label className="text-slate-300" htmlFor="year">Year</Label>
-          <Input id="year" inputMode="numeric" pattern="[0-9]*" type="number" value={local.year || ''} onChange={(e) => set({ year: e.target.value ? Number(e.target.value) : undefined })} placeholder="Any" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
+        {/* Year */}
+        <div className="min-w-[100px]">
+          <Label className="text-xs text-slate-400 mb-1 block" htmlFor="year">Year</Label>
+          <Input 
+            id="year" 
+            inputMode="numeric" 
+            pattern="[0-9]*" 
+            type="number" 
+            value={local.year || ''} 
+            onChange={(e) => set({ year: e.target.value ? Number(e.target.value) : undefined })} 
+            placeholder="Any" 
+            className="h-8 bg-slate-800/60 border-slate-700 text-white placeholder-slate-500 text-sm" 
+          />
         </div>
 
-        <div className="space-y-1">
-          <Label className="text-slate-300">Source</Label>
+        {/* Source */}
+        <div className="min-w-[120px]">
+          <Label className="text-xs text-slate-400 mb-1 block">Source</Label>
           <Select
             value={local.assetSource ?? 'any'}
             onValueChange={(val) => set({ assetSource: (val === 'any' ? undefined : (val as AssetFilters['assetSource'])) })}
           >
-            <SelectTrigger className="bg-slate-800/60 border-slate-700 text-white">
+            <SelectTrigger className="h-8 bg-slate-800/60 border-slate-700 text-white text-sm">
               <SelectValue placeholder="Any" />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 text-slate-200 border-slate-700">
@@ -92,17 +104,24 @@ export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; o
           </Select>
         </div>
 
-        {/** Tag filter removed by design */}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-        <Button
-          variant="outline"
-          className="bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700"
-          onClick={() => { setLocal({}); onChange({}); onApply(); }}
-        >
-          Reset
-        </Button>
-        <Button className="bg-cyan-600 hover:bg-cyan-500" onClick={onApply}>Apply Filters</Button>
+        {/* Action buttons */}
+        <div className="flex gap-2 ml-auto">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700 text-xs"
+            onClick={() => { setLocal({}); onChange({}); onApply(); }}
+          >
+            Reset
+          </Button>
+          <Button 
+            size="sm" 
+            className="h-8 bg-cyan-600 hover:bg-cyan-500 text-xs" 
+            onClick={onApply}
+          >
+            Apply
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -114,12 +133,14 @@ function Combobox({
   options,
   placeholder,
   disabled,
+  compact,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: string[];
   placeholder?: string;
   disabled?: boolean;
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o === value) || '';
@@ -132,7 +153,10 @@ function Combobox({
           disabled={disabled}
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between bg-slate-800/60 border-slate-700 text-white"
+          className={cn(
+            "w-full justify-between bg-slate-800/60 border-slate-700 text-white",
+            compact ? "h-8 text-sm" : ""
+          )}
         >
           <span className="truncate mr-2">{selected || placeholder || "Select"}</span>
           {selected && (

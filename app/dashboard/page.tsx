@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Upload, FileBox } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Asset } from '@/types/asset';
-import { TopBar } from '@/components/dashboard/TopBar';
 import { AssetCard } from '@/components/dashboard/AssetCard';
 import { UploadDialog } from '@/components/dashboard/UploadDialog';
 import { DeleteConfirm } from '@/components/dashboard/DeleteConfirm';
@@ -79,21 +78,23 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    router.push('/');
-  };
+  useEffect(() => {
+    const openUpload = () => { setEditingAsset(null); setShowUpload(true); };
+    if (typeof window !== 'undefined') {
+      window.addEventListener('modshop:open-upload', openUpload);
+      return () => window.removeEventListener('modshop:open-upload', openUpload);
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-950">
-      <TopBar onUploadClick={() => { setEditingAsset(null); setShowUpload(true); }} onLogout={handleLogout} />
-
-      {/* Content */}
-      <main className="px-4 sm:px-6 lg:px-8 py-6">
-        {/* Search Bar (independent) */}
-        <section role="search" aria-label="Search assets" className="mb-3 sm:mb-4">
-          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-2 sm:p-3">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      {/* Content (TopBar provided by /dashboard/layout.tsx) */}
+      <main className="px-0 sm:px-0 lg:px-0 py-0">
+        {/* Compact Search & Filter Toolbar */}
+        <section role="search" aria-label="Search and filter assets" className="mb-4 px-4 sm:px-6 lg:px-8 pt-4">
+          <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3">
+            {/* Top row: Search + Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 mb-3">
               <div className="relative flex-1">
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <Input
@@ -101,7 +102,7 @@ export default function Dashboard() {
                   onChange={(e) => setSearchQ(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') fetchAssets(); }}
                   placeholder="Search by name, make, model, tags"
-                  className="pl-9 bg-slate-800/60 border-slate-700 text-white placeholder-slate-500"
+                  className="pl-9 h-9 bg-slate-800/60 border-slate-700 text-white placeholder-slate-500"
                   aria-label="Search query"
                 />
                 {searchQ && (
@@ -115,20 +116,30 @@ export default function Dashboard() {
                   </button>
                 )}
               </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" className="bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700" onClick={() => { setSearchQ(''); fetchAssets(); }}>
+              <div className="flex gap-2 items-stretch shrink-0">
+                <Button
+                  variant="outline"
+                  className="h-9 bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700"
+                  onClick={() => { setSearchQ(''); fetchAssets(); }}
+                >
                   Clear
                 </Button>
-                <Button className="bg-cyan-600 hover:bg-cyan-500" onClick={fetchAssets}>
+                <Button className="h-9 bg-cyan-600 hover:bg-cyan-500" onClick={fetchAssets}>
                   <SearchIcon className="w-4 h-4 mr-2" /> Search
+                </Button>
+                <Button
+                  onClick={() => { setEditingAsset(null); setShowUpload(true); }}
+                  className="h-9 bg-cyan-600/80 hover:bg-cyan-500 text-white"
+                >
+                  <Upload className="w-4 h-4 mr-2" /> Upload
                 </Button>
               </div>
             </div>
+            
+            {/* Bottom row: Compact Filters */}
+            <FilterBar value={filters} onChange={(f) => { setFilters(f); }} onApply={fetchAssets} />
           </div>
         </section>
-
-        {/* Filters (separate from search) */}
-        <FilterBar value={filters} onChange={(f) => { setFilters(f); }} onApply={fetchAssets} />
         {/* Empty/Loading States */}
         {loading ? (
           <div className="min-h-[50vh]">
@@ -148,7 +159,7 @@ export default function Dashboard() {
             </div>
           </div>
         ) : assets.length === 0 ? (
-          <div className="min-h-[50vh] flex flex-col items-center justify-center text-center">
+          <div className="min-h-[50vh] flex flex-col items-center justify-center text-center px-4 sm:px-6 lg:px-8">
             <div className="w-16 h-16 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center mb-4">
               <FileBox className="w-8 h-8 text-slate-500" />
             </div>
@@ -159,7 +170,7 @@ export default function Dashboard() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 px-4 sm:px-6 lg:px-8">
             {assets.map((asset) => (
               <AssetCard key={asset._id} asset={asset} onEdit={(a) => { setEditingAsset(a); setShowUpload(true); }} onDelete={(id) => setDeletingId(id)} />
             ))}
