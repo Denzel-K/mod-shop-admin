@@ -72,11 +72,14 @@ export default function AssetViewerPanel({
 
   // Handle surface selection
   const handleSurfaceToggle = (surfaceId: string) => {
-    setSelectedSurfaces(prev => 
-      prev.includes(surfaceId) 
-        ? prev.filter(s => s !== surfaceId)
-        : [...prev, surfaceId]
-    );
+    setSelectedSurfaces((prev) => {
+      const next = prev.includes(surfaceId)
+        ? prev.filter((s) => s !== surfaceId)
+        : [...prev, surfaceId];
+      // Auto-manage highlight mode so selection changes reflect immediately in the scene
+      setHighlightMode(next.length > 0);
+      return next;
+    });
   };
 
   const handleSurfaceSelect = (surfaceId: string) => {

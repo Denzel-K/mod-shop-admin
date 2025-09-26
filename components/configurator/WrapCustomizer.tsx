@@ -108,9 +108,6 @@ export default function WrapCustomizer({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="font-medium text-sm">{finish.name}</div>
-                  {isSelected && (
-                    <Badge variant="secondary" className="text-[10px]">Selected</Badge>
-                  )}
                 </div>
                 {finish.description && (
                   <div className="text-xs text-slate-400 mt-1 line-clamp-2">{finish.description}</div>

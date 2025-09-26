@@ -154,7 +154,7 @@ export default function SurfaceSelector({
               }
             });
           }}
-          className="flex-1 text-xs"
+          className="flex-1 text-xs bg-slate-900/60 border-slate-700 text-slate-100 hover:bg-slate-800 hover:text-white"
         >
           Select All
         </Button>
@@ -164,7 +164,7 @@ export default function SurfaceSelector({
           onClick={() => {
             selectedSurfaces.forEach(surface => onSurfaceToggle(surface));
           }}
-          className="flex-1 text-xs"
+          className="flex-1 text-xs bg-slate-900/60 border-slate-700 text-slate-100 hover:bg-slate-800 hover:text-white disabled:opacity-50"
           disabled={selectedCount === 0}
         >
           Clear All
@@ -204,24 +204,42 @@ export default function SurfaceSelector({
 
               {/* Section Content */}
               {isExpanded && (
-                <div className="space-y-1 pl-2">
+                <div className={cn(
+                  "space-y-1 pl-2",
+                  section.key === 'wrappableSurfaces' && "p-2 border border-slate-700/60 rounded-lg max-h-64 overflow-y-auto bg-slate-900/30"
+                )}>
                   {section.surfaces.map((surface) => {
                     const isSelected = selectedSurfaces.includes(surface);
+                    const rowClasses = cn(
+                      "flex items-center justify-between p-2 rounded border",
+                      isSelected ? "bg-cyan-600/10 border-cyan-700/50" : "bg-slate-800/20 border-slate-700/50"
+                    );
                     return (
-                      <div
-                        key={surface}
-                        className="flex items-center justify-between p-2 bg-slate-800/20 rounded border border-slate-700/50"
-                      >
+                      <div key={surface} className={rowClasses}>
+                        {section.key === 'wrappableSurfaces' ? (
+                          <input
+                            type="checkbox"
+                            className="w-4 h-4 accent-cyan-600 mr-3 flex-shrink-0"
+                            checked={isSelected}
+                            onChange={() => onSurfaceToggle(surface)}
+                            aria-label={`Select ${surface}`}
+                          />
+                        ) : null}
                         <button
-                          onClick={() => onSurfaceSelect(surface)}
-                          className="flex-1 text-left text-sm text-slate-300 hover:text-slate-200 transition-colors"
+                          onClick={() => {
+                            onSurfaceToggle(surface);
+                            onSurfaceSelect(surface);
+                          }}
+                          className="flex-1 text-left text-sm text-slate-300 hover:text-slate-200 transition-colors break-words whitespace-pre-wrap leading-relaxed min-w-0"
                         >
                           {surface}
                         </button>
-                        <Switch
-                          checked={isSelected}
-                          onCheckedChange={() => onSurfaceToggle(surface)}
-                        />
+                        {section.key !== 'wrappableSurfaces' ? (
+                          <Switch
+                            checked={isSelected}
+                            onCheckedChange={() => onSurfaceToggle(surface)}
+                          />
+                        ) : null}
                       </div>
                     );
                   })}

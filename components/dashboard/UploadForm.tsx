@@ -83,6 +83,32 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
     }
   }, [thumbFile]);
 
+  // Prefill metadata when editing existing asset
+  useEffect(() => {
+    if (!asset || !asset.metadata) return;
+    const m = asset.metadata;
+    // Only prefill if fields are still empty to avoid clobbering user input
+    if (wrappableSurfacesChips.length === 0 && (m.wrappableSurfaces?.length || 0) > 0) setWrappableSurfacesChips(m.wrappableSurfaces!);
+    if (rimsChips.length === 0 && (m.rims?.length || 0) > 0) setRimsChips(m.rims!);
+    if (windowsChips.length === 0 && (m.windows?.length || 0) > 0) setWindowsChips(m.windows!);
+    if (doorsChips.length === 0 && (m.doors?.length || 0) > 0) setDoorsChips(m.doors!);
+    if (tyresChips.length === 0 && (m.tyres?.length || 0) > 0) setTyresChips(m.tyres!);
+    if (interiorChips.length === 0 && (m.interior?.length || 0) > 0) setInteriorChips(m.interior!);
+    if (lightsChips.length === 0 && (m.lights?.length || 0) > 0) setLightsChips(m.lights!);
+
+    // CSV mirrors for users switching modes
+    const toCsv = (arr?: string[]) => (arr && arr.length ? arr.join(', ') : '');
+    if (!wrappableSurfacesCsv) setWrappableSurfacesCsv(toCsv(m.wrappableSurfaces));
+    if (!rimsCsv) setRimsCsv(toCsv(m.rims));
+    if (!windowsCsv) setWindowsCsv(toCsv(m.windows));
+    if (!doorsCsv) setDoorsCsv(toCsv(m.doors));
+    if (!tyresCsv) setTyresCsv(toCsv(m.tyres));
+    if (!interiorCsv) setInteriorCsv(toCsv(m.interior));
+    if (!lightsCsv) setLightsCsv(toCsv(m.lights));
+    // We intentionally depend only on `asset` here to avoid clobbering user edits mid-session
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [asset]);
+
   const isEdit = !!asset;
   const canSubmit = useMemo(() => {
     if (isEdit) return !!name && sketchfabValid && !submitting; // editing metadata only

@@ -33,11 +33,19 @@ export function ChipsInput({
 
   return (
     <div className={`rounded-lg border border-slate-700 bg-slate-800/60 p-2 ${className}`}>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto pr-1">
         {value.map((v) => (
-          <span key={v} className="inline-flex items-center gap-1 text-xs text-slate-200 bg-slate-700/60 border border-slate-600 rounded-full px-2 py-1">
-            {v}
-            <button type="button" className="text-slate-300 hover:text-white ml-1" onClick={() => remove(v)} aria-label={`Remove ${v}`}>
+          <span
+            key={v}
+            className="inline-flex items-center gap-1 max-w-full text-xs text-slate-200 bg-slate-700/60 border border-slate-600 rounded-full px-2 py-1"
+          >
+            <span className="break-words whitespace-normal leading-snug max-w-[calc(100%-1.75rem)]">{v}</span>
+            <button
+              type="button"
+              className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full text-sm text-slate-200 hover:text-white hover:bg-slate-600/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600/50"
+              onClick={() => remove(v)}
+              aria-label={`Remove ${v}`}
+            >
               ×
             </button>
           </span>
