@@ -51,6 +51,11 @@ function CarModel({
   const computedScale = useMemo(() => scale || 0.01, [scale]);
   const materialCache = useRef<Map<string, THREE.Material>>(new Map());
 
+  // Clear material cache when URL changes to prevent cross-model contamination
+  useLayoutEffect(() => {
+    materialCache.current.clear();
+  }, [url]);
+
   return (
     <Suspense fallback={null}>
       <TextureLoader>
@@ -184,11 +189,12 @@ function CarModelWithTexture({
   }, [gltf.scene, envMapIntensity, wrapConfig, wrapColors, wrapFinishes, selectedSurfaces, highlightMode, vinylTexture, materialCache]);
 
   // Compute vertical offset so the model sits on the floor (y = 0)
+  // Include URL in dependencies to recalculate positioning for each model
   const yOffset = useMemo(() => {
     const box = new THREE.Box3().setFromObject(gltf.scene);
     const minY = box.min.y;
     return -minY * (computedScale ?? 1);
-  }, [gltf.scene, computedScale]);
+  }, [computedScale, gltf]);
 
   // Handle click events for surface selection
   const handleClick = (event: { stopPropagation: () => void; object: { userData: { surfaceId?: string } } }) => {

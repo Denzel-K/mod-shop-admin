@@ -3,6 +3,7 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ChipsInput } from "@/components/dashboard/ChipsInput";
+import { JsonEditor } from "@/components/ui/JsonEditor";
 
 export type MetadataTabProps = {
   // Metadata mode and values (true metadata only)
@@ -38,7 +39,53 @@ export type MetadataTabProps = {
   setLightsCsv: (v: string) => void;
   metadataJson: string;
   setMetadataJson: (v: string) => void;
+  isEdit?: boolean;
 };
+
+const DEFAULT_METADATA_TEMPLATE = `{
+  "wrappableSurfaces": [
+    "body_front_bumper",
+    "body_rear_bumper",
+    "body_hood",
+    "body_trunk",
+    "body_roof"
+  ],
+  "rims": [
+    "wheel_front_left_rim",
+    "wheel_front_right_rim",
+    "wheel_rear_left_rim",
+    "wheel_rear_right_rim"
+  ],
+  "windows": [
+    "window_windshield",
+    "window_rear",
+    "window_left_front",
+    "window_right_front"
+  ],
+  "doors": [
+    "door_left_front",
+    "door_right_front",
+    "door_left_rear",
+    "door_right_rear"
+  ],
+  "tyres": [
+    "tyre_front_left",
+    "tyre_front_right",
+    "tyre_rear_left",
+    "tyre_rear_right"
+  ],
+  "interior": [
+    "interior_dashboard",
+    "interior_seats_front",
+    "interior_steering_wheel"
+  ],
+  "lights": [
+    "light_headlight_left",
+    "light_headlight_right",
+    "light_taillight_left",
+    "light_taillight_right"
+  ]
+}`;
 
 export function MetadataTab(props: MetadataTabProps) {
   const {
@@ -74,7 +121,11 @@ export function MetadataTab(props: MetadataTabProps) {
     setLightsCsv,
     metadataJson,
     setMetadataJson,
+    isEdit,
   } = props;
+
+  // Use template for new uploads when JSON editor is empty
+  const jsonValue = metadataJson || (!isEdit ? DEFAULT_METADATA_TEMPLATE : '');
 
   return (
     <div className="space-y-5">
@@ -155,9 +206,17 @@ export function MetadataTab(props: MetadataTabProps) {
       {/* Raw JSON metadata editor */}
       {metadataMode === 'json' && (
         <div className="md:col-span-2 space-y-2 animate-in fade-in zoom-in-95 duration-200">
-          <Label htmlFor="metadataJson" className="text-slate-300">Raw Metadata JSON</Label>
-          <textarea id="metadataJson" value={metadataJson} onChange={(e) => setMetadataJson(e.target.value)} rows={5} className="w-full bg-slate-800/60 border border-slate-700 text-white rounded px-3 py-2 font-mono text-sm" placeholder='{"wrappableSurfaces":["Body","Hood"],"windows":["Front_Windshield"]}' />
-          <p className="text-xs text-slate-500">Paste a JSON object. If provided, it will override the category inputs above.</p>
+          <Label className="text-slate-300">Raw Metadata JSON</Label>
+          <JsonEditor
+            value={jsonValue}
+            onChange={setMetadataJson}
+            placeholder='{"wrappableSurfaces":["Body","Hood"],"windows":["Front_Windshield"]}'
+            height="600px"
+          />
+          <p className="text-xs text-slate-500">
+            Edit JSON metadata with syntax highlighting and error detection. 
+            This will override the category inputs above when saved.
+          </p>
         </div>
       )}
     </div>

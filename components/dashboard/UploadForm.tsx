@@ -105,6 +105,11 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
     if (!tyresCsv) setTyresCsv(toCsv(m.tyres));
     if (!interiorCsv) setInteriorCsv(toCsv(m.interior));
     if (!lightsCsv) setLightsCsv(toCsv(m.lights));
+
+    // JSON editor prefill for editing
+    if (!metadataJson.trim()) {
+      setMetadataJson(JSON.stringify(m, null, 2));
+    }
     // We intentionally depend only on `asset` here to avoid clobbering user edits mid-session
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [asset]);
@@ -287,7 +292,7 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
   return (
     // Place Tabs outside the form so tab triggers are not within a form context
     <Tabs defaultValue="primary" className="w-full">
-      <TabsList className="sticky top-0 z-10 bg-transparent gap-2 border-[1.5px] border-slate-700 mb-4">
+      <TabsList className="sticky top-0 z-10 bg-foreground gap-2 border-[1.5px] border-slate-700 mb-4 mt-2 ml-2">
         <TabsTrigger value="primary" asChild>
           <button
             type="button"
@@ -387,6 +392,7 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
             setLightsCsv={setLightsCsv}
             metadataJson={metadataJson}
             setMetadataJson={setMetadataJson}
+            isEdit={isEdit}
           />
         </TabsContent>
         <div className="flex items-center justify-end gap-3 pt-2">

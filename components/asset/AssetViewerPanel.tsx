@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import EnhancedModelViewer from "@/components/viewer/EnhancedModelViewer";
 import ScaleEditor from "@/components/asset/ScaleEditor";
 import WrapCustomizer from "@/components/configurator/WrapCustomizer";
@@ -61,6 +61,22 @@ export default function AssetViewerPanel({
   });
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedFinish, setSelectedFinish] = useState<string>("gloss");
+
+  // Reset viewer state when asset changes to prevent cross-contamination
+  useEffect(() => {
+    setSelectedSurfaces([]);
+    setHighlightMode(false);
+    setWrapConfig({
+      surfaces: {},
+      environment: {
+        preset: envPreset,
+        intensity: envIntensity,
+        background: hdriBackground,
+      },
+    });
+    setSelectedColor("");
+    setSelectedFinish("gloss");
+  }, [assetId, envPreset, envIntensity, hdriBackground]);
   
   const isMobile = useMemo(() => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 767px)").matches, []);
   const isTablet = useMemo(() => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(min-width: 768px) and (max-width: 1199px)").matches, []);
