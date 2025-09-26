@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Lock, Mail, Loader2 } from 'lucide-react';
+import { ModShopLogo } from '@/components/mod-shop-logo';
 
 interface LoginFormProps {
   onSwitchToReset: () => void;
@@ -60,12 +61,12 @@ export default function LoginForm({ onSwitchToReset }: LoginFormProps) {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-xl mx-auto">
       <div className="bg-gradient-to-br from-slate-900/90 to-slate-800/90 backdrop-blur-xl border border-cyan-500/20 rounded-2xl p-8 shadow-2xl shadow-cyan-500/10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl mb-4 shadow-lg shadow-cyan-500/25">
-            <Lock className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center p-[3px] bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg mb-4 shadow-lg shadow-cyan-500/25">
+            <ModShopLogo size="xl" className="text-white" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
           <p className="text-slate-400">Sign in to your admin account</p>
