@@ -48,7 +48,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
 
   if (!asset) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-200 p-6">
+      <div className="min-h-screen h-full bg-slate-950 text-slate-200 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-xl font-semibold">Asset not found</h1>
@@ -91,8 +91,8 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
       {/* Viewer section */}
       <main className="px-6 py-6">
         <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-          {/* Responsive container: 70vh on desktop, 60vh on mobile */}
-          <div className="w-full h-[60vh] md:h-[70vh]">
+          {/* Responsive container: 60vh mobile, 70vh tablet, 100vh large screens */}
+          <div className="w-full lg:h-[80vh]">
             <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading viewer…</div>}>
               <AssetViewerPanel
                 url={asset.modelUrl}

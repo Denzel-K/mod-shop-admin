@@ -136,22 +136,22 @@ export default function AssetViewerPanel({
   };
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full h-full">
       {/* Layout */}
       <div className={cn(
         "flex transition-all duration-300 ease-in-out",
-        "w-full min-h-[60vh] md:min-h-[70vh]"
+        "w-full h-full"
       )}>
         {/* Left Sidebar: Car Controls (Desktop only) */}
         {!isMobile && !isTablet && (
           <div className={cn(
             "xl:block h-full border-r border-slate-800 bg-slate-900 flex-shrink-0",
-            "max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth",
+            "overflow-y-auto overscroll-y-contain scroll-smooth min-h-0",
             "transition-[width] duration-300 ease-in-out",
-            leftSidebarOpen ? "w-[280px]" : "w-0 overflow-hidden"
+            leftSidebarOpen ? "w-[300px]" : "w-0 overflow-hidden"
           )}>
             <div className={cn(
-              "w-[280px] transition-opacity duration-300",
+              "w-[300px] transition-opacity duration-300",
               leftSidebarOpen ? "opacity-100" : "opacity-0"
             )}>
               <div className="p-4 space-y-6">
@@ -178,7 +178,7 @@ export default function AssetViewerPanel({
         )}
 
         {/* Center: Canvas area */}
-        <div className="relative bg-black flex-1">
+        <div className="relative bg-black flex-1 min-h-0 min-w-0 h-full">
           <EnhancedModelViewer
             url={url}
             scale={initialScale}
@@ -305,7 +305,7 @@ export default function AssetViewerPanel({
         {!isMobile && !isTablet && (
           <div className={cn(
             "xl:block h-full border-l border-slate-800 bg-slate-900 flex-shrink-0",
-            "max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth",
+            "overflow-y-auto overscroll-y-contain scroll-smooth min-h-0",
             "transition-[width] duration-300 ease-in-out",
             rightSidebarOpen ? "w-[300px]" : "w-0 overflow-hidden"
           )}>
