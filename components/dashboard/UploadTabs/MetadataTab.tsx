@@ -2,25 +2,10 @@
 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ComboBox } from "@/components/dashboard/ComboBox";
 import { ChipsInput } from "@/components/dashboard/ChipsInput";
 
 export type MetadataTabProps = {
-  // Make/Model/Year/Variant
-  makes: string[];
-  models: string[];
-  make: string;
-  setMake: (v: string) => void;
-  model: string;
-  setModel: (v: string) => void;
-  year: string;
-  setYear: (v: string) => void;
-  variant: string;
-  setVariant: (v: string) => void;
-  // Tags
-  tagsChips: string[];
-  setTagsChips: (v: string[]) => void;
-  // Metadata mode and values
+  // Metadata mode and values (true metadata only)
   metadataMode: 'chips' | 'csv' | 'json';
   setMetadataMode: (v: 'chips' | 'csv' | 'json') => void;
   wrappableSurfacesChips: string[];
@@ -57,18 +42,6 @@ export type MetadataTabProps = {
 
 export function MetadataTab(props: MetadataTabProps) {
   const {
-    makes,
-    models,
-    make,
-    setMake,
-    model,
-    setModel,
-    year,
-    setYear,
-    variant,
-    setVariant,
-    tagsChips,
-    setTagsChips,
     metadataMode,
     setMetadataMode,
     wrappableSurfacesChips,
@@ -105,32 +78,6 @@ export function MetadataTab(props: MetadataTabProps) {
 
   return (
     <div className="space-y-5">
-      {/* Make / Model / Year / Variant */}
-      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-5">
-        <div className="space-y-2">
-          <Label htmlFor="make" className="text-slate-300">Make</Label>
-          <ComboBox id="make" value={make} onChange={setMake} options={makes} placeholder="e.g. Nissan" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="model" className="text-slate-300">Model</Label>
-          <ComboBox id="model" value={model} onChange={setModel} options={models} placeholder="e.g. GTR" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="year" className="text-slate-300">Year</Label>
-          <Input id="year" value={year} onChange={(e) => setYear(e.target.value)} placeholder="e.g. 2017" type="number" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="variant" className="text-slate-300">Variant</Label>
-          <Input id="variant" value={variant} onChange={(e) => setVariant(e.target.value)} placeholder="e.g. NISMO" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-        </div>
-      </div>
-
-      {/* Tags */}
-      <div className="md:col-span-2 space-y-2">
-        <Label className="text-slate-300">Tags</Label>
-        <ChipsInput value={tagsChips} onChange={setTagsChips} placeholder="Type and press Enter or comma to add" />
-      </div>
-
       {/* Metadata entry mode */}
       <div className="md:col-span-2">
         <div className="flex flex-wrap gap-2 text-xs text-slate-300 mb-2 items-center ">

@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ComboBox } from "@/components/dashboard/ComboBox";
+import { ChipsInput } from "@/components/dashboard/ChipsInput";
 
 export type PrimaryInfoProps = {
   isEdit: boolean;
@@ -22,6 +24,20 @@ export type PrimaryInfoProps = {
   fieldErrors: Record<string, string>;
   creatorText: string;
   setCreatorText: (v: string) => void;
+  // Vehicle identity (moved from metadata)
+  makes: string[];
+  models: string[];
+  make: string;
+  setMake: (v: string) => void;
+  model: string;
+  setModel: (v: string) => void;
+  year: string;
+  setYear: (v: string) => void;
+  variant: string;
+  setVariant: (v: string) => void;
+  // Tags (moved from metadata)
+  tagsChips: string[];
+  setTagsChips: (v: string[]) => void;
   // Files
   modelFile: File | null;
   setModelFile: (f: File | null) => void;
@@ -50,6 +66,18 @@ export function PrimaryInfoTab(props: PrimaryInfoProps) {
     fieldErrors,
     creatorText,
     setCreatorText,
+    makes,
+    models,
+    make,
+    setMake,
+    model,
+    setModel,
+    year,
+    setYear,
+    variant,
+    setVariant,
+    tagsChips,
+    setTagsChips,
     modelFile,
     setModelFile,
     thumbFile,
@@ -88,6 +116,30 @@ export function PrimaryInfoTab(props: PrimaryInfoProps) {
           {isSketchfab && (
             <p className="text-xs text-slate-500">Creator credit text is required for Sketchfab-sourced models.</p>
           )}
+        </div>
+        {/* Vehicle identity */}
+        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-5">
+          <div className="space-y-2">
+            <Label htmlFor="make" className="text-slate-300">Make</Label>
+            <ComboBox id="make" value={make} onChange={setMake} options={makes} placeholder="e.g. Nissan" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="model" className="text-slate-300">Model</Label>
+            <ComboBox id="model" value={model} onChange={setModel} options={models} placeholder="e.g. GTR" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="year" className="text-slate-300">Year</Label>
+            <Input id="year" value={year} onChange={(e) => setYear(e.target.value)} placeholder="e.g. 2017" type="number" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="variant" className="text-slate-300">Variant</Label>
+            <Input id="variant" value={variant} onChange={(e) => setVariant(e.target.value)} placeholder="e.g. NISMO" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
+          </div>
+        </div>
+        {/* Tags */}
+        <div className="md:col-span-2 space-y-2">
+          <Label className="text-slate-300">Tags</Label>
+          <ChipsInput value={tagsChips} onChange={setTagsChips} placeholder="Type and press Enter or comma to add" />
         </div>
         <div className="space-y-2">
           <Label className="text-slate-300">Auto-scaling</Label>

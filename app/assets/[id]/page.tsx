@@ -25,6 +25,16 @@ async function getAssetAbsolute(baseUrl: string, id: string) {
     year?: number;
     variant?: string;
     tags?: string[];
+    metadata?: {
+      wrappableSurfaces?: string[];
+      rims?: string[];
+      windows?: string[];
+      doors?: string[];
+      tyres?: string[];
+      interior?: string[];
+      lights?: string[];
+      other?: Record<string, string[]>;
+    };
   } | null;
 }
 
@@ -90,6 +100,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
                 initialScale={asset.scale || 1.0}
                 assetName={asset.name}
                 assetFormat={asset.format}
+                assetMetadata={asset.metadata}
               />
             </Suspense>
           </div>

@@ -32,13 +32,13 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [scaleOverride, setScaleOverride] = useState<string>(asset?.scale ? String(asset.scale) : '');
   // New fields
-  const [assetSource, setAssetSource] = useState<string>('');
-  const [creatorText, setCreatorText] = useState<string>('');
-  const [make, setMake] = useState<string>('');
-  const [model, setModel] = useState<string>('');
-  const [year, setYear] = useState<string>('');
-  const [variant, setVariant] = useState<string>('');
-  const [tagsChips, setTagsChips] = useState<string[]>([]);
+  const [assetSource, setAssetSource] = useState<string>(asset?.assetSource || '');
+  const [creatorText, setCreatorText] = useState<string>(asset?.creatorCredits?.text || '');
+  const [make, setMake] = useState<string>(asset?.make || '');
+  const [model, setModel] = useState<string>(asset?.model || '');
+  const [year, setYear] = useState<string>(asset?.year ? String(asset.year) : '');
+  const [variant, setVariant] = useState<string>(asset?.variant || '');
+  const [tagsChips, setTagsChips] = useState<string[]>(asset?.tags || []);
   // Metadata (category inputs)
   const [wrappableSurfacesChips, setWrappableSurfacesChips] = useState<string[]>([]);
   const [rimsChips, setRimsChips] = useState<string[]>([]);
@@ -298,6 +298,18 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
             fieldErrors={fieldErrors}
             creatorText={creatorText}
             setCreatorText={setCreatorText}
+            makes={makes}
+            models={models}
+            make={make}
+            setMake={setMake}
+            model={model}
+            setModel={setModel}
+            year={year}
+            setYear={setYear}
+            variant={variant}
+            setVariant={setVariant}
+            tagsChips={tagsChips}
+            setTagsChips={setTagsChips}
             modelFile={modelFile}
             setModelFile={setModelFile}
             thumbFile={thumbFile}
@@ -311,18 +323,6 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
         </TabsContent>
         <TabsContent value="metadata" className="animate-in fade-in slide-in-from-top-1 duration-200">
           <MetadataTab
-            makes={makes}
-            models={models}
-            make={make}
-            setMake={setMake}
-            model={model}
-            setModel={setModel}
-            year={year}
-            setYear={setYear}
-            variant={variant}
-            setVariant={setVariant}
-            tagsChips={tagsChips}
-            setTagsChips={setTagsChips}
             metadataMode={metadataMode}
             setMetadataMode={setMetadataMode}
             wrappableSurfacesChips={wrappableSurfacesChips}

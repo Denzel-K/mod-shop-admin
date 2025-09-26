@@ -1,0 +1,222 @@
+{
+  "categories": [
+    {
+      "id": "classic",
+      "name": "Classic Colors",
+      "description": "Traditional automotive colors"
+    },
+    {
+      "id": "bold",
+      "name": "Bold & Vibrant",
+      "description": "Eye-catching bright colors"
+    },
+    {
+      "id": "luxury",
+      "name": "Luxury Tones",
+      "description": "Premium sophisticated colors"
+    },
+    {
+      "id": "racing",
+      "name": "Racing Colors",
+      "description": "High-performance inspired colors"
+    },
+    {
+      "id": "special",
+      "name": "Special Effects",
+      "description": "Color-shifting and unique finishes"
+    }
+  ],
+  "colors": [
+    {
+      "id": "jet_black",
+      "name": "Jet Black",
+      "hex": "#0a0a0a",
+      "rgb": [10, 10, 10],
+      "category": "classic",
+      "compatibleFinishes": ["gloss", "satin", "matte", "metallic_gloss", "metallic_satin", "metallic_matte"],
+      "popularity": 95
+    },
+    {
+      "id": "pure_white",
+      "name": "Pure White",
+      "hex": "#ffffff",
+      "rgb": [255, 255, 255],
+      "category": "classic",
+      "compatibleFinishes": ["gloss", "satin", "matte", "pearlescent"],
+      "popularity": 90
+    },
+    {
+      "id": "silver_metallic",
+      "name": "Silver Metallic",
+      "hex": "#c0c0c0",
+      "rgb": [192, 192, 192],
+      "category": "classic",
+      "compatibleFinishes": ["metallic_gloss", "metallic_satin", "chrome", "chrome_satin"],
+      "popularity": 85
+    },
+    {
+      "id": "deep_blue",
+      "name": "Deep Blue",
+      "hex": "#1e3a8a",
+      "rgb": [30, 58, 138],
+      "category": "classic",
+      "compatibleFinishes": ["gloss", "satin", "metallic_gloss", "pearlescent"],
+      "popularity": 80
+    },
+    {
+      "id": "crimson_red",
+      "name": "Crimson Red",
+      "hex": "#dc2626",
+      "rgb": [220, 38, 38],
+      "category": "bold",
+      "compatibleFinishes": ["gloss", "satin", "metallic_gloss", "pearlescent"],
+      "popularity": 75
+    },
+    {
+      "id": "electric_blue",
+      "name": "Electric Blue",
+      "hex": "#3b82f6",
+      "rgb": [59, 130, 246],
+      "category": "bold",
+      "compatibleFinishes": ["gloss", "satin", "metallic_gloss"],
+      "popularity": 70
+    },
+    {
+      "id": "lime_green",
+      "name": "Lime Green",
+      "hex": "#65a30d",
+      "rgb": [101, 163, 13],
+      "category": "bold",
+      "compatibleFinishes": ["gloss", "satin", "matte"],
+      "popularity": 60
+    },
+    {
+      "id": "sunset_orange",
+      "name": "Sunset Orange",
+      "hex": "#ea580c",
+      "rgb": [234, 88, 12],
+      "category": "bold",
+      "compatibleFinishes": ["gloss", "satin", "metallic_gloss"],
+      "popularity": 65
+    },
+    {
+      "id": "royal_purple",
+      "name": "Royal Purple",
+      "hex": "#7c3aed",
+      "rgb": [124, 58, 237],
+      "category": "luxury",
+      "compatibleFinishes": ["gloss", "satin", "metallic_gloss", "pearlescent"],
+      "popularity": 55
+    },
+    {
+      "id": "champagne_gold",
+      "name": "Champagne Gold",
+      "hex": "#d4af37",
+      "rgb": [212, 175, 55],
+      "category": "luxury",
+      "compatibleFinishes": ["metallic_gloss", "metallic_satin", "chrome"],
+      "popularity": 50
+    },
+    {
+      "id": "midnight_blue",
+      "name": "Midnight Blue",
+      "hex": "#1e1b4b",
+      "rgb": [30, 27, 75],
+      "category": "luxury",
+      "compatibleFinishes": ["gloss", "satin", "metallic_gloss", "pearlescent"],
+      "popularity": 70
+    },
+    {
+      "id": "gunmetal_gray",
+      "name": "Gunmetal Gray",
+      "hex": "#374151",
+      "rgb": [55, 65, 81],
+      "category": "luxury",
+      "compatibleFinishes": ["matte", "satin", "metallic_matte", "brushed_metal"],
+      "popularity": 75
+    },
+    {
+      "id": "racing_yellow",
+      "name": "Racing Yellow",
+      "hex": "#fbbf24",
+      "rgb": [251, 191, 36],
+      "category": "racing",
+      "compatibleFinishes": ["gloss", "satin"],
+      "popularity": 45
+    },
+    {
+      "id": "ferrari_red",
+      "name": "Ferrari Red",
+      "hex": "#ef4444",
+      "rgb": [239, 68, 68],
+      "category": "racing",
+      "compatibleFinishes": ["gloss", "metallic_gloss"],
+      "popularity": 60
+    },
+    {
+      "id": "mclaren_orange",
+      "name": "McLaren Orange",
+      "hex": "#f97316",
+      "rgb": [249, 115, 22],
+      "category": "racing",
+      "compatibleFinishes": ["gloss", "satin"],
+      "popularity": 40
+    },
+    {
+      "id": "carbon_black",
+      "name": "Carbon Black",
+      "hex": "#111827",
+      "rgb": [17, 24, 39],
+      "category": "racing",
+      "compatibleFinishes": ["matte", "carbon_fiber"],
+      "popularity": 65
+    },
+    {
+      "id": "chameleon_purple_green",
+      "name": "Chameleon Purple-Green",
+      "hex": "#8b5cf6",
+      "rgb": [139, 92, 246],
+      "category": "special",
+      "compatibleFinishes": ["pearlescent"],
+      "popularity": 30,
+      "colorShift": {
+        "primary": "#8b5cf6",
+        "secondary": "#10b981",
+        "angle": 45
+      }
+    },
+    {
+      "id": "oil_slick",
+      "name": "Oil Slick",
+      "hex": "#1f2937",
+      "rgb": [31, 41, 55],
+      "category": "special",
+      "compatibleFinishes": ["pearlescent"],
+      "popularity": 35,
+      "colorShift": {
+        "primary": "#1f2937",
+        "secondary": "#7c3aed",
+        "tertiary": "#059669",
+        "angle": 30
+      }
+    },
+    {
+      "id": "rose_gold",
+      "name": "Rose Gold",
+      "hex": "#e11d48",
+      "rgb": [225, 29, 72],
+      "category": "luxury",
+      "compatibleFinishes": ["metallic_gloss", "chrome"],
+      "popularity": 45
+    },
+    {
+      "id": "arctic_white",
+      "name": "Arctic White",
+      "hex": "#f8fafc",
+      "rgb": [248, 250, 252],
+      "category": "classic",
+      "compatibleFinishes": ["gloss", "satin", "pearlescent"],
+      "popularity": 80
+    }
+  ]
+}

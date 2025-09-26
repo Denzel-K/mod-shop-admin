@@ -1,0 +1,151 @@
+{
+  "finishes": [
+    {
+      "id": "gloss",
+      "name": "Gloss",
+      "category": "gloss",
+      "description": "Classic high-shine finish that looks like traditional paint",
+      "materialProperties": {
+        "roughness": 0.1,
+        "metalness": 0.0,
+        "clearcoat": 1.0,
+        "clearcoatRoughness": 0.03
+      },
+      "characteristics": ["easy_clean", "self_healing", "scratch_visible"]
+    },
+    {
+      "id": "satin",
+      "name": "Satin",
+      "category": "satin",
+      "description": "Silky smooth finish between gloss and matte with diffused highlights",
+      "materialProperties": {
+        "roughness": 0.3,
+        "metalness": 0.0,
+        "clearcoat": 0.7,
+        "clearcoatRoughness": 0.15
+      },
+      "characteristics": ["luxury_look", "moderate_clean", "refined"]
+    },
+    {
+      "id": "matte",
+      "name": "Matte",
+      "category": "matte",
+      "description": "Non-reflective stealth finish that stands out boldly",
+      "materialProperties": {
+        "roughness": 0.9,
+        "metalness": 0.0,
+        "clearcoat": 0.0,
+        "clearcoatRoughness": 0.0
+      },
+      "characteristics": ["stealth_look", "scratch_resistant", "harder_clean"]
+    },
+    {
+      "id": "metallic_gloss",
+      "name": "Metallic Gloss",
+      "category": "metallic",
+      "description": "High-shine metallic finish with reflective particles",
+      "materialProperties": {
+        "roughness": 0.15,
+        "metalness": 0.8,
+        "clearcoat": 1.0,
+        "clearcoatRoughness": 0.05
+      },
+      "characteristics": ["metallic_flake", "high_shine", "premium_look"]
+    },
+    {
+      "id": "metallic_satin",
+      "name": "Metallic Satin",
+      "category": "metallic",
+      "description": "Satin metallic with subtle metallic particles",
+      "materialProperties": {
+        "roughness": 0.35,
+        "metalness": 0.6,
+        "clearcoat": 0.6,
+        "clearcoatRoughness": 0.2
+      },
+      "characteristics": ["subtle_metallic", "sophisticated", "moderate_shine"]
+    },
+    {
+      "id": "metallic_matte",
+      "name": "Metallic Matte",
+      "category": "metallic",
+      "description": "Matte finish with metallic particles for depth",
+      "materialProperties": {
+        "roughness": 0.8,
+        "metalness": 0.4,
+        "clearcoat": 0.0,
+        "clearcoatRoughness": 0.0
+      },
+      "characteristics": ["subtle_metallic", "stealth", "unique_texture"]
+    },
+    {
+      "id": "chrome",
+      "name": "Chrome",
+      "category": "chrome",
+      "description": "Ultra-reflective mirror-like finish with real metal film layer",
+      "materialProperties": {
+        "roughness": 0.02,
+        "metalness": 1.0,
+        "clearcoat": 1.0,
+        "clearcoatRoughness": 0.01
+      },
+      "characteristics": ["mirror_finish", "ultra_reflective", "statement_piece"]
+    },
+    {
+      "id": "chrome_satin",
+      "name": "Chrome Satin",
+      "category": "chrome",
+      "description": "Satin chrome with controlled reflectivity",
+      "materialProperties": {
+        "roughness": 0.25,
+        "metalness": 0.9,
+        "clearcoat": 0.8,
+        "clearcoatRoughness": 0.1
+      },
+      "characteristics": ["controlled_reflection", "premium", "sophisticated"]
+    },
+    {
+      "id": "carbon_fiber",
+      "name": "Carbon Fiber",
+      "category": "textured",
+      "description": "Realistic carbon fiber texture with depth and tactile feel",
+      "materialProperties": {
+        "roughness": 0.4,
+        "metalness": 0.1,
+        "clearcoat": 0.9,
+        "clearcoatRoughness": 0.1,
+        "normalScale": 1.5
+      },
+      "characteristics": ["textured", "sporty", "realistic_pattern"],
+      "textureUrl": "/textures/carbon-fiber-normal.jpg"
+    },
+    {
+      "id": "brushed_metal",
+      "name": "Brushed Metal",
+      "category": "textured",
+      "description": "Brushed aluminum texture with directional grain",
+      "materialProperties": {
+        "roughness": 0.6,
+        "metalness": 0.8,
+        "clearcoat": 0.3,
+        "clearcoatRoughness": 0.3,
+        "normalScale": 0.8
+      },
+      "characteristics": ["textured", "industrial", "directional_grain"],
+      "textureUrl": "/textures/brushed-metal-normal.jpg"
+    },
+    {
+      "id": "pearlescent",
+      "name": "Pearlescent",
+      "category": "pearlescent",
+      "description": "Soft luxurious glow with color-shifting properties",
+      "materialProperties": {
+        "roughness": 0.2,
+        "metalness": 0.3,
+        "clearcoat": 1.0,
+        "clearcoatRoughness": 0.08
+      },
+      "characteristics": ["color_shift", "luxury_glow", "angle_dependent"]
+    }
+  ]
+}

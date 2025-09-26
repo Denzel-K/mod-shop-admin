@@ -1,12 +1,25 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import ModelViewer from "@/components/viewer/ModelViewer";
+import EnhancedModelViewer from "@/components/viewer/EnhancedModelViewer";
 import ScaleEditor from "@/components/asset/ScaleEditor";
+import WrapCustomizer from "@/components/configurator/WrapCustomizer";
+import SurfaceSelector from "@/components/configurator/SurfaceSelector";
+import EnvironmentControls from "@/components/configurator/EnvironmentControls";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
+import { WrapColor, WrapFinish, WrapCategory, WrapConfiguration } from "@/types/wrap";
+import { IAssetMetadata } from "@/models/Asset";
+import wrapColorsData from "@/lib/data/wrap-colors.json";
+import wrapFinishesData from "@/lib/data/wrap-finishes.json";
+
+type WrapColorsData = {
+  categories: WrapCategory[];
+  colors: WrapColor[];
+};
+
+type WrapFinishesData = {
+  finishes: WrapFinish[];
+};
 
 type EnvPreset = "city" | "studio" | "sunset" | "dawn" | "warehouse" | "apartment" | "night" | "forest" | "park" | "lobby";
 type PlatformStyle = "circle" | "rounded" | "grid";
@@ -18,12 +31,14 @@ export default function AssetViewerPanel({
   initialScale = 1,
   assetName,
   assetFormat,
+  assetMetadata,
 }: {
   url: string;
   assetId: string;
   initialScale?: number;
   assetName?: string;
   assetFormat?: string;
+  assetMetadata?: IAssetMetadata;
 }) {
   const [envPreset, setEnvPreset] = useState<EnvPreset>("city");
   const [hdriBackground, setHdriBackground] = useState<boolean>(false);
@@ -32,20 +47,120 @@ export default function AssetViewerPanel({
   const [groundVariant, setGroundVariant] = useState<GroundVariant>("plain");
   const [autoRotateEnabled, setAutoRotateEnabled] = useState<boolean>(true);
   const [autoRotateSpeed, setAutoRotateSpeed] = useState<number>(0.52);
-  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(true);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState<boolean>(true);
+  const [selectedSurfaces, setSelectedSurfaces] = useState<string[]>([]);
+  const [highlightMode, setHighlightMode] = useState<boolean>(false);
+  const [wrapConfig, setWrapConfig] = useState<WrapConfiguration>({
+    surfaces: {},
+    environment: {
+      preset: envPreset,
+      intensity: envIntensity,
+      background: hdriBackground,
+    },
+  });
+  const [selectedColor, setSelectedColor] = useState<string>("");
+  const [selectedFinish, setSelectedFinish] = useState<string>("gloss");
+  
   const isMobile = useMemo(() => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 767px)").matches, []);
+  const isTablet = useMemo(() => typeof window !== "undefined" && window.matchMedia && window.matchMedia("(min-width: 768px) and (max-width: 1199px)").matches, []);
+  
+  // Load wrap data
+  const wrapColors: WrapColor[] = (wrapColorsData as WrapColorsData).colors;
+  const wrapFinishes: WrapFinish[] = (wrapFinishesData as WrapFinishesData).finishes;
+  const wrapCategories: WrapCategory[] = (wrapColorsData as WrapColorsData).categories;
+
+  // Handle surface selection
+  const handleSurfaceToggle = (surfaceId: string) => {
+    setSelectedSurfaces(prev => 
+      prev.includes(surfaceId) 
+        ? prev.filter(s => s !== surfaceId)
+        : [...prev, surfaceId]
+    );
+  };
+
+  const handleSurfaceSelect = (surfaceId: string) => {
+    // Focus on surface in 3D view (to be implemented in ModelViewer)
+    console.log('Focus on surface:', surfaceId);
+  };
+
+  const handleColorSelect = (colorId: string) => {
+    setSelectedColor(colorId);
+    // Apply to selected surfaces
+    if (selectedSurfaces.length > 0) {
+      const newConfig = { ...wrapConfig };
+      selectedSurfaces.forEach(surfaceId => {
+        newConfig.surfaces[surfaceId] = {
+          ...newConfig.surfaces[surfaceId],
+          colorId,
+          finishId: selectedFinish,
+        };
+      });
+      setWrapConfig(newConfig);
+    }
+  };
+
+  const handleFinishSelect = (finishId: string) => {
+    setSelectedFinish(finishId);
+    // Apply to selected surfaces
+    if (selectedSurfaces.length > 0) {
+      const newConfig = { ...wrapConfig };
+      selectedSurfaces.forEach(surfaceId => {
+        newConfig.surfaces[surfaceId] = {
+          ...newConfig.surfaces[surfaceId],
+          colorId: selectedColor,
+          finishId,
+        };
+      });
+      setWrapConfig(newConfig);
+    }
+  };
 
   return (
     <div className="relative w-full">
       {/* Layout */}
       <div className={cn(
-        "grid transition-[grid-template-columns] duration-300 ease-in-out",
-        "w-full min-h-[60vh] md:min-h-[70vh]",
-        sidebarOpen ? "grid-cols-1 md:grid-cols-[1fr_320px]" : "grid-cols-1"
+        "flex transition-all duration-300 ease-in-out",
+        "w-full min-h-[60vh] md:min-h-[70vh]"
       )}>
-        {/* Left: Canvas area */}
-        <div className="relative bg-black">
-          <ModelViewer
+        {/* Left Sidebar: Car Controls (Desktop only) */}
+        {!isMobile && !isTablet && (
+          <div className={cn(
+            "xl:block h-full border-r border-slate-800 bg-slate-900 flex-shrink-0",
+            "max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth",
+            "transition-[width] duration-300 ease-in-out",
+            leftSidebarOpen ? "w-[280px]" : "w-0 overflow-hidden"
+          )}>
+            <div className={cn(
+              "w-[280px] transition-opacity duration-300",
+              leftSidebarOpen ? "opacity-100" : "opacity-0"
+            )}>
+              <div className="p-4 space-y-6">
+                <SurfaceSelector
+                  metadata={assetMetadata}
+                  selectedSurfaces={selectedSurfaces}
+                  onSurfaceToggle={handleSurfaceToggle}
+                  onSurfaceSelect={handleSurfaceSelect}
+                  highlightMode={highlightMode}
+                  onHighlightModeToggle={setHighlightMode}
+                />
+                <WrapCustomizer
+                  colors={wrapColors}
+                  finishes={wrapFinishes}
+                  categories={wrapCategories}
+                  selectedColor={selectedColor}
+                  selectedFinish={selectedFinish}
+                  onColorSelect={handleColorSelect}
+                  onFinishSelect={handleFinishSelect}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Center: Canvas area */}
+        <div className="relative bg-black flex-1">
+          <EnhancedModelViewer
             url={url}
             scale={initialScale}
             envPreset={envPreset}
@@ -55,6 +170,12 @@ export default function AssetViewerPanel({
             groundVariant={groundVariant}
             autoRotateEnabled={autoRotateEnabled}
             autoRotateSpeed={autoRotateSpeed}
+            wrapConfig={wrapConfig}
+            wrapColors={wrapColors}
+            wrapFinishes={wrapFinishes}
+            selectedSurfaces={selectedSurfaces}
+            highlightMode={highlightMode}
+            onSurfaceClick={handleSurfaceSelect}
           />
 
           {/* Mobile rotate tip */}
@@ -64,30 +185,117 @@ export default function AssetViewerPanel({
             </div>
           </div>
 
-          {/* Mobile overlay sidebar */}
-          {isMobile && (
+          {/* Mobile/Tablet overlay sidebars */}
+          {(isMobile || isTablet) && (
+            <>
+              {/* Left sidebar overlay (Car controls) */}
+              {leftSidebarOpen && (
+                <div className="absolute inset-0 z-20">
+                  <div
+                    className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
+                    onClick={() => setLeftSidebarOpen(false)}
+                  />
+                  <div className="absolute left-0 top-0 h-full w-[85%] max-w-sm bg-slate-900 border-r border-slate-800 shadow-xl max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300">
+                    <div className="p-4 space-y-6">
+                      <SurfaceSelector
+                        metadata={assetMetadata}
+                        selectedSurfaces={selectedSurfaces}
+                        onSurfaceToggle={handleSurfaceToggle}
+                        onSurfaceSelect={handleSurfaceSelect}
+                        highlightMode={highlightMode}
+                        onHighlightModeToggle={setHighlightMode}
+                      />
+                      <WrapCustomizer
+                        colors={wrapColors}
+                        finishes={wrapFinishes}
+                        categories={wrapCategories}
+                        selectedColor={selectedColor}
+                        selectedFinish={selectedFinish}
+                        onColorSelect={handleColorSelect}
+                        onFinishSelect={handleFinishSelect}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Right sidebar overlay (Environment controls) */}
+              {rightSidebarOpen && (
+                <div className="absolute inset-0 z-20">
+                  <div
+                    className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
+                    onClick={() => setRightSidebarOpen(false)}
+                  />
+                  <div className="absolute right-0 top-0 h-full w-[85%] max-w-sm bg-slate-900 border-l border-slate-800 shadow-xl max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300">
+                    <div className="p-4">
+                      <EnvironmentControls
+                        envPreset={envPreset}
+                        setEnvPreset={setEnvPreset}
+                        hdriBackground={hdriBackground}
+                        setHdriBackground={setHdriBackground}
+                        envIntensity={envIntensity}
+                        setEnvIntensity={setEnvIntensity}
+                        platformStyle={platformStyle}
+                        setPlatformStyle={setPlatformStyle}
+                        groundVariant={groundVariant}
+                        setGroundVariant={setGroundVariant}
+                        autoRotateEnabled={autoRotateEnabled}
+                        setAutoRotateEnabled={setAutoRotateEnabled}
+                        autoRotateSpeed={autoRotateSpeed}
+                        setAutoRotateSpeed={setAutoRotateSpeed}
+                      />
+                      <div className="mt-6">
+                        <ScaleEditor id={assetId} initialScale={initialScale} inlineReadOnlyInitially />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Toggle buttons */}
+          <div className="absolute top-3 left-3 right-3 z-10 flex justify-between">
+            {/* Left sidebar toggle */}
+            <button
+              onClick={() => setLeftSidebarOpen((v) => !v)}
+              className={cn(
+                "px-3 py-1.5 text-xs rounded-md border",
+                "bg-slate-900/70 border-slate-700 text-slate-200 hover:bg-slate-800",
+                "backdrop-blur-md transition-colors"
+              )}
+            >
+              {leftSidebarOpen ? "Hide" : "Show"} Car Controls
+            </button>
+            
+            {/* Right sidebar toggle */}
+            <button
+              onClick={() => setRightSidebarOpen((v) => !v)}
+              className={cn(
+                "px-3 py-1.5 text-xs rounded-md border",
+                "bg-slate-900/70 border-slate-700 text-slate-200 hover:bg-slate-800",
+                "backdrop-blur-md transition-colors"
+              )}
+            >
+              {rightSidebarOpen ? "Hide" : "Show"} Environment
+            </button>
+          </div>
+        </div>
+
+        {/* Right Sidebar: Environment Controls (Desktop only) */}
+        {!isMobile && !isTablet && (
+          <div className={cn(
+            "xl:block h-full border-l border-slate-800 bg-slate-900 flex-shrink-0",
+            "max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth",
+            "transition-[width] duration-300 ease-in-out",
+            rightSidebarOpen ? "w-[300px]" : "w-0 overflow-hidden"
+          )}>
             <div className={cn(
-              "absolute inset-0 z-20",
-              sidebarOpen ? "" : "pointer-events-none"
+              "w-[300px] transition-opacity duration-300",
+              rightSidebarOpen ? "opacity-100" : "opacity-0"
             )}>
-              {/* Backdrop */}
-              <div
-                className={cn(
-                  "absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity",
-                  sidebarOpen ? "opacity-100" : "opacity-0"
-                )}
-                onClick={() => setSidebarOpen(false)}
-              />
-              {/* Panel */}
-              <div
-                className={cn(
-                  "absolute right-0 top-0 h-full w-[85%] max-w-sm bg-slate-900 border-l border-slate-800 shadow-xl",
-                  // Cap height and enable smooth, contained scrolling on all sizes
-                  "max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth",
-                  sidebarOpen ? "translate-x-0" : "translate-x-full"
-                )}
-              >
-                <SidebarContent
+              <div className="p-4">
+                <EnvironmentControls
                   envPreset={envPreset}
                   setEnvPreset={setEnvPreset}
                   hdriBackground={hdriBackground}
@@ -102,226 +310,21 @@ export default function AssetViewerPanel({
                   setAutoRotateEnabled={setAutoRotateEnabled}
                   autoRotateSpeed={autoRotateSpeed}
                   setAutoRotateSpeed={setAutoRotateSpeed}
-                  assetId={assetId}
-                  initialScale={initialScale}
-                  assetName={assetName}
-                  assetFormat={assetFormat}
                 />
+                <div className="mt-6 space-y-2">
+                  <label className="text-sm text-slate-300">Scale</label>
+                  <ScaleEditor id={assetId} initialScale={initialScale} inlineReadOnlyInitially />
+                </div>
+                
+                {/* Asset Info */}
+                <div className="mt-6 text-xs text-slate-400 flex items-center gap-2">
+                  {assetName && <span className="truncate">{assetName}</span>}
+                  {assetFormat && <span className="uppercase border border-slate-700 rounded px-1 py-0.5">{assetFormat}</span>}
+                </div>
               </div>
             </div>
-          )}
-
-          {/* Toggle button */}
-          <button
-            onClick={() => setSidebarOpen((v) => !v)}
-            className={cn(
-              "absolute top-3 right-3 z-10 px-3 py-1.5 text-xs rounded-md border",
-              "bg-slate-900/70 border-slate-700 text-slate-200 hover:bg-slate-800",
-              "backdrop-blur-md transition-colors"
-            )}
-          >
-            {sidebarOpen ? "Hide" : "Show"} Panel
-          </button>
-        </div>
-
-        {/* Right: Desktop sidebar */}
-        <div className={cn(
-          "hidden md:block h-full border-l border-slate-800 bg-slate-900",
-          // Cap height and enable contained scrolling even on large screens
-          "max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth",
-          "transition-[width] duration-300",
-          sidebarOpen ? "w-[320px]" : "w-0"
+          </div>
         )}
-        >
-          {sidebarOpen && (
-            <SidebarContent
-              envPreset={envPreset}
-              setEnvPreset={setEnvPreset}
-              hdriBackground={hdriBackground}
-              setHdriBackground={setHdriBackground}
-              envIntensity={envIntensity}
-              setEnvIntensity={setEnvIntensity}
-              platformStyle={platformStyle}
-              setPlatformStyle={setPlatformStyle}
-              groundVariant={groundVariant}
-              setGroundVariant={setGroundVariant}
-              autoRotateEnabled={autoRotateEnabled}
-              setAutoRotateEnabled={setAutoRotateEnabled}
-              autoRotateSpeed={autoRotateSpeed}
-              setAutoRotateSpeed={setAutoRotateSpeed}
-              assetId={assetId}
-              initialScale={initialScale}
-              assetName={assetName}
-              assetFormat={assetFormat}
-            />
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function SidebarContent({
-  envPreset,
-  setEnvPreset,
-  hdriBackground,
-  setHdriBackground,
-  envIntensity,
-  setEnvIntensity,
-  platformStyle,
-  setPlatformStyle,
-  groundVariant,
-  setGroundVariant,
-  autoRotateEnabled,
-  setAutoRotateEnabled,
-  autoRotateSpeed,
-  setAutoRotateSpeed,
-  assetId,
-  initialScale,
-  assetName,
-  assetFormat,
-}: {
-  envPreset: EnvPreset;
-  setEnvPreset: (v: EnvPreset) => void;
-  hdriBackground: boolean;
-  setHdriBackground: (v: boolean) => void;
-  envIntensity: number;
-  setEnvIntensity: (v: number) => void;
-  platformStyle: PlatformStyle;
-  setPlatformStyle: (v: PlatformStyle) => void;
-  groundVariant: GroundVariant;
-  setGroundVariant: (v: GroundVariant) => void;
-  autoRotateEnabled: boolean;
-  setAutoRotateEnabled: (v: boolean) => void;
-  autoRotateSpeed: number;
-  setAutoRotateSpeed: (v: number) => void;
-  assetId: string;
-  initialScale: number;
-  assetName?: string;
-  assetFormat?: string;
-}) {
-  return (
-    <div className="p-4 space-y-6">
-      {/* Header */}
-      <div className="space-y-1">
-        <div className="text-sm text-slate-400">Customize</div>
-        <div className="text-lg font-semibold text-slate-100">Viewer Settings</div>
-      </div>
-
-      {/* Asset meta */}
-      <div className="text-xs text-slate-400 flex items-center gap-2">
-        {assetName && <span className="truncate">{assetName}</span>}
-        {assetFormat && <span className="uppercase border border-slate-700 rounded px-1 py-0.5">{assetFormat}</span>}
-      </div>
-
-      {/* Environment */}
-      <div className="space-y-3">
-        <div className="text-sm text-slate-300">Environment</div>
-        <div className="grid gap-3">
-          <div className="grid gap-1">
-            <label className="text-xs text-slate-400">HDRI preset</label>
-            <Select value={envPreset} onValueChange={(v) => setEnvPreset(v as EnvPreset)}>
-              <SelectTrigger className="w-full bg-slate-800 text-slate-200 border border-slate-700">
-                <SelectValue placeholder="Select preset" />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-900 text-slate-100 border-slate-700">
-                {(['city','studio','sunset','dawn','warehouse','apartment','night','forest','park','lobby'] as EnvPreset[]).map((p) => (
-                  <SelectItem key={p} value={p}>{p}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">Use as background</span>
-            <Switch checked={hdriBackground} onCheckedChange={setHdriBackground} />
-          </div>
-          <div className="grid gap-1">
-            <label className="text-xs text-slate-400">Environment intensity</label>
-            <Slider
-              value={[envIntensity]}
-              onValueChange={(v) => setEnvIntensity(v[0] ?? envIntensity)}
-              min={0}
-              max={2}
-              step={0.01}
-            />
-            <div className="text-[10px] text-slate-500">{envIntensity.toFixed(2)}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Platform style */}
-      <div className="space-y-2">
-        <label className="text-sm text-slate-300">Platform style</label>
-        <div className="grid grid-cols-2 gap-2">
-          {([
-            ["circle", "Circle"],
-            ["rounded", "Rounded"],
-            ["grid", "Grid"],
-          ] as [PlatformStyle, string][]).map(([val, label]) => (
-            <button
-              key={val}
-              onClick={() => setPlatformStyle(val)}
-              className={cn(
-                "px-3 py-2 rounded border text-sm transition-colors",
-                platformStyle === val
-                  ? "bg-cyan-600/20 border-cyan-600 text-cyan-300"
-                  : "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Ground variant */}
-      <div className="space-y-2">
-        <label className="text-sm text-slate-300">Ground variant</label>
-        <Select value={groundVariant} onValueChange={(v) => setGroundVariant(v as GroundVariant)}>
-          <SelectTrigger className="w-full bg-slate-800 text-slate-200 border border-slate-700">
-            <SelectValue placeholder="Select ground" />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-900 text-slate-100 border-slate-700">
-            {(["plain", "concrete", "asphalt", "carpet", "studio"] as GroundVariant[]).map((p) => (
-              <SelectItem key={p} value={p}>{p}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-
-      {/* Auto rotate speed */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="text-sm text-slate-300">Auto-rotate</label>
-          <div className="inline-flex items-center gap-2 cursor-pointer">
-            <Switch checked={autoRotateEnabled} onCheckedChange={setAutoRotateEnabled} />
-            <span className="text-xs text-slate-400">{autoRotateEnabled ? 'On' : 'Off'}</span>
-          </div>
-        </div>
-        <label className="text-sm text-slate-300">Speed</label>
-        <Slider
-          value={[autoRotateSpeed]}
-          onValueChange={(v) => setAutoRotateSpeed(v[0] ?? autoRotateSpeed)}
-          min={0}
-          max={30}
-          step={0.02}
-          disabled={!autoRotateEnabled}
-        />
-        <div className="text-xs text-slate-400">{autoRotateSpeed.toFixed(2)} (0–30)</div>
-      </div>
-
-      {/* Scale editor */}
-      <div className="space-y-2">
-        <label className="text-sm text-slate-300">Scale</label>
-        <ScaleEditor id={assetId} initialScale={initialScale} inlineReadOnlyInitially />
-      </div>
-
-      {/* Tips */}
-      <div className="text-xs text-slate-400 border-t border-slate-800 pt-4">
-        • Left Click + Drag: Rotate
-        <br />• Right Click + Drag: Pan
-        <br />• Scroll: Zoom
       </div>
     </div>
   );

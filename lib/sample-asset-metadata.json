@@ -1,0 +1,62 @@
+{
+  "sampleCarMetadata": {
+    "wrappableSurfaces": [
+      "body_front_bumper",
+      "body_rear_bumper", 
+      "body_left_door",
+      "body_right_door",
+      "body_hood",
+      "body_trunk",
+      "body_left_fender",
+      "body_right_fender",
+      "body_roof",
+      "body_left_side_panel",
+      "body_right_side_panel"
+    ],
+    "rims": [
+      "wheel_front_left_rim",
+      "wheel_front_right_rim", 
+      "wheel_rear_left_rim",
+      "wheel_rear_right_rim"
+    ],
+    "windows": [
+      "window_windshield",
+      "window_rear",
+      "window_left_front",
+      "window_right_front",
+      "window_left_rear", 
+      "window_right_rear"
+    ],
+    "doors": [
+      "door_left_front",
+      "door_right_front",
+      "door_left_rear",
+      "door_right_rear"
+    ],
+    "tyres": [
+      "tyre_front_left",
+      "tyre_front_right",
+      "tyre_rear_left", 
+      "tyre_rear_right"
+    ],
+    "interior": [
+      "interior_dashboard",
+      "interior_seats_front",
+      "interior_seats_rear",
+      "interior_steering_wheel",
+      "interior_door_panels"
+    ],
+    "lights": [
+      "light_headlight_left",
+      "light_headlight_right",
+      "light_taillight_left",
+      "light_taillight_right",
+      "light_brake_lights"
+    ],
+    "other": {
+      "mirrors": ["mirror_left", "mirror_right", "mirror_rear_view"],
+      "grille": ["grille_front", "grille_lower"],
+      "exhaust": ["exhaust_pipe_left", "exhaust_pipe_right"]
+    }
+  }
+}
