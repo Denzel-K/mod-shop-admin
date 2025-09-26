@@ -4,7 +4,6 @@ import { Settings, Sun, Camera, RotateCcw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type EnvPreset = "city" | "studio" | "sunset" | "dawn" | "warehouse" | "apartment" | "night" | "forest" | "park" | "lobby";
@@ -172,25 +171,6 @@ export default function EnvironmentControls({
               <div className="text-xs text-slate-400">{autoRotateSpeed.toFixed(2)} (0–30)</div>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Camera Presets */}
-      <div className="space-y-2">
-        <label className="text-xs text-slate-400">Camera presets</label>
-        <div className="grid grid-cols-2 gap-2">
-          <Button variant="outline" size="sm" className="text-xs">
-            Front View
-          </Button>
-          <Button variant="outline" size="sm" className="text-xs">
-            Side View
-          </Button>
-          <Button variant="outline" size="sm" className="text-xs">
-            Rear View
-          </Button>
-          <Button variant="outline" size="sm" className="text-xs">
-            Top View
-          </Button>
         </div>
       </div>
 

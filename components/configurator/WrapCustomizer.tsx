@@ -67,18 +67,77 @@ export default function WrapCustomizer({
           placeholder="Search colors..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 bg-slate-800 border-slate-700 text-slate-200"
+          className="pl-10 bg-slate-900/60 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-600/40"
         />
+      </div>
+
+      {/* Finish Selection */}
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <label className="text-sm text-slate-300">Finish Type</label>
+          <Select value={selectedFinishCategory} onValueChange={setSelectedFinishCategory}>
+            <SelectTrigger className="bg-slate-900/60 border-slate-600 text-slate-100">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-950/90 text-slate-100 border-slate-700">
+              <SelectItem value="all">All Finishes</SelectItem>
+              <SelectItem value="gloss">Gloss</SelectItem>
+              <SelectItem value="satin">Satin</SelectItem>
+              <SelectItem value="matte">Matte</SelectItem>
+              <SelectItem value="metallic">Metallic</SelectItem>
+              <SelectItem value="chrome">Chrome</SelectItem>
+              <SelectItem value="textured">Textured</SelectItem>
+              <SelectItem value="pearlescent">Pearlescent</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          {filteredFinishes.map((finish) => {
+            const isSelected = selectedFinish === finish.id;
+            return (
+              <button
+                key={finish.id}
+                onClick={() => onFinishSelect(finish.id)}
+                className={cn(
+                  "w-full p-2.5 rounded-md border text-left transition-colors",
+                  isSelected
+                    ? "bg-cyan-600/20 border-cyan-600 text-cyan-300"
+                    : "bg-slate-900/50 border-slate-700 text-slate-200 hover:bg-slate-800/70"
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-medium text-sm">{finish.name}</div>
+                  {isSelected && (
+                    <Badge variant="secondary" className="text-[10px]">Selected</Badge>
+                  )}
+                </div>
+                {finish.description && (
+                  <div className="text-xs text-slate-400 mt-1 line-clamp-2">{finish.description}</div>
+                )}
+                {finish.characteristics?.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {finish.characteristics.slice(0, 3).map((char) => (
+                      <Badge key={char} variant="outline" className="text-[10px] text-slate-200 border-slate-600">
+                        {char.replace('_', ' ')}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Category Filter */}
       <div className="space-y-2">
         <label className="text-sm text-slate-300">Color Category</label>
         <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-200">
+          <SelectTrigger className="bg-slate-900/60 border-slate-600 text-slate-100">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-slate-900 border-slate-700">
+          <SelectContent className="bg-slate-950/90 text-slate-100 border-slate-700">
             <SelectItem value="all">All Categories</SelectItem>
             {categories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
@@ -97,67 +156,20 @@ export default function WrapCustomizer({
             {filteredColors.length} available
           </Badge>
         </div>
-        <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
+        <div className="grid grid-cols-5 gap-1 max-h-44 overflow-y-auto">
           {filteredColors.map((color) => (
             <button
               key={color.id}
               onClick={() => onColorSelect(color.id)}
               className={cn(
-                "aspect-square rounded-lg border-2 transition-all hover:scale-105",
+                "aspect-square rounded-md border transition-all hover:scale-[1.03]",
                 selectedColor === color.id
-                  ? "border-cyan-400 ring-2 ring-cyan-400/30"
+                  ? "border-cyan-400 ring-1 ring-cyan-400/40"
                   : "border-slate-600 hover:border-slate-500"
               )}
               style={{ backgroundColor: color.hex }}
               title={color.name}
             />
-          ))}
-        </div>
-      </div>
-
-      {/* Finish Selection */}
-      <div className="space-y-3">
-        <div className="space-y-2">
-          <label className="text-sm text-slate-300">Finish Type</label>
-          <Select value={selectedFinishCategory} onValueChange={setSelectedFinishCategory}>
-            <SelectTrigger className="bg-slate-800 border-slate-700 text-slate-200">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-slate-900 border-slate-700">
-              <SelectItem value="all">All Finishes</SelectItem>
-              <SelectItem value="gloss">Gloss</SelectItem>
-              <SelectItem value="satin">Satin</SelectItem>
-              <SelectItem value="matte">Matte</SelectItem>
-              <SelectItem value="metallic">Metallic</SelectItem>
-              <SelectItem value="chrome">Chrome</SelectItem>
-              <SelectItem value="textured">Textured</SelectItem>
-              <SelectItem value="pearlescent">Pearlescent</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          {filteredFinishes.map((finish) => (
-            <button
-              key={finish.id}
-              onClick={() => onFinishSelect(finish.id)}
-              className={cn(
-                "w-full p-3 rounded-lg border text-left transition-colors",
-                selectedFinish === finish.id
-                  ? "bg-cyan-600/20 border-cyan-600 text-cyan-300"
-                  : "bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700"
-              )}
-            >
-              <div className="font-medium">{finish.name}</div>
-              <div className="text-xs text-slate-400 mt-1">{finish.description}</div>
-              <div className="flex flex-wrap gap-1 mt-2">
-                {finish.characteristics.slice(0, 2).map((char) => (
-                  <Badge key={char} variant="outline" className="text-xs">
-                    {char.replace('_', ' ')}
-                  </Badge>
-                ))}
-              </div>
-            </button>
           ))}
         </div>
       </div>

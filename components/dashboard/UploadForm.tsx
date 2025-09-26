@@ -259,28 +259,34 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
   };
 
   return (
-    <form onSubmit={submit} className="py-5 px-2 sm:px-4 md:px-6 space-y-5">
-      {error && (
-        <Alert className="bg-red-500/10 border-red-500/20 text-red-400">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      {/* Tabbed interface for curators to split responsibilities */}
-      <Tabs defaultValue="primary" className="w-full">
-        <TabsList className="sticky top-0 z-10 bg-transparent gap-2 border-[1.5px] border-slate-700 mb-4">
-          <TabsTrigger
-            value="primary"
+    // Place Tabs outside the form so tab triggers are not within a form context
+    <Tabs defaultValue="primary" className="w-full">
+      <TabsList className="sticky top-0 z-10 bg-transparent gap-2 border-[1.5px] border-slate-700 mb-4">
+        <TabsTrigger value="primary" asChild>
+          <button
+            type="button"
             className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:border-cyan-600 bg-slate-800/40 text-slate-200 border border-slate-700 hover:bg-slate-800 rounded-md px-3 py-1.5"
           >
             Primary Info
-          </TabsTrigger>
-          <TabsTrigger
-            value="metadata"
+          </button>
+        </TabsTrigger>
+        <TabsTrigger value="metadata" asChild>
+          <button
+            type="button"
             className="data-[state=active]:bg-cyan-600 data-[state=active]:text-white data-[state=active]:border-cyan-600 bg-slate-800/40 text-slate-200 border border-slate-700 hover:bg-slate-800 rounded-md px-3 py-1.5"
           >
             Metadata
-          </TabsTrigger>
-        </TabsList>
+          </button>
+        </TabsTrigger>
+      </TabsList>
+
+      {/* The form wraps only the tab contents and footer, not the tab triggers */}
+      <form onSubmit={submit} className="py-5 px-2 sm:px-4 md:px-6 space-y-5">
+        {error && (
+          <Alert className="bg-red-500/10 border-red-500/20 text-red-400">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <TabsContent value="primary" className="animate-in fade-in slide-in-from-top-1 duration-200">
           <PrimaryInfoTab
@@ -357,26 +363,26 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
             setMetadataJson={setMetadataJson}
           />
         </TabsContent>
-      </Tabs>
-      <div className="flex items-center justify-end gap-3 pt-2">
-        <Button type="button" onClick={onClose} disabled={submitting} variant="outline" className="bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50">Cancel</Button>
-        <Button type="submit" disabled={!canSubmit} className="bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-50 flex items-center gap-2">
-          {submitting && <span className="inline-block h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />}
-          {submitting ? (isEdit ? 'Saving…' : 'Uploading…') : (isEdit ? 'Save changes' : 'Upload')}
-        </Button>
-      </div>
-      {!isEdit && uploadId && (
-        <div className="pt-2">
-          <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-            <span>Upload progress</span>
-            <span>{Math.round(uploadProgress)}%</span>
-          </div>
-          <div className="h-2 w-full bg-slate-800 rounded">
-            <div className="h-2 bg-cyan-500 rounded transition-all" style={{ width: `${Math.max(0, Math.min(100, uploadProgress))}%` }} />
-          </div>
-          <div className="text-xs text-slate-500 mt-1">{uploadStatus === 'uploading' ? 'Uploading…' : uploadStatus === 'processing' ? 'Processing…' : uploadStatus === 'completed' ? 'Completed' : uploadStatus === 'failed' ? 'Failed' : ''}</div>
+        <div className="flex items-center justify-end gap-3 pt-2">
+          <Button type="button" onClick={onClose} disabled={submitting} variant="outline" className="bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50">Cancel</Button>
+          <Button type="submit" disabled={!canSubmit} className="bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-50 flex items-center gap-2">
+            {submitting && <span className="inline-block h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />}
+            {submitting ? (isEdit ? 'Saving…' : 'Uploading…') : (isEdit ? 'Save changes' : 'Upload')}
+          </Button>
         </div>
-      )}
-    </form>
+        {!isEdit && uploadId && (
+          <div className="pt-2">
+            <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+              <span>Upload progress</span>
+              <span>{Math.round(uploadProgress)}%</span>
+            </div>
+            <div className="h-2 w-full bg-slate-800 rounded">
+              <div className="h-2 bg-cyan-500 rounded transition-all" style={{ width: `${Math.max(0, Math.min(100, uploadProgress))}%` }} />
+            </div>
+            <div className="text-xs text-slate-500 mt-1">{uploadStatus === 'uploading' ? 'Uploading…' : uploadStatus === 'processing' ? 'Processing…' : uploadStatus === 'completed' ? 'Completed' : uploadStatus === 'failed' ? 'Failed' : ''}</div>
+          </div>
+        )}
+      </form>
+    </Tabs>
   );
 }
