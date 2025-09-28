@@ -32,6 +32,8 @@ export async function GET(req: NextRequest) {
     const yearStr = sp.get('year')?.trim();
     const assetSource = sp.get('assetSource')?.trim();
     const tag = sp.get('tag')?.trim();
+    const curatedBy = sp.get('curatedBy')?.trim();
+    const limitStr = sp.get('limit')?.trim();
 
     // Build a typed Mongo query
     const query: import('mongoose').FilterQuery<IAsset> = {};
@@ -52,8 +54,18 @@ export async function GET(req: NextRequest) {
     }
     if (assetSource && ['sketchfab','turbosquid','internal','other'].includes(assetSource)) query.assetSource = assetSource;
     if (tag) query.tags = tag;
+    if (curatedBy) query['curatedBy.adminId'] = curatedBy;
 
-    const assets = await Asset.find(query).sort({ createdAt: -1 }).lean();
+    // Parse limit parameter
+    let limit = 50; // default limit
+    if (limitStr) {
+      const parsedLimit = parseInt(limitStr, 10);
+      if (Number.isInteger(parsedLimit) && parsedLimit > 0 && parsedLimit <= 100) {
+        limit = parsedLimit;
+      }
+    }
+
+    const assets = await Asset.find(query).sort({ createdAt: -1 }).limit(limit).lean();
     return NextResponse.json({ assets }, { status: 200 });
   } catch (error) {
     console.error('List assets error:', error);

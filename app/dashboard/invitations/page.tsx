@@ -1,11 +1,26 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { z } from "zod";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
+import { 
+  MailPlus, 
+  Users, 
+  RefreshCw, 
+  Send, 
+  Filter,
+  Edit3,
+  UserX,
+  Plus
+} from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MailPlus, RefreshCw, Send, Users, Filter, Plus } from "lucide-react";
 
 type Invitation = {
   id: string;
@@ -15,6 +30,8 @@ type Invitation = {
   acceptedAt: string | null;
   invitedBy: { id: string; fullname: string; email: string } | null;
   role?: "super-admin" | "manager" | "curator";
+  adminId?: string; // present if accepted and admin exists
+  adminRole?: "super-admin" | "manager" | "curator"; // authoritative role once accepted
   createdAt: string;
 };
 
@@ -23,6 +40,9 @@ export default function InvitationsPage() {
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [resendingId, setResendingId] = useState<string | null>(null);
+  const [assetCounts, setAssetCounts] = useState<Record<string, number>>({});
+  const [editingRole, setEditingRole] = useState<{inv: Invitation; newRole: string} | null>(null);
+  const [revoking, setRevoking] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [listLoading, setListLoading] = useState(true);
@@ -84,6 +104,38 @@ export default function InvitationsPage() {
     fetchInvitations();
   }, []);
 
+  // Fetch asset counts for accepted admins
+  useEffect(() => {
+    const fetchAssetCounts = async () => {
+      const acceptedAdmins = invitations.filter(inv => inv.acceptedAt);
+      if (acceptedAdmins.length === 0) return;
+
+      const counts: Record<string, number> = {};
+      
+      try {
+        await Promise.all(
+          acceptedAdmins.map(async (admin) => {
+            try {
+              const countRes = await fetch(`/api/assets?curatedBy=${admin.id}`, { cache: "no-store" });
+              const countData = await countRes.json();
+              if (countRes.ok) {
+                counts[admin.id] = countData.assets?.length || 0;
+              }
+            } catch (e) {
+              console.error(`Failed to fetch asset count for admin ${admin.id}:`, e);
+              counts[admin.id] = 0;
+            }
+          })
+        );
+        setAssetCounts(counts);
+      } catch (e) {
+        console.error("Failed to fetch asset counts:", e);
+      }
+    };
+
+    fetchAssetCounts();
+  }, [invitations]);
+
   const onInvite = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -97,7 +149,7 @@ export default function InvitationsPage() {
     }
     try {
       setSending(true);
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch("/api/auth/invitations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fullname, email, role }),
@@ -141,6 +193,66 @@ export default function InvitationsPage() {
       toast.error(msg);
     } finally {
       setResendingId(null);
+    }
+  };
+
+  const onEditRole = (inv: Invitation) => {
+    if (!inv.acceptedAt || !inv.adminId) return; // cannot edit until accepted/admin exists
+    setEditingRole({ inv, newRole: inv.adminRole || inv.role || "curator" });
+  };
+
+  const onSaveRole = async () => {
+    if (!editingRole) return;
+    
+    setError(null);
+    setSuccess(null);
+    try {
+      if (!editingRole.inv.adminId) {
+        throw new Error("Admin ID not available for this invitation yet");
+      }
+      const res = await fetch(`/api/auth/admins/${editingRole.inv.adminId}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: editingRole.newRole }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update role");
+      setSuccess(`Role updated for ${editingRole.inv.fullname}`);
+      toast.success(`Role updated to ${editingRole.newRole.replace('-', ' ')}`);
+      setEditingRole(null);
+      fetchInvitations();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to update role";
+      setError(msg);
+      toast.error(msg);
+    }
+  };
+
+  const onRevokeAccess = async (inv: Invitation) => {
+    if (!confirm(`Are you sure you want to revoke access for ${inv.fullname}? This action cannot be undone.`)) {
+      return;
+    }
+    
+    setError(null);
+    setSuccess(null);
+    try {
+      setRevoking(inv.id);
+      if (!inv.adminId) throw new Error("Cannot revoke before invitation is accepted");
+      const res = await fetch(`/api/auth/admins/${inv.adminId}/revoke`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to revoke access");
+      setSuccess(`Access revoked for ${inv.fullname}`);
+      toast.success(`Access revoked for ${inv.fullname}`);
+      fetchInvitations();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to revoke access";
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setRevoking(null);
     }
   };
 
@@ -320,6 +432,7 @@ export default function InvitationsPage() {
                     <th className="px-6 py-3 text-left">User</th>
                     <th className="px-6 py-3 text-left">Role</th>
                     <th className="px-6 py-3 text-left">Status</th>
+                    <th className="px-6 py-3 text-left">Curated</th>
                     <th className="px-6 py-3 text-left">Invited By</th>
                     <th className="px-6 py-3 text-left">Date</th>
                     <th className="px-6 py-3 text-left">Actions</th>
@@ -351,6 +464,16 @@ export default function InvitationsPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-300">
+                        {inv.acceptedAt ? (
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="text-slate-400">{assetCounts[inv.id] || 0}</span>
+                            <span className="text-xs text-slate-500">assets</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-500 text-xs">—</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-300">
                         {inv.invitedBy ? inv.invitedBy.fullname : "—"}
                       </td>
                       <td className="px-6 py-4 text-sm text-slate-400">
@@ -360,25 +483,57 @@ export default function InvitationsPage() {
                         }
                       </td>
                       <td className="px-6 py-4">
-                        {!inv.acceptedAt && (
-                          <button
-                            onClick={() => onResend(inv)}
-                            disabled={resendingId === inv.id}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-lg disabled:opacity-60 transition"
-                          >
-                            {resendingId === inv.id ? (
-                              <>
-                                <RefreshCw className="size-3.5 animate-spin" />
-                                Resending...
-                              </>
-                            ) : (
-                              <>
-                                <Send className="size-3.5" />
-                                Resend
-                              </>
-                            )}
-                          </button>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {!inv.acceptedAt ? (
+                            <button
+                              onClick={() => onResend(inv)}
+                              disabled={resendingId === inv.id}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-lg disabled:opacity-60 transition"
+                            >
+                              {resendingId === inv.id ? (
+                                <>
+                                  <RefreshCw className="size-3.5 animate-spin" />
+                                  Resending...
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="size-3.5" />
+                                  Resend
+                                </>
+                              )}
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => onEditRole(inv)}
+                                disabled={!inv.adminId}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-blue-900/30 hover:bg-blue-900/50 text-blue-300 border border-blue-700/50 rounded-lg transition disabled:opacity-60"
+                                title="Edit Role"
+                              >
+                                <Edit3 className="size-3" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => onRevokeAccess(inv)}
+                                disabled={revoking === inv.id || !inv.adminId}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs bg-red-900/30 hover:bg-red-900/50 text-red-300 border border-red-700/50 rounded-lg transition disabled:opacity-60"
+                                title="Revoke Access"
+                              >
+                                {revoking === inv.id ? (
+                                  <>
+                                    <RefreshCw className="size-3 animate-spin" />
+                                    Revoking...
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserX className="size-3" />
+                                    Revoke
+                                  </>
+                                )}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -388,6 +543,56 @@ export default function InvitationsPage() {
           )}
         </div>
       </section>
+
+      {/* Edit Role Modal */}
+      {editingRole && (
+        <Dialog open={!!editingRole} onOpenChange={() => setEditingRole(null)}>
+          <DialogContent className="sm:max-w-md bg-slate-900 border border-slate-700 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold text-white">
+                Edit Role for {editingRole.inv.fullname}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4 pt-4">
+              <div>
+                <label className="block text-sm mb-2 text-slate-300" htmlFor="edit-role">Role</label>
+                <Select 
+                  value={editingRole.newRole} 
+                  onValueChange={(v) => setEditingRole({...editingRole, newRole: v})}
+                >
+                  <SelectTrigger className="w-full rounded-lg border border-slate-700 bg-slate-950/80 text-white focus:outline-none focus:ring-2 focus:ring-cyan-600">
+                    <SelectValue placeholder="Select a role" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border border-slate-700 text-slate-100">
+                    <SelectItem value="super-admin">Super Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="curator">Curator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingRole(null)}
+                  className="flex-1 px-4 py-2.5 border border-slate-700 text-slate-300 rounded-lg hover:bg-slate-800/50 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={onSaveRole}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-lg transition"
+                >
+                  <Edit3 className="size-4" />
+                  Update Role
+                </button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

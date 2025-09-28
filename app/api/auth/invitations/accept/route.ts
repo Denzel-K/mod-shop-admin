@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       fullname: invitation.fullname,
       email: invitation.email,
       password: hashedPassword,
-      role: (invitation as unknown as { role?: string }).role || 'curator',
+      role: invitation.role || 'curator',
     });
     await newAdmin.save();
 
