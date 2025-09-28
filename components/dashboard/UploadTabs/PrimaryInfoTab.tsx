@@ -8,10 +8,9 @@ import { ChipsInput } from "@/components/dashboard/ChipsInput";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, X, Car, Crown, Truck, Mountain, Zap, Shield } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Check, ChevronsUpDown, X, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { listMakes, listModels, getBrandIcon, getBrandCountry } from "@/lib/model-mapping";
+import { listMakes, listModels, getBrandCountry, getBrandLogo } from "@/lib/model-mapping";
 import { useMemo, useState } from "react";
  
 
@@ -278,20 +277,6 @@ function EnhancedMakeSelector({
 }) {
   const [open, setOpen] = useState(false);
   const makes = useMemo(() => listMakes(), []);
-  
-  const getIcon = (iconName: string) => {
-    const iconByName: Record<string, LucideIcon> = {
-      car: Car,
-      crown: Crown,
-      truck: Truck,
-      mountain: Mountain,
-      zap: Zap,
-      shield: Shield,
-    };
-    const key = (iconName || "").toLowerCase();
-    const IconComponent = iconByName[key] ?? Car;
-    return IconComponent;
-  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -305,8 +290,12 @@ function EnhancedMakeSelector({
         >
           <div className="flex items-center gap-2">
             {value && (() => {
-              const IconComponent = getIcon(getBrandIcon(value));
-              return <IconComponent className="h-4 w-4" />;
+              const logo = getBrandLogo(value);
+              return logo ? (
+                <Image src={logo} alt={`${value} logo`} width={16} height={16} className="h-4 w-4 object-contain" />
+              ) : (
+                <Car className="h-4 w-4" />
+              );
             })()}
             <span className="truncate">{value || "Select make"}</span>
           </div>
@@ -340,7 +329,6 @@ function EnhancedMakeSelector({
               <span>Clear selection</span>
             </CommandItem>
             {makes.map((make) => {
-              const IconComponent = getIcon(getBrandIcon(make));
               const country = getBrandCountry(make);
               return (
                 <CommandItem
@@ -353,7 +341,16 @@ function EnhancedMakeSelector({
                   className="text-slate-300"
                 >
                   <Check className={cn("mr-2 h-4 w-4", value === make ? "opacity-100" : "opacity-0")} />
-                  <IconComponent className="mr-2 h-4 w-4" />
+                  {(() => {
+                    const logo = getBrandLogo(make);
+                    return logo ? (
+                      <div className="flex items-center justify-center mr-2 rounded-sm bg-slate-100/60 border-slate-700 h-8 w-8">
+                        <Image src={logo} alt={`${make} logo`} width={16} height={16} className="h-6 w-6 object-contain" />
+                      </div>
+                    ) : (
+                      <Car className="mr-2 h-4 w-4" />
+                    );
+                  })()}
                   <div className="flex flex-col">
                     <span className="truncate">{make}</span>
                     {country && <span className="text-xs text-slate-500">{country}</span>}

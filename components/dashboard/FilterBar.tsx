@@ -1,12 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { listMakes, listModels, getBrandIcon, getBrandCountry } from "@/lib/model-mapping";
-import { Car, Crown, Truck, Mountain, Zap, Shield } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { listMakes, listModels, getBrandCountry, getBrandLogo } from "@/lib/model-mapping";
+import { Car } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -209,19 +209,6 @@ function EnhancedMakeCombobox({
 }) {
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o === value) || '';
-  
-  const getIcon = (iconName: string) => {
-    const iconByName: Record<string, LucideIcon> = {
-      car: Car,
-      crown: Crown,
-      truck: Truck,
-      mountain: Mountain,
-      zap: Zap,
-      shield: Shield,
-    };
-    const key = (iconName || "").toLowerCase();
-    return iconByName[key] ?? Car;
-  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -239,8 +226,12 @@ function EnhancedMakeCombobox({
         >
           <div className="flex items-center gap-2 min-w-0">
             {selected && (() => {
-              const IconComponent = getIcon(getBrandIcon(selected));
-              return <IconComponent className="h-4 w-4 flex-shrink-0" />;
+              const logo = getBrandLogo(selected);
+              return logo ? (
+                <Image src={logo} alt={`${selected} logo`} width={16} height={16} className="h-4 w-4 flex-shrink-0 object-contain" />
+              ) : (
+                <Car className="h-4 w-4 flex-shrink-0" />
+              );
             })()}
             <span className="truncate">{selected || placeholder || "Select"}</span>
           </div>
@@ -267,7 +258,6 @@ function EnhancedMakeCombobox({
               <Check className={cn("mr-2 h-4 w-4", value ? "opacity-0" : "opacity-100")} /> Any
             </CommandItem>
             {options.map((make) => {
-              const IconComponent = getIcon(getBrandIcon(make));
               const country = getBrandCountry(make);
               return (
                 <CommandItem
@@ -277,7 +267,16 @@ function EnhancedMakeCombobox({
                   className="text-slate-300"
                 >
                   <Check className={cn("mr-2 h-4 w-4", value === make ? "opacity-100" : "opacity-0")} />
-                  <IconComponent className="mr-2 h-4 w-4" />
+                  {(() => {
+                    const logo = getBrandLogo(make);
+                    return logo ? (
+                      <div className="flex items-center justify-center mr-2 rounded-sm bg-slate-100/60 border-slate-700 h-8 w-8">
+                        <Image src={logo} alt={`${make} logo`} width={16} height={16} className="h-6 w-6 object-contain" />
+                      </div>
+                    ) : (
+                      <Car className="mr-2 h-4 w-4" />
+                    );
+                  })()}
                   <div className="flex flex-col min-w-0">
                     <span className="truncate">{make}</span>
                     {country && compact && <span className="text-xs text-slate-500 truncate">{country}</span>}

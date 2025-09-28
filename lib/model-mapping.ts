@@ -66,3 +66,75 @@ export function search(query: string): { make: string; model: string }[] {
   }
   return results;
 }
+
+// Map normalized make names to SVG filenames in public/car-model-icons/
+const brandLogoMap: Record<string, string> = {
+  'acura': 'acura.svg',
+  'alfa romeo': 'alfa-romeo.svg',
+  'aston martin': 'aston-martin.svg',
+  'audi': 'audi.svg',
+  'bentley': 'bentley.svg',
+  'bmw': 'bmw.svg',
+  'bugatti': 'bugatti.svg',
+  'buick': 'buick.svg',
+  'cadillac': 'cadillac.svg',
+  'chevrolet': 'chevrolet.svg',
+  'chrysler': 'chrysler.svg',
+  'citroen': 'citroen.svg',
+  'dacia': 'dacia.svg',
+  'dodge': 'dodge.svg',
+  'ferrari': 'ferrari.svg',
+  'fiat': 'fiat.svg',
+  'ford': 'ford.svg',
+  'genesis': 'genesis.svg',
+  'gmc': 'gmc.svg',
+  'honda': 'honda.svg',
+  'hyundai': 'hyundai.svg',
+  'infiniti': 'infiniti.svg',
+  'jaguar': 'jaguar-stroked.svg',
+  'jeep': 'jeep.svg',
+  'kia': 'kia.svg',
+  'koenigsegg': 'koenigsegg.svg',
+  'lamborghini': 'lamborghini-badge.svg',
+  'land rover': 'land-rover.svg',
+  'lexus': 'lexus.svg',
+  'lincoln': 'lincoln.svg',
+  'lotus': 'lotus.svg',
+  'maserati': 'maserati.svg',
+  'mazda': 'mazda.svg',
+  'mclaren': 'mclaren.svg',
+  'mercedes benz': 'mercedes-benz.svg',
+  'mini': 'mini.svg',
+  'mitsubishi': 'mitsubishi.svg',
+  'nissan': 'nissan.svg',
+  'opel': 'opel.svg',
+  'pagani': 'pagani.svg',
+  'peugeot': 'peugeot.svg',
+  'porsche': 'porsche.svg',
+  'ram': 'ram.svg',
+  'renault': 'renault.svg',
+  'rolls royce': 'rolls-royce.svg',
+  'saab': 'saab.svg',
+  'seat': 'seat.svg',
+  'skoda': 'skoda.svg',
+  'subaru': 'subaru.svg',
+  'suzuki': 'suzuki.svg',
+  'tesla': 'tesla.svg',
+  'toyota': 'toyota.svg',
+  'volkswagen': 'volkswagen.svg',
+  'volvo': 'volvo.svg',
+};
+
+/**
+ * Returns the public URL path to the brand logo SVG if available, otherwise null.
+ * The path is relative to the Next.js public/ folder, e.g. "/car-model-icons/bmw.svg".
+ */
+export function getBrandLogo(make: string): string | null {
+  if (!make) return null;
+  const key = normalizeName(make).replace(/\s+/g, ' ').trim();
+  const filename = brandLogoMap[key];
+  if (!filename) return null;
+  // If a filename is mapped but the actual file is missing at runtime, Next/Image will 404; components should handle nulls gracefully if desired.
+  return `/car-model-icons/${filename}`;
+}
+
