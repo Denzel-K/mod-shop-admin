@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Upload, FileBox } from 'lucide-react';
@@ -90,6 +90,7 @@ export default function Dashboard() {
   }, []);
 
   return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950 text-slate-300 flex items-center justify-center">Loading dashboard…</div>}>
     <div className="min-h-screen bg-slate-950">
       {/* Content (TopBar provided by /dashboard/layout.tsx) */}
       <main className="px-0 sm:px-0 lg:px-0 py-0">
@@ -213,5 +214,6 @@ export default function Dashboard() {
         />
       )}
     </div>
+    </Suspense>
   );
 }

@@ -71,8 +71,6 @@ const AdminSchema: Schema = new Schema(
   }
 );
 
-// Index for faster email lookups
-AdminSchema.index({ email: 1 });
 
 // Prevent password from being returned in queries by default
 AdminSchema.methods.toJSON = function () {

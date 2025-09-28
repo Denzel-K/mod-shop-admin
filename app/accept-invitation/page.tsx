@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -103,6 +103,7 @@ export default function AcceptInvitationPage() {
   }
 
   return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-950 text-slate-300 flex items-center justify-center">Loading…</div>}>
     <div className="relative min-h-screen bg-slate-900/80 flex items-center justify-center px-4 py-8 overflow-hidden">
       {/* Grid background */}
       <div className="pointer-events-none absolute inset-0 -z-10">
@@ -205,5 +206,6 @@ export default function AcceptInvitationPage() {
         <p className="text-center text-xs text-slate-500 mt-4">Having trouble? Contact your administrator for a new invitation.</p>
       </div>
     </div>
+    </Suspense>
   );
 }
