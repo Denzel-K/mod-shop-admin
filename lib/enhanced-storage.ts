@@ -1,4 +1,4 @@
-import { Storage, File } from '@google-cloud/storage';
+import { Storage, File, Bucket } from '@google-cloud/storage';
 import fs from 'fs/promises';
 import path from 'path';
 import { createHash } from 'crypto';
@@ -36,7 +36,7 @@ export interface StorageConfig {
 // Enhanced Storage Service Class
 export class EnhancedStorageService {
   private storage?: Storage;
-  private bucket?: any;
+  private bucket?: Bucket;
   private config: StorageConfig;
   private uploadQueue: Map<string, Promise<UploadResult>> = new Map();
   private activeUploads = 0;
