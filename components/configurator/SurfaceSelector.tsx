@@ -42,42 +42,42 @@ export default function SurfaceSelector({
       key: 'wrappableSurfaces',
       label: 'Body Panels',
       icon: Car,
-      surfaces: metadata?.wrappableSurfaces || [],
+      surfaces: metadata?.wrappableSurfaces ? Object.entries(metadata.wrappableSurfaces).map(([name, id]) => ({ name, id })) : [],
       color: 'cyan'
     },
     {
       key: 'rims',
       label: 'Wheels & Rims',
       icon: Layers,
-      surfaces: metadata?.rims || [],
+      surfaces: metadata?.rims ? Object.entries(metadata.rims).map(([name, id]) => ({ name, id })) : [],
       color: 'orange'
     },
     {
       key: 'windows',
       label: 'Windows',
       icon: Eye,
-      surfaces: metadata?.windows || [],
+      surfaces: metadata?.windows ? Object.entries(metadata.windows).map(([name, id]) => ({ name, id })) : [],
       color: 'blue'
     },
     {
       key: 'doors',
       label: 'Doors',
       icon: Layers,
-      surfaces: metadata?.doors || [],
+      surfaces: metadata?.doors ? Object.entries(metadata.doors).map(([name, id]) => ({ name, id })) : [],
       color: 'green'
     },
     {
       key: 'interior',
       label: 'Interior',
       icon: Layers,
-      surfaces: metadata?.interior || [],
+      surfaces: metadata?.interior ? Object.entries(metadata.interior).map(([name, id]) => ({ name, id })) : [],
       color: 'purple'
     },
     {
       key: 'lights',
       label: 'Lights',
       icon: Eye,
-      surfaces: metadata?.lights || [],
+      surfaces: metadata?.lights ? Object.entries(metadata.lights).map(([name, id]) => ({ name, id })) : [],
       color: 'yellow'
     }
   ];
@@ -147,10 +147,10 @@ export default function SurfaceSelector({
           variant="outline"
           size="sm"
           onClick={() => {
-            const allSurfaces = surfaceSections.flatMap(section => section.surfaces);
-            allSurfaces.forEach(surface => {
-              if (!selectedSurfaces.includes(surface)) {
-                onSurfaceToggle(surface);
+            const allSurfaces = surfaceSections.flatMap(section => section.surfaces.map(s => s.id));
+            allSurfaces.forEach(surfaceId => {
+              if (!selectedSurfaces.includes(surfaceId)) {
+                onSurfaceToggle(surfaceId);
               }
             });
           }}
@@ -162,7 +162,7 @@ export default function SurfaceSelector({
           variant="outline"
           size="sm"
           onClick={() => {
-            selectedSurfaces.forEach(surface => onSurfaceToggle(surface));
+            selectedSurfaces.forEach(surfaceId => onSurfaceToggle(surfaceId));
           }}
           className="flex-1 text-xs bg-slate-900/60 border-slate-700 text-slate-100 hover:bg-slate-800 hover:text-white disabled:opacity-50"
           disabled={selectedCount === 0}
@@ -177,7 +177,7 @@ export default function SurfaceSelector({
           if (section.surfaces.length === 0) return null;
           
           const isExpanded = expandedSections.has(section.key);
-          const sectionSelectedCount = section.surfaces.filter(s => selectedSurfaces.includes(s)).length;
+          const sectionSelectedCount = section.surfaces.filter(s => selectedSurfaces.includes(s.id)).length;
           const IconComponent = section.icon;
 
           return (
@@ -190,7 +190,7 @@ export default function SurfaceSelector({
                 <div className="flex items-center gap-2">
                   <IconComponent className={cn("w-4 h-4", section.color === 'cyan' ? 'text-cyan-400' : section.color === 'orange' ? 'text-orange-400' : section.color === 'blue' ? 'text-blue-400' : section.color === 'green' ? 'text-green-400' : section.color === 'purple' ? 'text-purple-400' : 'text-yellow-400')} />
                   <span className="text-sm font-medium text-slate-300">{section.label}</span>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs text-slate-300">
                     {sectionSelectedCount}/{section.surfaces.length}
                   </Badge>
                 </div>
@@ -209,35 +209,40 @@ export default function SurfaceSelector({
                   section.key === 'wrappableSurfaces' && "p-2 border border-slate-700/60 rounded-lg max-h-64 overflow-y-auto bg-slate-900/30"
                 )}>
                   {section.surfaces.map((surface) => {
-                    const isSelected = selectedSurfaces.includes(surface);
+                    const isSelected = selectedSurfaces.includes(surface.id);
                     const rowClasses = cn(
                       "flex items-center justify-between p-2 rounded border",
                       isSelected ? "bg-cyan-600/10 border-cyan-700/50" : "bg-slate-800/20 border-slate-700/50"
                     );
                     return (
-                      <div key={surface} className={rowClasses}>
+                      <div key={surface.id} className={rowClasses}>
                         {section.key === 'wrappableSurfaces' ? (
                           <input
                             type="checkbox"
                             className="w-4 h-4 accent-cyan-600 mr-3 flex-shrink-0"
                             checked={isSelected}
-                            onChange={() => onSurfaceToggle(surface)}
-                            aria-label={`Select ${surface}`}
+                            onChange={() => onSurfaceToggle(surface.id)}
+                            aria-label={`Select ${surface.name}`}
                           />
                         ) : null}
-                        <button
-                          onClick={() => {
-                            onSurfaceToggle(surface);
-                            onSurfaceSelect(surface);
-                          }}
-                          className="flex-1 text-left text-sm text-slate-300 hover:text-slate-200 transition-colors break-words whitespace-pre-wrap leading-relaxed min-w-0"
-                        >
-                          {surface}
-                        </button>
+                        <div className="flex-1 min-w-0">
+                          <button
+                            onClick={() => {
+                              onSurfaceToggle(surface.id);
+                              onSurfaceSelect(surface.id);
+                            }}
+                            className="w-full text-left text-sm text-slate-300 hover:text-slate-200 transition-colors"
+                          >
+                            <div className="font-medium">{surface.name}</div>
+                            <div className="text-xs text-slate-500 font-mono truncate" title={surface.id}>
+                              {surface.id}
+                            </div>
+                          </button>
+                        </div>
                         {section.key !== 'wrappableSurfaces' ? (
                           <Switch
                             checked={isSelected}
-                            onCheckedChange={() => onSurfaceToggle(surface)}
+                            onCheckedChange={() => onSurfaceToggle(surface.id)}
                           />
                         ) : null}
                       </div>

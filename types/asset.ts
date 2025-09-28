@@ -1,12 +1,12 @@
 export type AssetMetadata = {
-  wrappableSurfaces?: string[];
-  rims?: string[];
-  windows?: string[];
-  doors?: string[];
-  tyres?: string[];
-  interior?: string[];
-  lights?: string[];
-  other?: Record<string, string[]>;
+  wrappableSurfaces?: Record<string, string>;
+  rims?: Record<string, string>;
+  windows?: Record<string, string>;
+  doors?: Record<string, string>;
+  tyres?: Record<string, string>;
+  interior?: Record<string, string>;
+  lights?: Record<string, string>;
+  other?: Record<string, Record<string, string>>;
 };
 
 export type Asset = {

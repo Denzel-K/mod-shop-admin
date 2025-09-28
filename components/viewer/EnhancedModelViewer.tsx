@@ -116,6 +116,7 @@ function CarModelWithTexture({
         mesh.userData.surfaceId = obj.name;
         
         // Check if this surface has a wrap configuration
+        // obj.name contains the technical surface identifier
         const surfaceConfig = wrapConfig.surfaces[obj.name];
         
         if (surfaceConfig) {
@@ -167,6 +168,7 @@ function CarModelWithTexture({
         }
         
         // Apply highlight effect for selected surfaces
+        // selectedSurfaces contains technical surface identifiers
         if (highlightMode && selectedSurfaces.includes(obj.name)) {
           const originalMaterial = mesh.material;
           const highlightMaterial = new THREE.MeshStandardMaterial({
@@ -201,6 +203,7 @@ function CarModelWithTexture({
     event.stopPropagation();
     const surfaceId = event.object?.userData?.surfaceId;
     if (surfaceId && onSurfaceClick) {
+      // surfaceId is the technical identifier from the 3D model
       onSurfaceClick(surfaceId);
     }
   };

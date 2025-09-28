@@ -11,13 +11,13 @@ import { PrimaryInfoTab } from "@/components/dashboard/UploadTabs/PrimaryInfoTab
 import { MetadataTab } from "@/components/dashboard/UploadTabs/MetadataTab";
 
 type MetadataCategories = {
-  wrappableSurfaces?: string[];
-  rims?: string[];
-  windows?: string[];
-  doors?: string[];
-  tyres?: string[];
-  interior?: string[];
-  lights?: string[];
+  wrappableSurfaces?: Record<string, string>;
+  rims?: Record<string, string>;
+  windows?: Record<string, string>;
+  doors?: Record<string, string>;
+  tyres?: Record<string, string>;
+  interior?: Record<string, string>;
+  lights?: Record<string, string>;
 };
 
 type ApiResponse = {
@@ -39,23 +39,15 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
   const [year, setYear] = useState<string>(asset?.year ? String(asset.year) : '');
   const [variant, setVariant] = useState<string>(asset?.variant || '');
   const [tagsChips, setTagsChips] = useState<string[]>(asset?.tags || []);
-  // Metadata (category inputs)
-  const [wrappableSurfacesChips, setWrappableSurfacesChips] = useState<string[]>([]);
-  const [rimsChips, setRimsChips] = useState<string[]>([]);
-  const [windowsChips, setWindowsChips] = useState<string[]>([]);
-  const [doorsChips, setDoorsChips] = useState<string[]>([]);
-  const [tyresChips, setTyresChips] = useState<string[]>([]);
-  const [interiorChips, setInteriorChips] = useState<string[]>([]);
-  const [lightsChips, setLightsChips] = useState<string[]>([]);
-  const [metadataMode, setMetadataMode] = useState<'chips' | 'csv' | 'json'>('chips');
-  // CSV fallbacks
-  const [wrappableSurfacesCsv, setWrappableSurfacesCsv] = useState<string>('');
-  const [rimsCsv, setRimsCsv] = useState<string>('');
-  const [windowsCsv, setWindowsCsv] = useState<string>('');
-  const [doorsCsv, setDoorsCsv] = useState<string>('');
-  const [tyresCsv, setTyresCsv] = useState<string>('');
-  const [interiorCsv, setInteriorCsv] = useState<string>('');
-  const [lightsCsv, setLightsCsv] = useState<string>('');
+  // Metadata (key-value inputs)
+  const [wrappableSurfaces, setWrappableSurfaces] = useState<Record<string, string>>({});
+  const [rims, setRims] = useState<Record<string, string>>({});
+  const [windows, setWindows] = useState<Record<string, string>>({});
+  const [doors, setDoors] = useState<Record<string, string>>({});
+  const [tyres, setTyres] = useState<Record<string, string>>({});
+  const [interior, setInterior] = useState<Record<string, string>>({});
+  const [lights, setLights] = useState<Record<string, string>>({});
+  const [metadataMode, setMetadataMode] = useState<'keyvalue' | 'json'>('keyvalue');
   const [metadataJson, setMetadataJson] = useState<string>('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
@@ -88,23 +80,13 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
     if (!asset || !asset.metadata) return;
     const m = asset.metadata;
     // Only prefill if fields are still empty to avoid clobbering user input
-    if (wrappableSurfacesChips.length === 0 && (m.wrappableSurfaces?.length || 0) > 0) setWrappableSurfacesChips(m.wrappableSurfaces!);
-    if (rimsChips.length === 0 && (m.rims?.length || 0) > 0) setRimsChips(m.rims!);
-    if (windowsChips.length === 0 && (m.windows?.length || 0) > 0) setWindowsChips(m.windows!);
-    if (doorsChips.length === 0 && (m.doors?.length || 0) > 0) setDoorsChips(m.doors!);
-    if (tyresChips.length === 0 && (m.tyres?.length || 0) > 0) setTyresChips(m.tyres!);
-    if (interiorChips.length === 0 && (m.interior?.length || 0) > 0) setInteriorChips(m.interior!);
-    if (lightsChips.length === 0 && (m.lights?.length || 0) > 0) setLightsChips(m.lights!);
-
-    // CSV mirrors for users switching modes
-    const toCsv = (arr?: string[]) => (arr && arr.length ? arr.join(', ') : '');
-    if (!wrappableSurfacesCsv) setWrappableSurfacesCsv(toCsv(m.wrappableSurfaces));
-    if (!rimsCsv) setRimsCsv(toCsv(m.rims));
-    if (!windowsCsv) setWindowsCsv(toCsv(m.windows));
-    if (!doorsCsv) setDoorsCsv(toCsv(m.doors));
-    if (!tyresCsv) setTyresCsv(toCsv(m.tyres));
-    if (!interiorCsv) setInteriorCsv(toCsv(m.interior));
-    if (!lightsCsv) setLightsCsv(toCsv(m.lights));
+    if (Object.keys(wrappableSurfaces).length === 0 && m.wrappableSurfaces) setWrappableSurfaces(m.wrappableSurfaces);
+    if (Object.keys(rims).length === 0 && m.rims) setRims(m.rims);
+    if (Object.keys(windows).length === 0 && m.windows) setWindows(m.windows);
+    if (Object.keys(doors).length === 0 && m.doors) setDoors(m.doors);
+    if (Object.keys(tyres).length === 0 && m.tyres) setTyres(m.tyres);
+    if (Object.keys(interior).length === 0 && m.interior) setInterior(m.interior);
+    if (Object.keys(lights).length === 0 && m.lights) setLights(m.lights);
 
     // JSON editor prefill for editing
     if (!metadataJson.trim()) {
@@ -151,24 +133,13 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
                 try { return JSON.parse(metadataJson); } catch { /* ignore */ }
               }
               const obj: MetadataCategories = {};
-              const parseList = (s: string) => Array.from(new Set(s.split(',').map((t) => t.trim()).filter(Boolean)));
-              if (metadataMode === 'chips') {
-                if (wrappableSurfacesChips.length) obj.wrappableSurfaces = wrappableSurfacesChips;
-                if (rimsChips.length) obj.rims = rimsChips;
-                if (windowsChips.length) obj.windows = windowsChips;
-                if (doorsChips.length) obj.doors = doorsChips;
-                if (tyresChips.length) obj.tyres = tyresChips;
-                if (interiorChips.length) obj.interior = interiorChips;
-                if (lightsChips.length) obj.lights = lightsChips;
-              } else {
-                if (wrappableSurfacesCsv.trim()) obj.wrappableSurfaces = parseList(wrappableSurfacesCsv);
-                if (rimsCsv.trim()) obj.rims = parseList(rimsCsv);
-                if (windowsCsv.trim()) obj.windows = parseList(windowsCsv);
-                if (doorsCsv.trim()) obj.doors = parseList(doorsCsv);
-                if (tyresCsv.trim()) obj.tyres = parseList(tyresCsv);
-                if (interiorCsv.trim()) obj.interior = parseList(interiorCsv);
-                if (lightsCsv.trim()) obj.lights = parseList(lightsCsv);
-              }
+              if (Object.keys(wrappableSurfaces).length) obj.wrappableSurfaces = wrappableSurfaces;
+              if (Object.keys(rims).length) obj.rims = rims;
+              if (Object.keys(windows).length) obj.windows = windows;
+              if (Object.keys(doors).length) obj.doors = doors;
+              if (Object.keys(tyres).length) obj.tyres = tyres;
+              if (Object.keys(interior).length) obj.interior = interior;
+              if (Object.keys(lights).length) obj.lights = lights;
               return Object.keys(obj).length ? obj : undefined;
             })(),
           }),
@@ -226,24 +197,13 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
           fd.set('metadata', metadataJson.trim());
         } else {
           const obj: MetadataCategories = {};
-          const parseList = (s: string) => Array.from(new Set(s.split(',').map((t) => t.trim()).filter(Boolean)));
-          if (metadataMode === 'chips') {
-            if (wrappableSurfacesChips.length) obj.wrappableSurfaces = wrappableSurfacesChips;
-            if (rimsChips.length) obj.rims = rimsChips;
-            if (windowsChips.length) obj.windows = windowsChips;
-            if (doorsChips.length) obj.doors = doorsChips;
-            if (tyresChips.length) obj.tyres = tyresChips;
-            if (interiorChips.length) obj.interior = interiorChips;
-            if (lightsChips.length) obj.lights = lightsChips;
-          } else {
-            if (wrappableSurfacesCsv.trim()) obj.wrappableSurfaces = parseList(wrappableSurfacesCsv);
-            if (rimsCsv.trim()) obj.rims = parseList(rimsCsv);
-            if (windowsCsv.trim()) obj.windows = parseList(windowsCsv);
-            if (doorsCsv.trim()) obj.doors = parseList(doorsCsv);
-            if (tyresCsv.trim()) obj.tyres = parseList(tyresCsv);
-            if (interiorCsv.trim()) obj.interior = parseList(interiorCsv);
-            if (lightsCsv.trim()) obj.lights = parseList(lightsCsv);
-          }
+          if (Object.keys(wrappableSurfaces).length) obj.wrappableSurfaces = wrappableSurfaces;
+          if (Object.keys(rims).length) obj.rims = rims;
+          if (Object.keys(windows).length) obj.windows = windows;
+          if (Object.keys(doors).length) obj.doors = doors;
+          if (Object.keys(tyres).length) obj.tyres = tyres;
+          if (Object.keys(interior).length) obj.interior = interior;
+          if (Object.keys(lights).length) obj.lights = lights;
           if (Object.keys(obj).length) fd.set('metadata', JSON.stringify(obj));
         }
         // Creator credits serialization
@@ -362,34 +322,20 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
           <MetadataTab
             metadataMode={metadataMode}
             setMetadataMode={setMetadataMode}
-            wrappableSurfacesChips={wrappableSurfacesChips}
-            setWrappableSurfacesChips={setWrappableSurfacesChips}
-            rimsChips={rimsChips}
-            setRimsChips={setRimsChips}
-            windowsChips={windowsChips}
-            setWindowsChips={setWindowsChips}
-            doorsChips={doorsChips}
-            setDoorsChips={setDoorsChips}
-            tyresChips={tyresChips}
-            setTyresChips={setTyresChips}
-            interiorChips={interiorChips}
-            setInteriorChips={setInteriorChips}
-            lightsChips={lightsChips}
-            setLightsChips={setLightsChips}
-            wrappableSurfacesCsv={wrappableSurfacesCsv}
-            setWrappableSurfacesCsv={setWrappableSurfacesCsv}
-            rimsCsv={rimsCsv}
-            setRimsCsv={setRimsCsv}
-            windowsCsv={windowsCsv}
-            setWindowsCsv={setWindowsCsv}
-            doorsCsv={doorsCsv}
-            setDoorsCsv={setDoorsCsv}
-            tyresCsv={tyresCsv}
-            setTyresCsv={setTyresCsv}
-            interiorCsv={interiorCsv}
-            setInteriorCsv={setInteriorCsv}
-            lightsCsv={lightsCsv}
-            setLightsCsv={setLightsCsv}
+            wrappableSurfaces={wrappableSurfaces}
+            setWrappableSurfaces={setWrappableSurfaces}
+            rims={rims}
+            setRims={setRims}
+            windows={windows}
+            setWindows={setWindows}
+            doors={doors}
+            setDoors={setDoors}
+            tyres={tyres}
+            setTyres={setTyres}
+            interior={interior}
+            setInterior={setInterior}
+            lights={lights}
+            setLights={setLights}
             metadataJson={metadataJson}
             setMetadataJson={setMetadataJson}
             isEdit={isEdit}

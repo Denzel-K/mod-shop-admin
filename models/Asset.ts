@@ -17,14 +17,14 @@ export interface ICuratorInfo {
 }
 
 export interface IAssetMetadata {
-  wrappableSurfaces?: string[];
-  rims?: string[];
-  windows?: string[];
-  doors?: string[];
-  tyres?: string[];
-  interior?: string[];
-  lights?: string[];
-  other?: Record<string, string[]>;
+  wrappableSurfaces?: Record<string, string>;
+  rims?: Record<string, string>;
+  windows?: Record<string, string>;
+  doors?: Record<string, string>;
+  tyres?: Record<string, string>;
+  interior?: Record<string, string>;
+  lights?: Record<string, string>;
+  other?: Record<string, Record<string, string>>;
 }
 
 export interface IAsset {
@@ -63,13 +63,13 @@ const CreditsSchema = new Schema<ICreatorCredits>(
 
 const MetadataSchema = new Schema<IAssetMetadata>(
   {
-    wrappableSurfaces: [{ type: String, trim: true }],
-    rims: [{ type: String, trim: true }],
-    windows: [{ type: String, trim: true }],
-    doors: [{ type: String, trim: true }],
-    tyres: [{ type: String, trim: true }],
-    interior: [{ type: String, trim: true }],
-    lights: [{ type: String, trim: true }],
+    wrappableSurfaces: { type: Schema.Types.Mixed },
+    rims: { type: Schema.Types.Mixed },
+    windows: { type: Schema.Types.Mixed },
+    doors: { type: Schema.Types.Mixed },
+    tyres: { type: Schema.Types.Mixed },
+    interior: { type: Schema.Types.Mixed },
+    lights: { type: Schema.Types.Mixed },
     other: { type: Schema.Types.Mixed },
   },
   { _id: false }

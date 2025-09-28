@@ -1,131 +1,138 @@
 "use client";
 
+import { useState } from "react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { ChipsInput } from "@/components/dashboard/ChipsInput";
+import { KeyValueInput } from "@/components/dashboard/KeyValueInput";
 import { JsonEditor } from "@/components/ui/JsonEditor";
+import { Button } from "@/components/ui/button";
+import { Car, Layers, Lightbulb, Circle, Square, CircleDot } from "lucide-react";
 
 export type MetadataTabProps = {
   // Metadata mode and values (true metadata only)
-  metadataMode: 'chips' | 'csv' | 'json';
-  setMetadataMode: (v: 'chips' | 'csv' | 'json') => void;
-  wrappableSurfacesChips: string[];
-  setWrappableSurfacesChips: (v: string[]) => void;
-  rimsChips: string[];
-  setRimsChips: (v: string[]) => void;
-  windowsChips: string[];
-  setWindowsChips: (v: string[]) => void;
-  doorsChips: string[];
-  setDoorsChips: (v: string[]) => void;
-  tyresChips: string[];
-  setTyresChips: (v: string[]) => void;
-  interiorChips: string[];
-  setInteriorChips: (v: string[]) => void;
-  lightsChips: string[];
-  setLightsChips: (v: string[]) => void;
-  wrappableSurfacesCsv: string;
-  setWrappableSurfacesCsv: (v: string) => void;
-  rimsCsv: string;
-  setRimsCsv: (v: string) => void;
-  windowsCsv: string;
-  setWindowsCsv: (v: string) => void;
-  doorsCsv: string;
-  setDoorsCsv: (v: string) => void;
-  tyresCsv: string;
-  setTyresCsv: (v: string) => void;
-  interiorCsv: string;
-  setInteriorCsv: (v: string) => void;
-  lightsCsv: string;
-  setLightsCsv: (v: string) => void;
+  metadataMode: 'keyvalue' | 'json';
+  setMetadataMode: (v: 'keyvalue' | 'json') => void;
+  wrappableSurfaces: Record<string, string>;
+  setWrappableSurfaces: (v: Record<string, string>) => void;
+  rims: Record<string, string>;
+  setRims: (v: Record<string, string>) => void;
+  windows: Record<string, string>;
+  setWindows: (v: Record<string, string>) => void;
+  doors: Record<string, string>;
+  setDoors: (v: Record<string, string>) => void;
+  tyres: Record<string, string>;
+  setTyres: (v: Record<string, string>) => void;
+  interior: Record<string, string>;
+  setInterior: (v: Record<string, string>) => void;
+  lights: Record<string, string>;
+  setLights: (v: Record<string, string>) => void;
   metadataJson: string;
   setMetadataJson: (v: string) => void;
   isEdit?: boolean;
 };
 
 const DEFAULT_METADATA_TEMPLATE = `{
-  "wrappableSurfaces": [
-    "body_front_bumper",
-    "body_rear_bumper",
-    "body_hood",
-    "body_trunk",
-    "body_roof"
-  ],
-  "rims": [
-    "wheel_front_left_rim",
-    "wheel_front_right_rim",
-    "wheel_rear_left_rim",
-    "wheel_rear_right_rim"
-  ],
-  "windows": [
-    "window_windshield",
-    "window_rear",
-    "window_left_front",
-    "window_right_front"
-  ],
-  "doors": [
-    "door_left_front",
-    "door_right_front",
-    "door_left_rear",
-    "door_right_rear"
-  ],
-  "tyres": [
-    "tyre_front_left",
-    "tyre_front_right",
-    "tyre_rear_left",
-    "tyre_rear_right"
-  ],
-  "interior": [
-    "interior_dashboard",
-    "interior_seats_front",
-    "interior_steering_wheel"
-  ],
-  "lights": [
-    "light_headlight_left",
-    "light_headlight_right",
-    "light_taillight_left",
-    "light_taillight_right"
-  ]
+  "wrappableSurfaces": {
+    "Surface Name": "technical_surface_identifier"
+  },
+  "rims": {
+    "Rim Name": "technical_rim_identifier"
+  },
+  "windows": {
+    "Window Name": "technical_window_identifier"
+  },
+  "doors": {
+    "Door Name": "technical_door_identifier"
+  },
+  "tyres": {
+    "Tyre Name": "technical_tyre_identifier"
+  },
+  "interior": {
+    "Interior Part": "technical_interior_identifier"
+  },
+  "lights": {
+    "Light Name": "technical_light_identifier"
+  }
 }`;
+
+const METADATA_CATEGORIES = [
+  {
+    id: 'wrappableSurfaces',
+    label: 'Body Panels',
+    icon: Car,
+    description: 'Wrappable surfaces like bumpers, hood, roof, etc.',
+    placeholder: { key: 'Surface name (e.g., Front Bumper)', value: 'Technical identifier' }
+  },
+  {
+    id: 'rims',
+    label: 'Wheels & Rims',
+    icon: CircleDot,
+    description: 'Wheel rims and related components',
+    placeholder: { key: 'Rim name (e.g., Front Left Rim)', value: 'Technical identifier' }
+  },
+  {
+    id: 'windows',
+    label: 'Windows',
+    icon: Square,
+    description: 'Glass surfaces and windows',
+    placeholder: { key: 'Window name (e.g., Windshield)', value: 'Technical identifier' }
+  },
+  {
+    id: 'doors',
+    label: 'Doors',
+    icon: Layers,
+    description: 'Door panels and components',
+    placeholder: { key: 'Door name (e.g., Front Left Door)', value: 'Technical identifier' }
+  },
+  {
+    id: 'tyres',
+    label: 'Tyres',
+    icon: Circle,
+    description: 'Tire components',
+    placeholder: { key: 'Tyre name (e.g., Front Left Tyre)', value: 'Technical identifier' }
+  },
+  {
+    id: 'interior',
+    label: 'Interior',
+    icon: Layers,
+    description: 'Interior components like seats, dashboard, etc.',
+    placeholder: { key: 'Interior part (e.g., Dashboard)', value: 'Technical identifier' }
+  },
+  {
+    id: 'lights',
+    label: 'Lights',
+    icon: Lightbulb,
+    description: 'Lighting components',
+    placeholder: { key: 'Light name (e.g., Left Headlight)', value: 'Technical identifier' }
+  }
+];
 
 export function MetadataTab(props: MetadataTabProps) {
   const {
     metadataMode,
     setMetadataMode,
-    wrappableSurfacesChips,
-    setWrappableSurfacesChips,
-    rimsChips,
-    setRimsChips,
-    windowsChips,
-    setWindowsChips,
-    doorsChips,
-    setDoorsChips,
-    tyresChips,
-    setTyresChips,
-    interiorChips,
-    setInteriorChips,
-    lightsChips,
-    setLightsChips,
-    wrappableSurfacesCsv,
-    setWrappableSurfacesCsv,
-    rimsCsv,
-    setRimsCsv,
-    windowsCsv,
-    setWindowsCsv,
-    doorsCsv,
-    setDoorsCsv,
-    tyresCsv,
-    setTyresCsv,
-    interiorCsv,
-    setInteriorCsv,
-    lightsCsv,
-    setLightsCsv,
+    wrappableSurfaces,
+    setWrappableSurfaces,
+    rims,
+    setRims,
+    windows,
+    setWindows,
+    doors,
+    setDoors,
+    tyres,
+    setTyres,
+    interior,
+    setInterior,
+    lights,
+    setLights,
     metadataJson,
     setMetadataJson,
     isEdit,
   } = props;
 
-  // Use template for new uploads when JSON editor is empty
-  const jsonValue = metadataJson || (!isEdit ? DEFAULT_METADATA_TEMPLATE : '');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+
+  // Use template for new uploads when JSON editor is empty, but only show existing data when editing
+  const jsonValue = metadataJson || (!isEdit ? DEFAULT_METADATA_TEMPLATE : '{}');
 
   return (
     <div className="space-y-5">
@@ -134,72 +141,123 @@ export function MetadataTab(props: MetadataTabProps) {
         <div className="flex flex-wrap gap-2 text-xs text-slate-300 mb-2 items-center ">
           <span className="text-slate-400">Metadata input:</span>
           <div className="border-[1.5px] border-slate-700 px-2 py-[4px] rounded-md space-x-2">  
-            <button type="button" onClick={() => setMetadataMode('chips')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='chips'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>Chips</button>
-            <button type="button" onClick={() => setMetadataMode('csv')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='csv'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>CSV</button>
+            <button type="button" onClick={() => setMetadataMode('keyvalue')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='keyvalue'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>Key-Value</button>
             <button type="button" onClick={() => setMetadataMode('json')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='json'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>JSON</button>
           </div>
         </div>
       </div>
 
-      {/* Metadata category inputs */}
-      {metadataMode !== 'json' && (
-        <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-5 animate-in fade-in zoom-in-95 duration-200">
-          <div className="space-y-2">
-            <Label className="text-slate-300">Wrappable Surfaces</Label>
-            {metadataMode === 'chips' ? (
-              <ChipsInput value={wrappableSurfacesChips} onChange={setWrappableSurfacesChips} placeholder="Body, Hood, Roof" />
-            ) : (
-              <Input value={wrappableSurfacesCsv} onChange={(e) => setWrappableSurfacesCsv(e.target.value)} placeholder="Body, Hood, Roof" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label className="text-slate-300">Rims</Label>
-            {metadataMode === 'chips' ? (
-              <ChipsInput value={rimsChips} onChange={setRimsChips} placeholder="FL_Rim, FR_Rim, RL_Rim, RR_Rim" />
-            ) : (
-              <Input value={rimsCsv} onChange={(e) => setRimsCsv(e.target.value)} placeholder="FL_Rim, FR_Rim, RL_Rim, RR_Rim" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label className="text-slate-300">Windows</Label>
-            {metadataMode === 'chips' ? (
-              <ChipsInput value={windowsChips} onChange={setWindowsChips} placeholder="Front_Windshield, Rear_Windshield" />
-            ) : (
-              <Input value={windowsCsv} onChange={(e) => setWindowsCsv(e.target.value)} placeholder="Front_Windshield, Rear_Windshield" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label className="text-slate-300">Doors</Label>
-            {metadataMode === 'chips' ? (
-              <ChipsInput value={doorsChips} onChange={setDoorsChips} placeholder="FL_Door, FR_Door, RL_Door, RR_Door" />
-            ) : (
-              <Input value={doorsCsv} onChange={(e) => setDoorsCsv(e.target.value)} placeholder="FL_Door, FR_Door, RL_Door, RR_Door" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label className="text-slate-300">Tyres</Label>
-            {metadataMode === 'chips' ? (
-              <ChipsInput value={tyresChips} onChange={setTyresChips} placeholder="FL_Tyre, FR_Tyre, RL_Tyre, RR_Tyre" />
-            ) : (
-              <Input value={tyresCsv} onChange={(e) => setTyresCsv(e.target.value)} placeholder="FL_Tyre, FR_Tyre, RL_Tyre, RR_Tyre" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label className="text-slate-300">Interior</Label>
-            {metadataMode === 'chips' ? (
-              <ChipsInput value={interiorChips} onChange={setInteriorChips} placeholder="Seats, Dashboard, Steering_Wheel" />
-            ) : (
-              <Input value={interiorCsv} onChange={(e) => setInteriorCsv(e.target.value)} placeholder="Seats, Dashboard, Steering_Wheel" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label className="text-slate-300">Lights</Label>
-            {metadataMode === 'chips' ? (
-              <ChipsInput value={lightsChips} onChange={setLightsChips} placeholder="Headlights, Taillights, Indicators" />
-            ) : (
-              <Input value={lightsCsv} onChange={(e) => setLightsCsv(e.target.value)} placeholder="Headlights, Taillights, Indicators" className="bg-slate-800/60 border-slate-700 text-white placeholder-slate-500" />
-            )}
-          </div>
+      {/* Category selection and inputs */}
+      {metadataMode === 'keyvalue' && (
+        <div className="md:col-span-2 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+          {!selectedCategory ? (
+            <div className="space-y-4">
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-slate-200 mb-2">Select a Category</h3>
+                <p className="text-sm text-slate-400 mb-6">Choose which type of surfaces you want to configure</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {METADATA_CATEGORIES.map((category) => {
+                  const IconComponent = category.icon;
+                  const categoryData = {
+                    wrappableSurfaces,
+                    rims,
+                    windows,
+                    doors,
+                    tyres,
+                    interior,
+                    lights
+                  }[category.id as keyof typeof categoryData] as Record<string, string>;
+                  
+                  const itemCount = Object.keys(categoryData || {}).length;
+                  
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => setSelectedCategory(category.id)}
+                      className="p-4 bg-slate-800/30 hover:bg-slate-800/50 border border-slate-700 rounded-lg transition-colors text-left group"
+                    >
+                      <div className="flex items-start gap-3">
+                        <IconComponent className="w-5 h-5 text-cyan-400 mt-0.5 group-hover:text-cyan-300" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <h4 className="font-medium text-slate-200 group-hover:text-white">{category.label}</h4>
+                            {itemCount > 0 && (
+                              <span className="text-xs bg-cyan-600/20 text-cyan-300 px-2 py-1 rounded-full">
+                                {itemCount} item{itemCount !== 1 ? 's' : ''}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-400 mt-1">{category.description}</p>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Category header with back button */}
+              
+              
+              {/* Selected category input */}
+              {(() => {
+                const category = METADATA_CATEGORIES.find(c => c.id === selectedCategory);
+                if (!category) return null;
+                
+                const IconComponent = category.icon;
+                const categoryData = {
+                  wrappableSurfaces,
+                  rims,
+                  windows,
+                  doors,
+                  tyres,
+                  interior,
+                  lights
+                }[category.id as keyof typeof categoryData] as Record<string, string>;
+                
+                const setCategoryData = {
+                  wrappableSurfaces: setWrappableSurfaces,
+                  rims: setRims,
+                  windows: setWindows,
+                  doors: setDoors,
+                  tyres: setTyres,
+                  interior: setInterior,
+                  lights: setLights
+                }[category.id as keyof typeof setCategoryData] as (value: Record<string, string>) => void;
+                
+                return (
+                  <div className="space-y-3">
+                    <div className="flex flex-row items-center w-full justify-between">
+                      <div className="flex items-center gap-2">
+                        <IconComponent className="w-5 h-5 text-cyan-400" />
+                        <Label className="text-slate-300 text-lg font-medium">{category.label}</Label>
+                      </div>
+
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedCategory('')}
+                        className="text-slate-400 hover:text-slate-200 hover:bg-blue-400 border-[1.6px] border-gray-700"
+                      >
+                        ← Back to Categories
+                      </Button>  
+                    </div>
+
+                    <p className="text-sm text-slate-400 mb-4">{category.description}</p>
+                    <KeyValueInput 
+                      value={categoryData || {}} 
+                      onChange={setCategoryData} 
+                      placeholder={category.placeholder}
+                    />
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
       )}
 
@@ -215,7 +273,7 @@ export function MetadataTab(props: MetadataTabProps) {
           />
           <p className="text-xs text-slate-500">
             Edit JSON metadata with syntax highlighting and error detection. 
-            This will override the category inputs above when saved.
+            This will override the key-value inputs above when saved.
           </p>
         </div>
       )}
