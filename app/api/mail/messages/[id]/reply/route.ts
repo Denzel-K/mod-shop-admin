@@ -5,7 +5,7 @@ import Admin from '@/models/Admin';
 import { verifyAdmin } from '@/lib/auth';
 import { sendEmail } from '@/lib/email';
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const auth = await verifyAdmin();
     if (!auth) {
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     await connectDB();
 
-    const { id } = params;
+    const { id } = await context.params;
     const { body } = await req.json();
     if (!body || typeof body !== 'string') {
       return NextResponse.json({ error: 'Reply body is required' }, { status: 400 });

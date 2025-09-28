@@ -3,13 +3,13 @@ import connectDB from '@/lib/db';
 import { verifyAdmin } from '@/lib/auth';
 import Admin from '@/models/Admin';
 
-export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
     const auth = await verifyAdmin();
     if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const id = params.id;
+    const { id } = await context.params;
     const deleted = await Admin.findByIdAndDelete(id).lean();
     if (!deleted) return NextResponse.json({ error: 'Admin not found' }, { status: 404 });
 

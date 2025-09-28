@@ -3,13 +3,13 @@ import connectDB from '@/lib/db';
 import { verifyAdmin } from '@/lib/auth';
 import Admin from '@/models/Admin';
 
-export async function PATCH(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(_req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
     const auth = await verifyAdmin();
     if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const id = params.id;
+    const { id } = await context.params;
     let body: unknown;
     try {
       body = await _req.json();
