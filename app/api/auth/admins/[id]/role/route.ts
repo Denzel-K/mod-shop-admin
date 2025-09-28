@@ -30,7 +30,7 @@ export async function PATCH(_req: NextRequest, context: { params: Promise<{ id: 
       id,
       { $set: { role: roleInput } },
       { new: true, runValidators: true }
-    ).lean();
+    ).exec();
 
     if (!updated) return NextResponse.json({ error: 'Admin not found' }, { status: 404 });
 
