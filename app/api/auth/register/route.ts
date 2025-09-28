@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { fullname, email } = await request.json();
+    const { fullname, email, role } = await request.json();
 
     // Validate required fields
     if (!fullname || !email) {
@@ -25,6 +25,11 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const allowedRoles = ['super-admin', 'manager', 'curator'] as const;
+    const selectedRole = (typeof role === 'string' && (allowedRoles as readonly string[]).includes(role))
+      ? (role as typeof allowedRoles[number])
+      : 'curator';
 
     // Check if admin already exists
     const existingAdmin = await Admin.findOne({ email: email.toLowerCase().trim() });
@@ -47,6 +52,7 @@ export async function POST(request: NextRequest) {
         token,
         expiresAt,
         invitedBy: auth.adminId,
+        role: selectedRole,
       },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
@@ -70,6 +76,7 @@ export async function POST(request: NextRequest) {
           email: invitation.email,
           fullname: invitation.fullname,
           expiresAt: invitation.expiresAt,
+          role: invitation.role,
         },
       },
       { status: 201 }

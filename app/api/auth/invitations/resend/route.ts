@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
       fullname: invitation.fullname,
       expiresAt: invitation.expiresAt,
       acceptedAt: invitation.acceptedAt || null,
+      role: (invitation as unknown as { role?: string }).role,
     }});
   } catch (error) {
     console.error('Resend invitation error:', error);

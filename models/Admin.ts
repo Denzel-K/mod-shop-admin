@@ -4,6 +4,9 @@ export interface IAdmin extends Document {
   fullname: string;
   email: string;
   password: string;
+  role: 'super-admin' | 'manager' | 'curator';
+  avatarUrl?: string;
+  avatarPath?: string; // storage path within GCS or local provider
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   createdAt: Date;
@@ -34,6 +37,23 @@ const AdminSchema: Schema = new Schema(
       required: [true, 'Password is required'],
       minlength: [8, 'Password must be at least 8 characters long'],
       select: false, // Exclude password from queries by default
+    },
+    role: {
+      type: String,
+      enum: ['super-admin', 'manager', 'curator'],
+      default: 'curator',
+      index: true,
+      required: true,
+    },
+    avatarUrl: {
+      type: String,
+      default: undefined,
+      trim: true,
+    },
+    avatarPath: {
+      type: String,
+      default: undefined,
+      trim: true,
     },
     resetPasswordToken: {
       type: String,

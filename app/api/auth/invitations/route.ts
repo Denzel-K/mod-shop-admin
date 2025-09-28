@@ -37,6 +37,7 @@ export async function GET(request: NextRequest) {
           expiresAt: inv.expiresAt,
           acceptedAt: inv.acceptedAt || null,
           invitedBy,
+          role: (inv as unknown as { role?: string }).role,
           createdAt: inv.createdAt,
         };
       }),

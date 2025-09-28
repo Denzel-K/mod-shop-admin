@@ -7,6 +7,7 @@ export interface IInvitation extends Document {
   expiresAt: Date;
   acceptedAt?: Date;
   invitedBy?: Types.ObjectId; // inviter admin id
+  role: 'super-admin' | 'manager' | 'curator';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -46,6 +47,13 @@ const InvitationSchema: Schema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Admin',
       default: undefined,
+    },
+    role: {
+      type: String,
+      enum: ['super-admin', 'manager', 'curator'],
+      default: 'curator',
+      required: true,
+      index: true,
     },
   },
   { timestamps: true }

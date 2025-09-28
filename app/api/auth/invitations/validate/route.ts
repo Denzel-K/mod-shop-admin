@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
         email: invitation.email,
         fullname: invitation.fullname,
         expiresAt: invitation.expiresAt,
+        role: (invitation as unknown as { role?: string }).role,
       }
     });
   } catch (error) {

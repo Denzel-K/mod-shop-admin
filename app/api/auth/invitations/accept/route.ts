@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       fullname: invitation.fullname,
       email: invitation.email,
       password: hashedPassword,
+      role: (invitation as unknown as { role?: string }).role || 'curator',
     });
     await newAdmin.save();
 
@@ -54,11 +55,11 @@ export async function POST(request: NextRequest) {
     if (!jwtSecret) {
       throw new Error('JWT_SECRET environment variable is not defined');
     }
-    const authToken = jwt.sign({ adminId: newAdmin._id, email: newAdmin.email }, jwtSecret, { expiresIn: '7d' });
+    const authToken = jwt.sign({ adminId: newAdmin._id, email: newAdmin.email, role: newAdmin.role }, jwtSecret, { expiresIn: '7d' });
 
     const response = NextResponse.json({
       message: 'Invitation accepted and account created',
-      admin: { id: newAdmin._id, fullname: newAdmin.fullname, email: newAdmin.email },
+      admin: { id: newAdmin._id, fullname: newAdmin.fullname, email: newAdmin.email, role: newAdmin.role },
     });
     response.cookies.set('auth-token', authToken, {
       httpOnly: true,
