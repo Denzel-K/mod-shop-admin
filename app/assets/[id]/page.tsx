@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { headers } from 'next/headers';
 import AssetViewerPanel from '@/components/asset/AssetViewerPanel';
+import { IAssetMetadata } from '@/models/Asset';
 import Link from 'next/link';
 
 async function getAssetAbsolute(baseUrl: string, id: string) {
@@ -25,16 +26,7 @@ async function getAssetAbsolute(baseUrl: string, id: string) {
     year?: number;
     variant?: string;
     tags?: string[];
-    metadata?: {
-      wrappableSurfaces?: string[];
-      rims?: string[];
-      windows?: string[];
-      doors?: string[];
-      tyres?: string[];
-      interior?: string[];
-      lights?: string[];
-      other?: Record<string, string[]>;
-    };
+    metadata?: IAssetMetadata;
   } | null;
 }
 
