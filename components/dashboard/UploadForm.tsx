@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Asset } from "@/types/asset";
 import { toast } from "sonner";
-import { listMakes, listModels } from "@/lib/model-mapping";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PrimaryInfoTab } from "@/components/dashboard/UploadTabs/PrimaryInfoTab";
 import { MetadataTab } from "@/components/dashboard/UploadTabs/MetadataTab";
@@ -37,7 +36,6 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
   const [make, setMake] = useState<string>(asset?.make || '');
   const [model, setModel] = useState<string>(asset?.model || '');
   const [year, setYear] = useState<string>(asset?.year ? String(asset.year) : '');
-  const [variant, setVariant] = useState<string>(asset?.variant || '');
   const [tagsChips, setTagsChips] = useState<string[]>(asset?.tags || []);
   // Metadata (key-value inputs)
   const [wrappableSurfaces, setWrappableSurfaces] = useState<Record<string, string>>({});
@@ -60,8 +58,6 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'completed' | 'failed'>('idle');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const makes = useMemo(() => listMakes(), []);
-  const models = useMemo(() => (make ? listModels(make) : listModels()), [make]);
   const isSketchfab = assetSource === 'sketchfab';
   const sketchfabValid = !isSketchfab || (creatorText.trim().length > 0);
 
@@ -126,7 +122,6 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
             make: make || undefined,
             model: model || undefined,
             year: year ? Number(year) : undefined,
-            variant: variant || undefined,
             tags: tagsChips.length ? tagsChips : undefined,
             metadata: (() => {
               if (metadataMode === 'json' && metadataJson.trim()) {
@@ -190,7 +185,6 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
         if (make) fd.set('make', make);
         if (model) fd.set('model', model);
         if (year) fd.set('year', year);
-        if (variant) fd.set('variant', variant);
         if (tagsChips.length) fd.set('tags', JSON.stringify(tagsChips));
         // Metadata serialization
         if (metadataMode === 'json' && metadataJson.trim()) {
@@ -295,16 +289,12 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
             fieldErrors={fieldErrors}
             creatorText={creatorText}
             setCreatorText={setCreatorText}
-            makes={makes}
-            models={models}
             make={make}
             setMake={setMake}
             model={model}
             setModel={setModel}
             year={year}
             setYear={setYear}
-            variant={variant}
-            setVariant={setVariant}
             tagsChips={tagsChips}
             setTagsChips={setTagsChips}
             modelFile={modelFile}

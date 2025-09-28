@@ -13,7 +13,7 @@ type TopBarProps = {
   subtitle?: string;
 };
 
-export function TopBar({ onUploadClick, onLogout, title, subtitle = "3D Models" }: TopBarProps) {
+export function TopBar({ onLogout, title, subtitle = "3D Models" }: TopBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);

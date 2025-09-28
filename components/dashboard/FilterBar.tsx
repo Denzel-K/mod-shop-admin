@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { listMakes, listModels } from "@/lib/model-mapping";
+import { listMakes, listModels, getBrandIcon, getBrandCountry } from "@/lib/model-mapping";
+import { Car, Crown, Truck, Mountain, Zap, Shield } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -75,7 +77,7 @@ export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; o
         {/* Make */}
         <div className="min-w-[120px]">
           <Label className="text-xs text-slate-400 mb-1 block">Make</Label>
-          <Combobox
+          <EnhancedMakeCombobox
             value={local.make || ''}
             onChange={(v) => {
               const nextModel = v && local.model && listModels(v).includes(local.model) ? local.model : undefined;
@@ -186,6 +188,107 @@ export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; o
         </div>
       </div>
     </div>
+  );
+}
+
+// Enhanced Make Combobox with icons and country info
+function EnhancedMakeCombobox({
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled,
+  compact,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder?: string;
+  disabled?: boolean;
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const selected = options.find((o) => o === value) || '';
+  
+  const getIcon = (iconName: string) => {
+    const iconByName: Record<string, LucideIcon> = {
+      car: Car,
+      crown: Crown,
+      truck: Truck,
+      mountain: Mountain,
+      zap: Zap,
+      shield: Shield,
+    };
+    const key = (iconName || "").toLowerCase();
+    return iconByName[key] ?? Car;
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disabled}
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            "w-full justify-between bg-slate-800/60 border-slate-700 text-white",
+            compact ? "h-8 text-sm" : ""
+          )}
+        >
+          <div className="flex items-center gap-2 min-w-0">
+            {selected && (() => {
+              const IconComponent = getIcon(getBrandIcon(selected));
+              return <IconComponent className="h-4 w-4 flex-shrink-0" />;
+            })()}
+            <span className="truncate">{selected || placeholder || "Select"}</span>
+          </div>
+          {selected && (
+            <X
+              className="h-4 w-4 opacity-70 hover:opacity-100 mr-1 flex-shrink-0"
+              onClick={(e) => { e.stopPropagation(); onChange(''); }}
+            />
+          )}
+          <ChevronsUpDown className="ml-auto h-4 w-4 opacity-60 flex-shrink-0" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0 bg-slate-900 border-slate-700" align="start">
+        <Command className="bg-transparent text-slate-200">
+          <CommandInput placeholder="Search makes..." className="placeholder-slate-500" />
+          <CommandEmpty>No makes found.</CommandEmpty>
+          <CommandGroup className="max-h-64 overflow-auto">
+            <CommandItem
+              key="__any__"
+              value=""
+              onSelect={() => { onChange(''); setOpen(false); }}
+              className="text-slate-300"
+            >
+              <Check className={cn("mr-2 h-4 w-4", value ? "opacity-0" : "opacity-100")} /> Any
+            </CommandItem>
+            {options.map((make) => {
+              const IconComponent = getIcon(getBrandIcon(make));
+              const country = getBrandCountry(make);
+              return (
+                <CommandItem
+                  key={make}
+                  value={make}
+                  onSelect={(cur) => { onChange(cur === value ? '' : cur); setOpen(false); }}
+                  className="text-slate-300"
+                >
+                  <Check className={cn("mr-2 h-4 w-4", value === make ? "opacity-100" : "opacity-0")} />
+                  <IconComponent className="mr-2 h-4 w-4" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate">{make}</span>
+                    {country && compact && <span className="text-xs text-slate-500 truncate">{country}</span>}
+                  </div>
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }
 
