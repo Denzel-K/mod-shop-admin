@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Message, { type IReply } from '@/models/Message';
+import Admin from '@/models/Admin';
 import { verifyAdmin } from '@/lib/auth';
 import { sendEmail } from '@/lib/email';
 
@@ -65,12 +66,18 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
       fromName: 'Mod Shop Support',
     });
 
-    // Store reply on record
+    // Store reply on record (include replying admin identity)
+    const admin = await Admin.findById(auth.adminId)
+      .select<{ fullname: string; email: string }>('fullname email')
+      .lean<{ fullname: string; email: string }>();
     const replyEntry: IReply = {
       body,
       to: msg.email,
       from: process.env.SMTP_FROM || 'noreply@modshop.com',
       createdAt: new Date(),
+      repliedById: auth.adminId,
+      repliedByName: admin?.fullname || undefined,
+      repliedByEmail: admin?.email || auth.email,
     };
     msg.replies.push(replyEntry);
     msg.status = 'replied';

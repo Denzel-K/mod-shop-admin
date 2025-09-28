@@ -19,7 +19,7 @@ interface IMessage {
   message: string;
   createdAt: string;
   status: "new" | "replied" | "closed";
-  replies: Array<{ body: string; to: string; from: string; createdAt: string }>;
+  replies: Array<{ body: string; to: string; from: string; createdAt: string; repliedById?: string; repliedByName?: string; repliedByEmail?: string }>;
 }
 
 type Bubble = {
@@ -27,6 +27,7 @@ type Bubble = {
   role: "user" | "admin";
   body: string;
   at: string;
+  repliedByName?: string;
 };
 
 export default function MailPage() {
@@ -44,6 +45,7 @@ export default function MailPage() {
   const [total, setTotal] = useState(0);
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [currentAdmin, setCurrentAdmin] = useState<{ id: string; fullname: string; email: string; role: string } | null>(null);
 
   const fetchMessages = async () => {
     setLoading(true);
@@ -75,6 +77,19 @@ export default function MailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, pageSize]);
 
+  // Fetch current admin for display/fallback
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (!res.ok) return; // not critical to break the page
+        const data = await res.json();
+        if (data?.admin) setCurrentAdmin(data.admin);
+      } catch {}
+    };
+    run();
+  }, []);
+
   // Build chat bubbles: original inbound, then all replies
   const bubbles: Bubble[] = useMemo(() => {
     if (!selected) return [];
@@ -91,9 +106,10 @@ export default function MailPage() {
       role: "admin" as const,
       body: r.body,
       at: r.createdAt,
+      repliedByName: r.repliedByName || r.repliedByEmail || currentAdmin?.fullname,
     }));
     return [...base, ...replies];
-  }, [selected]);
+  }, [selected, currentAdmin]);
 
   useEffect(() => {
     // Scroll to bottom when conversation changes or modal opens
@@ -307,7 +323,14 @@ export default function MailPage() {
                     } p-3 sm:p-4 animate-in fade-in slide-in-from-bottom-1`}
                   >
                     <div className="whitespace-pre-wrap text-sm leading-6">{b.body}</div>
-                    <div className={`mt-1.5 text-[10px] ${b.role === "admin" ? "text-white/80" : "text-slate-400"}`}>{new Date(b.at).toLocaleString()}</div>
+                    <div className={`mt-1.5 text-[10px] ${b.role === "admin" ? "text-white/80" : "text-slate-400"}`}>
+                      {new Date(b.at).toLocaleString()}
+                      {b.role === 'admin' && (
+                        <>
+                          {` • Replied${b.repliedByName ? ` by ${b.repliedByName}` : ''}`}
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}

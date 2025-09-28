@@ -5,6 +5,9 @@ export interface IReply {
   to: string; // original sender email
   from: string; // official mod shop email (SMTP_FROM)
   createdAt: Date;
+  repliedById?: string; // admin id who replied
+  repliedByName?: string; // admin fullname
+  repliedByEmail?: string; // admin email
 }
 
 export interface IMessage extends Document {
@@ -23,6 +26,9 @@ const ReplySchema = new Schema<IReply>({
   to: { type: String, required: true },
   from: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
+  repliedById: { type: String, default: undefined },
+  repliedByName: { type: String, default: undefined },
+  repliedByEmail: { type: String, default: undefined },
 });
 
 const MessageSchema = new Schema<IMessage>({

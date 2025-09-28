@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { LogOut, Mail, User, Users, Menu } from "lucide-react";
 
@@ -12,10 +13,12 @@ type TopBarProps = {
   subtitle?: string;
 };
 
-export function TopBar({ onUploadClick, onLogout, title = "Mod Shop Library", subtitle = "3D Models" }: TopBarProps) {
+export function TopBar({ onUploadClick, onLogout, title, subtitle = "3D Models" }: TopBarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
+  const pathname = usePathname();
+  const [role, setRole] = useState<"super-admin" | "manager" | "curator" | null>(null);
 
   const handleLogout = useCallback(async () => {
     if (onLogout) return onLogout();
@@ -45,12 +48,44 @@ export function TopBar({ onUploadClick, onLogout, title = "Mod Shop Library", su
     return () => document.removeEventListener('click', onDocClick);
   }, []);
 
+  // Fetch current user role once
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const r = data?.admin?.role as typeof role | undefined;
+        if (r) setRole(r);
+      } catch {
+        // no-op
+      }
+    };
+    run();
+  }, []);
+
+  // Compute default title based on route if not provided
+  const computedTitle = useMemo(() => {
+    if (title) return title;
+    if (!pathname) return "Mod Shop";
+    if (pathname === "/dashboard") return "Mod Shop Library";
+    if (pathname.startsWith("/dashboard/invitations")) return "Team Invitations";
+    if (pathname.startsWith("/dashboard/profile")) return "Profile";
+    return "Dashboard";
+  }, [pathname, title]);
+
+  const isMailActive = pathname?.startsWith('/mail') ?? false;
+  const isInvitesActive = pathname?.startsWith('/dashboard/invitations') ?? false;
+
+  const canSeeMail = role === 'super-admin' || role === 'manager';
+  const canSeeInvites = role === 'super-admin';
+
   return (
     <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-xl">
       <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="w-2.5 h-2.5 flex-shrink-0 rounded-full bg-cyan-400 shadow-[0_0_24px] shadow-cyan-400/50" />
-          <h1 className="text-white text-lg sm:text-xl font-semibold tracking-wide truncate">{title}</h1>
+          <h1 className="text-white text-lg sm:text-xl font-semibold tracking-wide truncate">{computedTitle}</h1>
           {subtitle && (
             <span className="hidden md:inline text-xs text-slate-400 border border-slate-700 rounded px-1.5 py-0.5">{subtitle}</span>
           )}
@@ -58,16 +93,27 @@ export function TopBar({ onUploadClick, onLogout, title = "Mod Shop Library", su
 
         {/* Desktop actions */}
         <div className="hidden sm:flex items-center gap-2">
-          <Button asChild className="bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700">
-            <Link href="/mail">
-              <Mail className="w-4 h-4 mr-2" /> <span className="hidden md:inline">Mail</span><span className="md:hidden">Mail</span>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700">
-            <Link href="/dashboard/invitations">
-              <Users className="w-4 h-4 mr-2" /> <span className="hidden md:inline">Invite Admins</span><span className="md:hidden">Invite</span>
-            </Link>
-          </Button>
+          {canSeeMail && (
+            <Button
+              asChild
+              className={`bg-slate-800 hover:bg-slate-700 text-slate-100 border ${isMailActive ? 'border-cyan-600 ring-2 ring-cyan-700/40' : 'border-slate-700'}`}
+            >
+              <Link href="/mail">
+                <Mail className="w-4 h-4 mr-2" /> <span className="hidden md:inline">Mail</span><span className="md:hidden">Mail</span>
+              </Link>
+            </Button>
+          )}
+          {canSeeInvites && (
+            <Button
+              asChild
+              variant="outline"
+              className={`bg-slate-800/80 text-slate-300 hover:bg-slate-700 border ${isInvitesActive ? 'border-cyan-600 ring-2 ring-cyan-700/40' : 'border-slate-700'}`}
+            >
+              <Link href="/dashboard/invitations">
+                <Users className="w-4 h-4 mr-2" /> <span className="hidden md:inline">Invite Admins</span><span className="md:hidden">Invite</span>
+              </Link>
+            </Button>
+          )}
           <div className="relative" ref={profileRef}>
             <Button
               onClick={() => setProfileOpen((v) => !v)}
@@ -115,12 +161,16 @@ export function TopBar({ onUploadClick, onLogout, title = "Mod Shop Library", su
       {menuOpen && (
         <div className="sm:hidden px-4 pb-3">
           <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-2 space-y-2">
-            <Button asChild className="w-full justify-start bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700">
-              <Link href="/mail"><Mail className="w-4 h-4 mr-2" /> Mail</Link>
-            </Button>
-            <Button asChild variant="outline" className="w-full justify-start bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700">
-              <Link href="/dashboard/invitations"><Users className="w-4 h-4 mr-2" /> Invite Admins</Link>
-            </Button>
+            {canSeeMail && (
+              <Button asChild className={`w-full justify-start bg-slate-800 hover:bg-slate-700 text-slate-100 border ${isMailActive ? 'border-cyan-600' : 'border-slate-700'}`}>
+                <Link href="/mail"><Mail className="w-4 h-4 mr-2" /> Mail</Link>
+              </Button>
+            )}
+            {canSeeInvites && (
+              <Button asChild variant="outline" className={`w-full justify-start bg-slate-800/80 text-slate-300 hover:bg-slate-700 border ${isInvitesActive ? 'border-cyan-600' : 'border-slate-700'}`}>
+                <Link href="/dashboard/invitations"><Users className="w-4 h-4 mr-2" /> Invite Admins</Link>
+              </Button>
+            )}
             <Button asChild variant="outline" className="w-full justify-start bg-slate-800/80 border-slate-700 text-slate-300 hover:bg-slate-700">
               <Link href="/dashboard/profile"><User className="w-4 h-4 mr-2" /> Profile</Link>
             </Button>

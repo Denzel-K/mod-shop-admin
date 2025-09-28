@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -24,18 +24,49 @@ export type AssetFilters = {
   year?: number;
   assetSource?: 'sketchfab' | 'turbosquid' | 'internal' | 'other';
   tag?: string;
+  curatedBy?: string; // adminId
 };
+
+type Curator = { id: string; fullname: string; email: string; count: number };
 
 export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; onChange: (v: AssetFilters) => void; onApply: () => void }) {
   const makes = useMemo(() => listMakes(), []);
   const [local, setLocal] = useState<AssetFilters>(value);
   const models = useMemo(() => local.make ? listModels(local.make) : listModels(), [local.make]);
+  const [curators, setCurators] = useState<Curator[]>([]);
+  const [totalAssets, setTotalAssets] = useState<number>(0);
+  const [meId, setMeId] = useState<string | null>(null);
 
   const set = (patch: Partial<AssetFilters>) => {
     const next = { ...local, ...patch };
     setLocal(next);
     onChange(next);
   };
+
+  // Load curators with counts and current admin id
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const [meRes, listRes] = await Promise.all([
+          fetch('/api/auth/me', { cache: 'no-store' }),
+          fetch('/api/assets/curators', { cache: 'no-store' }),
+        ]);
+        if (mounted && meRes.ok) {
+          const me = await meRes.json();
+          if (me?.admin?.id) setMeId(String(me.admin.id));
+        }
+        if (mounted && listRes.ok) {
+          const data = await listRes.json();
+          setCurators(Array.isArray(data.curators) ? data.curators : []);
+          if (typeof data.total === 'number') setTotalAssets(data.total);
+        }
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div role="region" aria-label="Asset filters" className="border-t border-slate-800 pt-3">
@@ -100,6 +131,37 @@ export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; o
               <SelectItem value="turbosquid">TurboSquid</SelectItem>
               <SelectItem value="internal">Internal</SelectItem>
               <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Curated by */}
+        <div className="min-w-[180px]">
+          <Label className="text-xs text-slate-400 mb-1 block">Curated by</Label>
+          <Select
+            value={local.curatedBy ?? 'all'}
+            onValueChange={(val) => set({ curatedBy: val === 'all' ? undefined : val })}
+          >
+            <SelectTrigger className="h-8 bg-slate-800/60 border-slate-700 text-white text-sm">
+              <SelectValue placeholder="All curators" />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-900 text-slate-200 border-slate-700">
+              <SelectItem value="all">{`All curators${totalAssets ? ` (${totalAssets})` : ''}`}</SelectItem>
+              {meId && (
+                <SelectItem value={meId}>
+                  Me{(() => {
+                    const me = curators.find(c => c.id === meId);
+                    return me ? ` (${me.count})` : '';
+                  })()}
+                </SelectItem>
+              )}
+              {curators
+                .filter(c => !meId || c.id !== meId)
+                .map(c => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.fullname || c.email} ({c.count})
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
