@@ -167,20 +167,10 @@ export class EnhancedStorageService {
       // Fallback local-style URL (shouldn't happen here)
       return `/${encodeURI(destination)}`;
     }
-    // If UBLA (private bucket) is enabled, generate a V4 signed URL
+    // If UBLA (private bucket) is enabled, return API proxy path to avoid CORS and keep bucket private
     if (this.bucketUsesUniformAcl) {
-      try {
-        const file = this.bucket.file(destination);
-        const expires = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
-        const [signedUrl] = await file.getSignedUrl({
-          action: 'read',
-          version: 'v4',
-          expires,
-        });
-        return signedUrl;
-      } catch (e) {
-        console.warn('[EnhancedStorage] Failed to generate signed URL, falling back to host URL:', e);
-      }
+      // Our proxy route will stream from GCS using server credentials
+      return `/api/storage/objects/${encodeURI(destination)}`;
     }
     const publicHost = this.config.gcsCdnDomain || `${this.config.gcsBucket}.storage.googleapis.com`;
     return `https://${publicHost}/${encodeURI(destination)}`;
