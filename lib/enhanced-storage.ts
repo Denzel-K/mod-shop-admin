@@ -42,6 +42,8 @@ export class EnhancedStorageService {
   private config: StorageConfig;
   private uploadQueue: Map<string, Promise<UploadResult>> = new Map();
   private activeUploads = 0;
+  private bucketUsesUniformAcl = false;
+  private ublaChecked = false;
 
   constructor(config: StorageConfig) {
     this.config = {
@@ -56,7 +58,6 @@ export class EnhancedStorageService {
     if (this.config.localStoragePath && !path.isAbsolute(this.config.localStoragePath)) {
       this.config.localStoragePath = path.join(process.cwd(), this.config.localStoragePath);
     }
-
     // Initialize GCP Storage if credentials are available
     if (this.isGcpConfigured()) {
       try {
@@ -69,7 +70,10 @@ export class EnhancedStorageService {
           },
         });
         this.bucket = this.storage.bucket(this.config.gcsBucket!);
-        console.log('[EnhancedStorage] GCP Storage initialized successfully');
+        // Fire-and-forget UBLA detection; do not await in constructor
+        this.detectUniformBucketLevelAccess().catch((e) => {
+          console.warn('[EnhancedStorage] UBLA detection deferred error:', e);
+        });
       } catch (error) {
         console.warn('[EnhancedStorage] Failed to initialize GCP Storage:', error);
         this.storage = undefined;
@@ -85,6 +89,20 @@ export class EnhancedStorageService {
       this.config.gcpPrivateKey &&
       this.config.gcsBucket
     );
+  }
+
+  private async detectUniformBucketLevelAccess(): Promise<void> {
+    if (!this.bucket || this.ublaChecked) return;
+    try {
+      const [meta] = await this.bucket.getMetadata();
+      const ublaEnabled = !!meta.iamConfiguration?.uniformBucketLevelAccess?.enabled;
+      this.bucketUsesUniformAcl = ublaEnabled;
+      this.ublaChecked = true;
+      console.log('[EnhancedStorage] Bucket metadata read', ublaEnabled ? '(UBLA enabled)' : '(ACLs allowed)');
+    } catch (e) {
+      this.ublaChecked = true; // avoid repeated attempts on every upload
+      console.warn('[EnhancedStorage] Failed to detect UBLA from bucket metadata. Proceeding with defaults.', e);
+    }
   }
 
   // Normalize various ways the service account key can be supplied to avoid OpenSSL decoder errors
@@ -144,6 +162,30 @@ export class EnhancedStorageService {
     return { projectId, clientEmail, privateKey };
   }
 
+  private async buildReadUrlForPath(destination: string): Promise<string> {
+    if (!this.bucket) {
+      // Fallback local-style URL (shouldn't happen here)
+      return `/${encodeURI(destination)}`;
+    }
+    // If UBLA (private bucket) is enabled, generate a V4 signed URL
+    if (this.bucketUsesUniformAcl) {
+      try {
+        const file = this.bucket.file(destination);
+        const expires = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
+        const [signedUrl] = await file.getSignedUrl({
+          action: 'read',
+          version: 'v4',
+          expires,
+        });
+        return signedUrl;
+      } catch (e) {
+        console.warn('[EnhancedStorage] Failed to generate signed URL, falling back to host URL:', e);
+      }
+    }
+    const publicHost = this.config.gcsCdnDomain || `${this.config.gcsBucket}.storage.googleapis.com`;
+    return `https://${publicHost}/${encodeURI(destination)}`;
+  }
+
   private normalizePrivateKey(key: string): string {
     if (!key) return key;
     let k = key.trim();
@@ -179,6 +221,8 @@ export class EnhancedStorageService {
     if (!this.storage || !this.bucket) {
       throw new Error('GCP Storage not configured or initialized');
     }
+    // Ensure UBLA detection has occurred
+    await this.detectUniformBucketLevelAccess();
 
     const { buffer, destination, contentType, cacheControl = 'public, max-age=31536000, immutable', makePublic = true } = options;
     const file: File = this.bucket.file(destination);
@@ -227,19 +271,22 @@ export class EnhancedStorageService {
         });
       }
 
-      // Make file public if requested
+      // Make file public if requested and UBLA is NOT enabled. With UBLA, per-object ACLs are not allowed.
       if (makePublic) {
-        try {
-          await file.makePublic();
-        } catch (error) {
-          console.warn(`[EnhancedStorage] Failed to make file public: ${destination}`, error);
+        if (this.bucketUsesUniformAcl) {
+          console.log('[EnhancedStorage] Skipping makePublic because UBLA is enabled on the bucket. Use bucket-level IAM or CDN.');
+        } else {
+          try {
+            await file.makePublic();
+          } catch (error) {
+            console.warn(`[EnhancedStorage] Failed to make file public: ${destination}`, error);
+          }
         }
       }
 
-      // Get file metadata
+      // Get file metadata and compute a usable read URL (signed if private bucket)
       const [metadata] = await file.getMetadata();
-      const publicHost = this.config.gcsCdnDomain || `${this.config.gcsBucket}.storage.googleapis.com`;
-      const publicUrl = `https://${publicHost}/${encodeURI(destination)}`;
+      const publicUrl = await this.buildReadUrlForPath(destination);
 
       return {
         url: publicUrl,

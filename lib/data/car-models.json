@@ -255,7 +255,7 @@
     "country": "USA"
   },
   "Toyota": {
-    "models": ["Yaris", "Corolla", "Camry", "Avalon", "Prius", "C-HR", "RAV4", "Highlander", "4Runner", "Sequoia", "Land Cruiser", "Tacoma", "Tundra", "Sienna", "Supra", "86", "MR2", "Celica", "Tercel", "Echo", "Matrix", "Venza"],
+    "models": ["Yaris", "Corolla", "Camry", "Avalon", "Prius", "C-HR", "RAV4", "Highlander", "Hilux", "4Runner", "Sequoia", "Land Cruiser", "Tacoma", "Tundra", "Sienna", "Supra", "86", "MR2", "Celica", "Tercel", "Echo", "Matrix", "Venza"],
     "icon": "car",
     "country": "Japan"
   },
