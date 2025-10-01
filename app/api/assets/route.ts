@@ -80,9 +80,32 @@ export async function POST(req: NextRequest) {
   try {
     await connectDB();
     const storageService = getStorageService();
-
-    // Parse form data
-    const { fields, files } = await FormDataParser.parseMultipartForm(req);
+    const contentType = req.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+    
+    // Support two modes:
+    // 1) Legacy multipart form-data upload (server receives files) -> subject to platform limits
+    // 2) JSON finalize flow (direct-to-storage) with modelPath/thumbnailPath
+    let fields: Map<string, string> = new Map();
+    let files: Map<string, File> = new Map();
+    let jsonBody: any = null;
+    if (isJson) {
+      jsonBody = await req.json();
+      // Normalize JSON fields into Map for reuse of normalization logic
+      const keys = [
+        'name','description','scale','assetSource','make','model','year','variant','tags','metadata','creatorCredits','creatorCredits.text','creditsText','uploadId','modelPath','thumbnailPath'
+      ];
+      for (const k of keys) {
+        if (jsonBody[k] !== undefined && jsonBody[k] !== null) {
+          fields.set(k, typeof jsonBody[k] === 'string' ? jsonBody[k] : JSON.stringify(jsonBody[k]));
+        }
+      }
+    } else {
+      // Parse multipart form data
+      const parsed = await FormDataParser.parseMultipartForm(req);
+      fields = parsed.fields;
+      files = parsed.files;
+    }
     
     // Extract and validate required fields
     const name = FormDataParser.getRequiredField(fields, 'name');
@@ -100,32 +123,63 @@ export async function POST(req: NextRequest) {
     // Or accept dot-notated individual creator credits (text only)
     const ccText = FormDataParser.getOptionalField(fields, 'creatorCredits.text') || FormDataParser.getOptionalField(fields, 'creditsText');
 
-    // Extract and validate required files
-    const modelFile = FormDataParser.getRequiredFile(files, 'model');
-    const thumbFile = FormDataParser.getRequiredFile(files, 'thumbnail');
+    // Either we have direct paths from JSON, or files via multipart
+    const directModelPath = fields.get('modelPath');
+    const directThumbPath = fields.get('thumbnailPath');
+    const hasDirectPaths = !!(directModelPath && directThumbPath);
+    let modelFile: File | null = null;
+    let thumbFile: File | null = null;
+    if (!hasDirectPaths) {
+      // Extract and validate required files (multipart mode)
+      modelFile = FormDataParser.getRequiredFile(files, 'model');
+      thumbFile = FormDataParser.getRequiredFile(files, 'thumbnail');
+    }
 
     // Create or attach to upload tracking
     const clientUploadId = fields.get('uploadId');
     if (clientUploadId && typeof clientUploadId === 'string' && clientUploadId.startsWith('upload_')) {
       uploadId = clientUploadId;
-      // Initialize progress entry if not present
+      // Initialize progress entry if not present using the provided ID
       if (!UploadProgressTracker.getProgress(uploadId)) {
-        UploadProgressTracker.createUpload(modelFile.name);
+        UploadProgressTracker.registerUpload(uploadId, hasDirectPaths ? (directModelPath || 'model') : (modelFile as File).name);
       }
     } else {
-      uploadId = UploadProgressTracker.createUpload(modelFile.name);
+      uploadId = UploadProgressTracker.createUpload(hasDirectPaths ? (directModelPath || 'model') : (modelFile as File).name);
     }
     UploadProgressTracker.updateProgress(uploadId, 5, 'uploading');
 
-    // Validate files
-    let validatedModel, validatedThumb;
-    try {
-      validatedModel = await FileValidator.validateModelFile(modelFile);
-      validatedThumb = await FileValidator.validateImageFile(thumbFile);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'File validation failed';
-      UploadProgressTracker.setError(uploadId, errorMsg);
-      return NextResponse.json({ error: errorMsg, uploadId }, { status: 400 });
+    // Branch: Direct paths vs Multipart upload
+    let validatedModel: { extension: string; buffer?: Buffer } | undefined;
+    let validatedThumb: { extension: string; buffer?: Buffer } | undefined;
+    let modelUpload: { url: string; path: string; bytes?: number; provider?: string } | undefined;
+    let thumbUpload: { url: string; path: string; bytes?: number; provider?: string } | undefined;
+
+    if (hasDirectPaths) {
+      // Direct-to-storage: paths already uploaded by client via signed URLs
+      const modelPath = directModelPath as string;
+      const thumbPath = directThumbPath as string;
+      const modelExt = modelPath.split('.').pop()!.toLowerCase();
+      const thumbExt = thumbPath.split('.').pop()!.toLowerCase();
+      validatedModel = { extension: modelExt };
+      validatedThumb = { extension: thumbExt };
+      // Compute public read URLs
+      const [modelUrl, thumbUrl] = await Promise.all([
+        storageService.getPublicReadUrl(modelPath),
+        storageService.getPublicReadUrl(thumbPath),
+      ]);
+      modelUpload = { url: modelUrl, path: modelPath, provider: 'gcp' };
+      thumbUpload = { url: thumbUrl, path: thumbPath, provider: 'gcp' };
+      UploadProgressTracker.updateProgress(uploadId, 50, 'processing');
+    } else {
+      // Validate files in multipart mode
+      try {
+        validatedModel = await FileValidator.validateModelFile(modelFile as File);
+        validatedThumb = await FileValidator.validateImageFile(thumbFile as File);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : 'File validation failed';
+        UploadProgressTracker.setError(uploadId!, errorMsg);
+        return NextResponse.json({ error: errorMsg, uploadId }, { status: 400 });
+      }
     }
 
     UploadProgressTracker.updateProgress(uploadId, 15, 'processing');
@@ -142,27 +196,28 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Enhanced Upload] Processing ${name}: model=${modelFilename}, thumb=${thumbFilename}`);
 
-    // Upload model with enhanced storage service
-    UploadProgressTracker.updateProgress(uploadId, 25, 'uploading');
-    let modelUpload;
-    try {
-      modelUpload = await storageService.upload({
-        buffer: validatedModel.buffer,
-        destination: `mod-shop/models/${modelFilename}`,
-        contentType: getContentTypeForExtension(validatedModel.extension),
-        retryAttempts: 3,
-      });
-      console.log(`[Enhanced Upload] Model uploaded via ${modelUpload.provider}: ${modelUpload.url}`);
-    } catch (error) {
-      const errorMsg = `Model upload failed: ${error instanceof Error ? error.message : 'unknown error'}`;
-      UploadProgressTracker.setError(uploadId, errorMsg);
-      return NextResponse.json({ error: errorMsg, uploadId }, { status: 500 });
+    if (!hasDirectPaths) {
+      // Upload model with enhanced storage service
+      UploadProgressTracker.updateProgress(uploadId!, 25, 'uploading');
+      try {
+        modelUpload = await storageService.upload({
+          buffer: (validatedModel as any).buffer,
+          destination: `mod-shop/models/${modelFilename}`,
+          contentType: getContentTypeForExtension(validatedModel!.extension),
+          retryAttempts: 3,
+        });
+        console.log(`[Enhanced Upload] Model uploaded via ${modelUpload.provider}: ${modelUpload.url}`);
+      } catch (error) {
+        const errorMsg = `Model upload failed: ${error instanceof Error ? error.message : 'unknown error'}`;
+        UploadProgressTracker.setError(uploadId!, errorMsg);
+        return NextResponse.json({ error: errorMsg, uploadId }, { status: 500 });
+      }
+
+      UploadProgressTracker.updateProgress(uploadId!, 50, 'processing');
     }
 
-    UploadProgressTracker.updateProgress(uploadId, 50, 'processing');
-
     // Attempt auto-scaling using glTF-Transform by reading the uploaded buffer directly
-    if (validatedModel.extension === 'glb') {
+    if (!hasDirectPaths && validatedModel!.extension === 'glb') {
       try {
         const io = new NodeIO();
         // Read document from the original uploaded buffer
@@ -210,22 +265,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    UploadProgressTracker.updateProgress(uploadId, 70, 'uploading');
-
-    // Upload thumbnail with enhanced storage service
-    let thumbUpload;
-    try {
-      thumbUpload = await storageService.upload({
-        buffer: validatedThumb.buffer,
-        destination: `mod-shop/thumbnails/${thumbFilename}`,
-        contentType: getContentTypeForExtension(validatedThumb.extension),
-        retryAttempts: 3,
-      });
-      console.log(`[Enhanced Upload] Thumbnail uploaded via ${thumbUpload.provider}: ${thumbUpload.url}`);
-    } catch (error) {
-      const errorMsg = `Thumbnail upload failed: ${error instanceof Error ? error.message : 'unknown error'}`;
-      UploadProgressTracker.setError(uploadId, errorMsg);
-      return NextResponse.json({ error: errorMsg, uploadId }, { status: 500 });
+    if (!hasDirectPaths) {
+      UploadProgressTracker.updateProgress(uploadId!, 70, 'uploading');
+      // Upload thumbnail with enhanced storage service
+      try {
+        thumbUpload = await storageService.upload({
+          buffer: (validatedThumb as any).buffer,
+          destination: `mod-shop/thumbnails/${thumbFilename}`,
+          contentType: getContentTypeForExtension(validatedThumb!.extension),
+          retryAttempts: 3,
+        });
+        console.log(`[Enhanced Upload] Thumbnail uploaded via ${thumbUpload.provider}: ${thumbUpload.url}`);
+      } catch (error) {
+        const errorMsg = `Thumbnail upload failed: ${error instanceof Error ? error.message : 'unknown error'}`;
+        UploadProgressTracker.setError(uploadId!, errorMsg);
+        return NextResponse.json({ error: errorMsg, uploadId }, { status: 500 });
+      }
     }
 
     UploadProgressTracker.updateProgress(uploadId, 90, 'processing');
@@ -277,8 +332,8 @@ export async function POST(req: NextRequest) {
       modelPublicId: modelUpload.path,
       thumbnailUrl: thumbUpload.url,
       thumbnailPublicId: thumbUpload.path,
-      format: validatedModel.extension as 'glb' | 'gltf',
-      sizeBytes: modelUpload.bytes,
+      format: validatedModel!.extension as 'glb' | 'gltf',
+      sizeBytes: modelUpload?.bytes,
       scale: computedScale,
       assetSource: normalized.assetSource,
       creatorCredits: normalized.creatorCredits,

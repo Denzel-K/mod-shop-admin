@@ -24,6 +24,23 @@ type ApiResponse = {
   storageStats?: { provider?: string };
 };
 
+// Payload for JSON finalize request to /api/assets
+type FinalizePayload = {
+  name: string;
+  description?: string;
+  scale?: string;
+  assetSource?: string;
+  make?: string;
+  model?: string;
+  year?: string;
+  tags?: string[];
+  creatorCredits?: { text?: string };
+  uploadId: string;
+  modelPath: string;
+  thumbnailPath: string;
+  metadata?: MetadataCategories | Record<string, unknown>;
+};
+
 export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClose: () => void; onUploaded: () => void; setUploading: (v: boolean) => void; asset?: Asset | null }) {
   const [name, setName] = useState(asset?.name || '');
   const [description, setDescription] = useState(asset?.description || '');
@@ -154,41 +171,80 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
           throw new Error('Thumbnail must be an image');
         }
 
-        // Generate client uploadId and start progress polling
+        // Generate client uploadId
         const newUploadId = `upload_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
         setUploadId(newUploadId);
         setUploadProgress(0);
         setUploadStatus('uploading');
+        if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
 
-        if (pollRef.current) clearInterval(pollRef.current);
-        pollRef.current = setInterval(async () => {
-          try {
-            const pr = await fetch(`/api/uploads/progress/${newUploadId}`, { cache: 'no-store' });
-            if (pr.ok) {
-              const pj = await pr.json();
-              const pg = pj?.progress?.progress ?? 0;
-              const st = pj?.progress?.status ?? 'uploading';
-              setUploadProgress(pg);
-              setUploadStatus(st);
-              if (st === 'completed' || st === 'failed') {
-                if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-              }
+        // 1) Request signed URLs for direct uploads
+        const signRes = await fetch('/api/uploads/sign', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            uploadId: newUploadId,
+            model: { filename: modelFile!.name, contentType: modelFile!.type || 'application/octet-stream' },
+            thumbnail: { filename: thumbFile!.name, contentType: thumbFile!.type || 'image/jpeg' },
+          }),
+        });
+        if (!signRes.ok) {
+          const j = await signRes.json().catch(() => ({}));
+          throw new Error(j?.error || 'Failed to get signed upload URLs');
+        }
+        const signJson = await signRes.json();
+        const modelSignedUrl: string = signJson?.model?.url;
+        const modelPath: string = signJson?.model?.path;
+        const thumbSignedUrl: string = signJson?.thumbnail?.url;
+        const thumbnailPath: string = signJson?.thumbnail?.path;
+
+        // Helper to upload a file with progress via signed URL
+        const uploadWithProgress = (file: File, url: string, onProgress: (pct: number) => void) => new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open('PUT', url, true);
+          xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const pct = (evt.loaded / evt.total) * 100;
+              onProgress(pct);
             }
-          } catch {}
-        }, 900);
+          };
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) resolve();
+            else reject(new Error(`Upload failed with status ${xhr.status}`));
+          };
+          xhr.onerror = () => reject(new Error('Network error during upload'));
+          xhr.send(file);
+        });
 
-        const fd = new FormData();
-        fd.set('name', name);
-        if (description) fd.set('description', description);
-        if (scaleOverride.trim()) fd.set('scale', scaleOverride.trim());
-        if (assetSource) fd.set('assetSource', assetSource);
-        if (make) fd.set('make', make);
-        if (model) fd.set('model', model);
-        if (year) fd.set('year', year);
-        if (tagsChips.length) fd.set('tags', JSON.stringify(tagsChips));
-        // Metadata serialization
+        // 2) Upload model and thumbnail directly to storage
+        // Split progress roughly: model 0-70, thumbnail 70-90
+        await uploadWithProgress(modelFile!, modelSignedUrl, (pct) => {
+          setUploadProgress(Math.min(70, Math.round((pct / 100) * 70)));
+        });
+        await uploadWithProgress(thumbFile!, thumbSignedUrl, (pct) => {
+          setUploadProgress(70 + Math.min(20, Math.round((pct / 100) * 20)));
+        });
+        setUploadStatus('processing');
+
+        // Serialize metadata/fields for finalize
+        const finalizeBody: FinalizePayload = {
+          name,
+          description: description || undefined,
+          scale: scaleOverride.trim() || undefined,
+          assetSource: assetSource || undefined,
+          make: make || undefined,
+          model: model || undefined,
+          year: year || undefined,
+          tags: tagsChips.length ? tagsChips : undefined,
+          creatorCredits: creatorText ? { text: creatorText } : undefined,
+          uploadId: newUploadId,
+          modelPath,
+          thumbnailPath,
+        };
         if (metadataMode === 'json' && metadataJson.trim()) {
-          fd.set('metadata', metadataJson.trim());
+          finalizeBody.metadata = (() => { try { return JSON.parse(metadataJson.trim()); } catch { return undefined; } })();
         } else {
           const obj: MetadataCategories = {};
           if (Object.keys(wrappableSurfaces).length) obj.wrappableSurfaces = wrappableSurfaces;
@@ -198,18 +254,15 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
           if (Object.keys(tyres).length) obj.tyres = tyres;
           if (Object.keys(interior).length) obj.interior = interior;
           if (Object.keys(lights).length) obj.lights = lights;
-          if (Object.keys(obj).length) fd.set('metadata', JSON.stringify(obj));
+          if (Object.keys(obj).length) finalizeBody.metadata = obj;
         }
-        // Creator credits serialization
-        if (creatorText) {
-          fd.set('creatorCredits', JSON.stringify({
-            text: creatorText || undefined,
-          }));
-        }
-        if (modelFile) fd.set('model', modelFile);
-        if (thumbFile) fd.set('thumbnail', thumbFile);
-        fd.set('uploadId', newUploadId);
-        res = await fetch('/api/assets', { method: 'POST', body: fd });
+
+        // 3) Finalize on server without large body
+        res = await fetch('/api/assets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(finalizeBody),
+        });
       }
       let data: ApiResponse = {};
       try {
@@ -230,6 +283,8 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
       if (!isEdit) {
         const provider = data?.storageStats?.provider || 'storage';
         toast.success(`Upload complete via ${provider.toUpperCase()}`);
+        setUploadProgress(100);
+        setUploadStatus('completed');
       }
       onUploaded();
     } catch (err) {

@@ -176,6 +176,28 @@ export class EnhancedStorageService {
     return `https://${publicHost}/${encodeURI(destination)}`;
   }
 
+  // Public: return a read URL (may be proxied via /api/storage/objects when UBLA is enabled)
+  public async getPublicReadUrl(destination: string): Promise<string> {
+    return this.buildReadUrlForPath(destination);
+  }
+
+  // Public: create a V4 signed URL for direct client uploads to GCS
+  public async getSignedUploadUrl(options: { destination: string; contentType: string; expiresInSeconds?: number }): Promise<{ url: string }>{
+    const { destination, contentType, expiresInSeconds = 15 * 60 } = options;
+    if (!this.storage || !this.bucket) {
+      throw new Error('GCP Storage not configured or initialized');
+    }
+    const file: File = this.bucket.file(destination);
+    const expires = Date.now() + expiresInSeconds * 1000;
+    const [url] = await file.getSignedUrl({
+      action: 'write',
+      version: 'v4',
+      expires,
+      contentType,
+    });
+    return { url };
+  }
+
   private normalizePrivateKey(key: string): string {
     if (!key) return key;
     let k = key.trim();

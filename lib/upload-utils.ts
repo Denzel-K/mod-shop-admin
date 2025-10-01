@@ -24,6 +24,8 @@ export interface UploadProgress {
   progress: number;
   status: 'pending' | 'uploading' | 'processing' | 'completed' | 'failed';
   error?: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 // File validation utilities
@@ -220,8 +222,27 @@ export class UploadProgressTracker {
       filename,
       progress: 0,
       status: 'pending',
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
     return uploadId;
+  }
+
+  /**
+   * Register an upload entry with a specific, client-provided uploadId.
+   * If an entry already exists for the id, it will not be overwritten.
+   */
+  public static registerUpload(uploadId: string, filename: string): void {
+    if (!this.progressMap.has(uploadId)) {
+      this.progressMap.set(uploadId, {
+        uploadId,
+        filename,
+        progress: 0,
+        status: 'pending',
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    }
   }
 
   public static updateProgress(
@@ -235,6 +256,7 @@ export class UploadProgressTracker {
         ...existing,
         progress: Math.max(0, Math.min(100, progress)),
         status: status || existing.status,
+        updatedAt: Date.now(),
       });
     }
   }
@@ -246,6 +268,7 @@ export class UploadProgressTracker {
         ...existing,
         status: 'failed',
         error,
+        updatedAt: Date.now(),
       });
     }
   }
@@ -268,8 +291,12 @@ export class UploadProgressTracker {
     // or Redis with proper TTL instead of in-memory storage
     const now = Date.now();
     for (const [uploadId, progress] of this.progressMap.entries()) {
-      // For now, we'll just clean up completed or failed uploads after 1 hour
+      const age = now - (progress.updatedAt || progress.createdAt || now);
+      // Remove entries that are completed/failed and older than threshold
+      // Also remove any stale entries (any status) older than 2x threshold as a safety net
       if ((progress.status === 'completed' || progress.status === 'failed')) {
+        if (age > maxAgeMs) this.progressMap.delete(uploadId);
+      } else if (age > maxAgeMs * 2) {
         this.progressMap.delete(uploadId);
       }
     }
