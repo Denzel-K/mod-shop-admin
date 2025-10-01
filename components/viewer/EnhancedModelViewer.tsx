@@ -5,6 +5,11 @@ import { OrbitControls, Bounds, useGLTF, Html, ContactShadows, Grid, useProgress
 import { Suspense, useMemo, useLayoutEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
+import { EffectComposer as ThreeEffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { WrapConfiguration, WrapColor, WrapFinish } from '@/types/wrap';
 import type { GLTF } from 'three-stdlib';
 
@@ -104,6 +109,26 @@ function CarModelWithTexture({
   highlightMode: boolean;
   onSurfaceClick?: (surfaceId: string) => void;
 }) {
+  // Reuse a single highlight material instance to avoid creating many GPU materials
+  const highlightMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  if (!highlightMatRef.current) {
+    highlightMatRef.current = new THREE.MeshStandardMaterial({
+      color: 0x00ffff,
+      emissive: 0x004444,
+      transparent: true,
+      opacity: 0.8,
+    });
+  }
+
+  // Dispose highlight material on unmount
+  useLayoutEffect(() => {
+    return () => {
+      if (highlightMatRef.current) {
+        highlightMatRef.current.dispose();
+        highlightMatRef.current = null;
+      }
+    };
+  }, []);
   // Apply wrap materials to surfaces
   useLayoutEffect(() => {
     gltf.scene.traverse((obj: THREE.Object3D) => {
@@ -171,16 +196,11 @@ function CarModelWithTexture({
         // selectedSurfaces contains technical surface identifiers
         if (highlightMode && selectedSurfaces.includes(obj.name)) {
           const originalMaterial = mesh.material;
-          const highlightMaterial = new THREE.MeshStandardMaterial({
-            color: 0x00ffff,
-            emissive: 0x004444,
-            transparent: true,
-            opacity: 0.8,
-          });
-          mesh.material = highlightMaterial;
-          
-          // Store original material for restoration
-          mesh.userData.originalMaterial = originalMaterial;
+          if (highlightMatRef.current) {
+            mesh.material = highlightMatRef.current;
+            // Store original material for restoration
+            mesh.userData.originalMaterial = originalMaterial;
+          }
         } else if (mesh.userData.originalMaterial && !highlightMode) {
           // Restore original material when highlight mode is disabled
           mesh.material = mesh.userData.originalMaterial;
@@ -443,15 +463,17 @@ export default function EnhancedModelViewer({
     <div className="relative w-full h-full">
       <Canvas
         camera={{ position: [2.5, 1.6, 4.0], fov: 50 }}
-        dpr={[1, 2]}
+        dpr={[1, 1.5]}
         shadows
         gl={{
           powerPreference: 'high-performance',
           antialias: true,
           alpha: false,
           preserveDrawingBuffer: false,
+          failIfMajorPerformanceCaveat: false,
         }}
       >
+        <GLContextGuard />
         <Scene
           url={url}
           scale={scale}
@@ -470,6 +492,8 @@ export default function EnhancedModelViewer({
           highlightMode={highlightMode}
           onSurfaceClick={onSurfaceClick}
         />
+        {/* Post-processing antialiasing: prefer SMAA, fallback to FXAA */}
+        <PostAA />
       </Canvas>
     </div>
   );
@@ -485,11 +509,16 @@ function SafeEnvironment({ preset, background, intensity, rotate }: { preset: En
     if (groupRef.current) groupRef.current.rotation.y += 0.002;
   });
 
+  // Stricter HDR/PMREM capability detection to avoid shader validation failures on some Chromium/ANGLE paths
   const isWebGL2 = gl.capabilities.isWebGL2;
   const ctx = gl.getContext();
-  const supportsFloat = !!ctx.getExtension('OES_texture_float');
-  const supportsFloatLinear = !!ctx.getExtension('OES_texture_float_linear');
-  const supportsHDR = isWebGL2 || (supportsFloat && supportsFloatLinear);
+  const extFloat = !!ctx.getExtension('OES_texture_float');
+  const extFloatLinear = !!ctx.getExtension('OES_texture_float_linear');
+  const extColorBufFloat = !!ctx.getExtension('EXT_color_buffer_float') || !!ctx.getExtension('WEBGL_color_buffer_float');
+  const extColorBufHalfFloat = !!ctx.getExtension('EXT_color_buffer_half_float');
+  const hdrWebGL1 = extFloat && extFloatLinear && (extColorBufFloat || extColorBufHalfFloat);
+  const hdrWebGL2 = isWebGL2 && (extColorBufFloat || extColorBufHalfFloat);
+  const supportsHDR = hdrWebGL1 || hdrWebGL2;
 
   if (!supportsHDR) {
     scene.background = background ? new THREE.Color('#000000') : scene.background;
@@ -511,4 +540,77 @@ function SafeEnvironment({ preset, background, intensity, rotate }: { preset: En
       <Environment preset={preset} background={background} blur={background ? 0 : 0.2} />
     </group>
   );
+}
+
+// Attach WebGL context lost/restored handlers to make behavior predictable on Chromium when memory limits are hit
+function GLContextGuard() {
+  const { gl } = useThree();
+  useLayoutEffect(() => {
+    const el = gl.domElement as HTMLCanvasElement;
+    const onLost = (e: Event) => {
+      // Prevent default to allow manual restore
+      e.preventDefault();
+      // Could pause animations or show UI notice here
+    };
+    const onRestored = () => {
+      // Could re-init resources if needed
+    };
+    el.addEventListener('webglcontextlost', onLost as EventListener, false);
+    el.addEventListener('webglcontextrestored', onRestored as EventListener, false);
+    return () => {
+      el.removeEventListener('webglcontextlost', onLost as EventListener, false);
+      el.removeEventListener('webglcontextrestored', onRestored as EventListener, false);
+    };
+  }, [gl]);
+  return null;
+}
+
+// Choose SMAA when WebGL2 is available, otherwise fallback to FXAA
+function PostAA() {
+  const { gl, size, scene, camera } = useThree();
+  const composerRef = useRef<ThreeEffectComposer | null>(null);
+  const fxaaRef = useRef<ShaderPass | null>(null);
+  const smaaRef = useRef<SMAAPass | null>(null);
+
+  // Initialize composer and passes (rebuild on size changes)
+  useLayoutEffect(() => {
+    const composer = new ThreeEffectComposer(gl);
+    composerRef.current = composer;
+    // First pass renders the scene
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const isWebGL2 = gl.capabilities.isWebGL2;
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const width = Math.floor(size.width * pixelRatio);
+    const height = Math.floor(size.height * pixelRatio);
+
+    if (isWebGL2) {
+      const smaa = new SMAAPass();
+      // Set target size for SMAA after construction
+      smaa.setSize(width, height);
+      smaaRef.current = smaa;
+      composer.addPass(smaa);
+    } else {
+      const fxaa = new ShaderPass(FXAAShader);
+      fxaaRef.current = fxaa;
+      fxaa.material.uniforms['resolution'].value.set(1 / width, 1 / height);
+      composer.addPass(fxaa);
+    }
+
+    return () => {
+      composer.dispose();
+      composerRef.current = null;
+      smaaRef.current = null;
+      fxaaRef.current = null;
+    };
+  }, [gl, scene, camera, size.width, size.height]);
+
+  // Render composer each frame (after the default render)
+  useFrame(() => {
+    const composer = composerRef.current;
+    if (composer) composer.render();
+  }, 1);
+
+  return null;
 }
