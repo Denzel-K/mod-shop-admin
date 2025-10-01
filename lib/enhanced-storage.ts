@@ -1,5 +1,6 @@
 import { Storage, File, Bucket } from '@google-cloud/storage';
 import fs from 'fs/promises';
+import { readFileSync } from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
 
@@ -31,6 +32,7 @@ export interface StorageConfig {
   maxConcurrentUploads?: number;
   retryAttempts?: number;
   chunkSizeBytes?: number;
+  gcsCdnDomain?: string;
 }
 
 // Enhanced Storage Service Class
@@ -46,18 +48,24 @@ export class EnhancedStorageService {
       maxConcurrentUploads: 5,
       retryAttempts: 3,
       chunkSizeBytes: 8 * 1024 * 1024, // 8MB chunks
+      // Default local storage under Next.js public/ so URLs are served statically
       localStoragePath: path.join(process.cwd(), 'public'),
       ...config,
     };
+    // If a relative localStoragePath is provided, make it absolute
+    if (this.config.localStoragePath && !path.isAbsolute(this.config.localStoragePath)) {
+      this.config.localStoragePath = path.join(process.cwd(), this.config.localStoragePath);
+    }
 
     // Initialize GCP Storage if credentials are available
     if (this.isGcpConfigured()) {
       try {
+        const { clientEmail, privateKey, projectId } = this.resolveGcpCredentials();
         this.storage = new Storage({
-          projectId: this.config.gcpProjectId,
+          projectId,
           credentials: {
-            client_email: this.config.gcpClientEmail!,
-            private_key: this.config.gcpPrivateKey!.replace(/\\n/g, '\n'),
+            client_email: clientEmail,
+            private_key: privateKey,
           },
         });
         this.bucket = this.storage.bucket(this.config.gcsBucket!);
@@ -77,6 +85,84 @@ export class EnhancedStorageService {
       this.config.gcpPrivateKey &&
       this.config.gcsBucket
     );
+  }
+
+  // Normalize various ways the service account key can be supplied to avoid OpenSSL decoder errors
+  private resolveGcpCredentials(): { projectId: string; clientEmail: string; privateKey: string } {
+    // Prefer explicit fields from config
+    let projectId = this.config.gcpProjectId || '';
+    let clientEmail = this.config.gcpClientEmail || '';
+    let privateKeyRaw = this.config.gcpPrivateKey || '';
+
+    // If private key looks like JSON (whole service account JSON), parse it
+    try {
+      const parsed = JSON.parse(privateKeyRaw);
+      if (parsed && typeof parsed === 'object') {
+        projectId = parsed.project_id || projectId;
+        clientEmail = parsed.client_email || clientEmail;
+        privateKeyRaw = parsed.private_key || privateKeyRaw;
+      }
+    } catch {
+      // not JSON, keep as is
+    }
+
+    // Also support GOOGLE_APPLICATION_CREDENTIALS_JSON env var as a fallback
+    if ((!projectId || !clientEmail || !privateKeyRaw) && typeof process !== 'undefined') {
+      const json = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON || process.env.SERVICE_ACCOUNT_JSON;
+      if (json) {
+        try {
+          const parsed = JSON.parse(json);
+          projectId = parsed.project_id || projectId;
+          clientEmail = parsed.client_email || clientEmail;
+          privateKeyRaw = parsed.private_key || privateKeyRaw;
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    // Support GOOGLE_APPLICATION_CREDENTIALS path to JSON file
+    if ((!projectId || !clientEmail || !privateKeyRaw) && typeof process !== 'undefined') {
+      const credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      if (credPath) {
+        try {
+          const jsonStr = readFileSync(credPath, 'utf-8');
+          const parsed = JSON.parse(jsonStr);
+          projectId = parsed.project_id || projectId;
+          clientEmail = parsed.client_email || clientEmail;
+          privateKeyRaw = parsed.private_key || privateKeyRaw;
+        } catch (e) {
+          console.warn('[EnhancedStorage] Failed to read GOOGLE_APPLICATION_CREDENTIALS file:', e);
+        }
+      }
+    }
+
+    const privateKey = this.normalizePrivateKey(privateKeyRaw);
+    if (!projectId || !clientEmail || !privateKey) {
+      throw new Error('Incomplete GCP credentials after normalization');
+    }
+    return { projectId, clientEmail, privateKey };
+  }
+
+  private normalizePrivateKey(key: string): string {
+    if (!key) return key;
+    let k = key.trim();
+    // Handle wrapped quotes from env files
+    if ((k.startsWith('"') && k.endsWith('"')) || (k.startsWith("'") && k.endsWith("'"))) {
+      k = k.slice(1, -1);
+    }
+    // Replace literal \n and \r\n sequences with real newlines
+    k = k.replace(/\\r\\n/g, '\n').replace(/\\n/g, '\n');
+    // Ensure header/footer are correct and each on their own line
+    if (k.includes('BEGIN PRIVATE KEY') && !k.includes('\n-----END')) {
+      // Some providers inline everything; attempt to insert newlines safely
+      k = k
+        .replace('-----BEGIN PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----\n')
+        .replace('-----END PRIVATE KEY-----', '\n-----END PRIVATE KEY-----');
+    }
+    // If key is RSA PRIVATE KEY (PKCS#1), OpenSSL 3 may fail to decode without legacy provider.
+    // Recommend converting to PKCS#8, but attempt to work with it by just normalizing newlines.
+    return k;
   }
 
   private generateChecksum(buffer: Buffer): string {
@@ -152,7 +238,8 @@ export class EnhancedStorageService {
 
       // Get file metadata
       const [metadata] = await file.getMetadata();
-      const publicUrl = `https://${this.config.gcsBucket}.storage.googleapis.com/${encodeURI(destination)}`;
+      const publicHost = this.config.gcsCdnDomain || `${this.config.gcsBucket}.storage.googleapis.com`;
+      const publicUrl = `https://${publicHost}/${encodeURI(destination)}`;
 
       return {
         url: publicUrl,
@@ -374,6 +461,8 @@ export function getStorageService(): EnhancedStorageService {
       gcpClientEmail: process.env.GCP_CLIENT_EMAIL,
       gcpPrivateKey: process.env.GCP_PRIVATE_KEY,
       gcsBucket: process.env.GCS_BUCKET,
+      gcsCdnDomain: process.env.GCS_CDN_DOMAIN,
+      localStoragePath: process.env.LOCAL_STORAGE_PATH || path.join(process.cwd(), 'public'),
     });
   }
   return storageService;
