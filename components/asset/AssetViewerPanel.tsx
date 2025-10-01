@@ -146,7 +146,7 @@ export default function AssetViewerPanel({
         {!isMobile && !isTablet && (
           <div className={cn(
             "xl:block h-full border-r border-slate-800 bg-slate-900 flex-shrink-0",
-            "overflow-y-auto overscroll-y-contain scroll-smooth min-h-0",
+            "overflow-y-auto overscroll-y-contain scroll-smooth min-h-0 scrollbar-subtle",
             "transition-[width] duration-300 ease-in-out",
             leftSidebarOpen ? "w-[300px]" : "w-0 overflow-hidden"
           )}>
@@ -214,7 +214,7 @@ export default function AssetViewerPanel({
                     className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
                     onClick={() => setLeftSidebarOpen(false)}
                   />
-                  <div className="absolute left-0 top-0 h-full w-[85%] max-w-sm bg-slate-900 border-r border-slate-800 shadow-xl max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300">
+                  <div className="absolute left-0 top-0 h-full w-[85%] max-w-sm bg-slate-900 border-r border-slate-800 shadow-xl max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
                     <div className="p-4 space-y-6">
                       <SurfaceSelector
                         metadata={assetMetadata}
@@ -245,7 +245,7 @@ export default function AssetViewerPanel({
                     className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
                     onClick={() => setRightSidebarOpen(false)}
                   />
-                  <div className="absolute right-0 top-0 h-full w-[85%] max-w-sm bg-slate-900 border-l border-slate-800 shadow-xl max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300">
+                  <div className="absolute right-0 top-0 h-full w-[85%] max-w-sm bg-slate-900 border-l border-slate-800 shadow-xl max-h-[80vh] md:max-h-[calc(100vh-140px)] overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
                     <div className="p-4">
                       <EnvironmentControls
                         envPreset={envPreset}
@@ -305,7 +305,7 @@ export default function AssetViewerPanel({
         {!isMobile && !isTablet && (
           <div className={cn(
             "xl:block h-full border-l border-slate-800 bg-slate-900 flex-shrink-0",
-            "overflow-y-auto overscroll-y-contain scroll-smooth min-h-0",
+            "overflow-y-auto overscroll-y-contain scroll-smooth min-h-0 scrollbar-subtle",
             "transition-[width] duration-300 ease-in-out",
             rightSidebarOpen ? "w-[300px]" : "w-0 overflow-hidden"
           )}>

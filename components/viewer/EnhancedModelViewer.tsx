@@ -27,19 +27,7 @@ interface CarModelProps {
   onSurfaceClick?: (surfaceId: string) => void;
 }
 
-// Separate component for texture loading to avoid state updates during render
-function TextureLoader({ children }: { children: (texture: THREE.Texture | null) => React.ReactNode }) {
-  const vinylTexture = useTexture('/textures/vinyl-tablecloth_albedo.png');
-  
-  useLayoutEffect(() => {
-    if (vinylTexture) {
-      vinylTexture.wrapS = vinylTexture.wrapT = THREE.RepeatWrapping;
-      vinylTexture.repeat.set(4, 4);
-    }
-  }, [vinylTexture]);
-
-  return <>{children(vinylTexture)}</>;
-}
+// Removed TextureLoader component; loading textures directly inside CarModelWithTexture
 
 function CarModel({ 
   url, 
@@ -62,25 +50,18 @@ function CarModel({
   }, [url]);
 
   return (
-    <Suspense fallback={null}>
-      <TextureLoader>
-        {(vinylTexture) => (
-          <CarModelWithTexture
-            gltf={gltf}
-            computedScale={computedScale}
-            materialCache={materialCache}
-            vinylTexture={vinylTexture}
-            envMapIntensity={envMapIntensity}
-            wrapConfig={wrapConfig}
-            wrapColors={wrapColors}
-            wrapFinishes={wrapFinishes}
-            selectedSurfaces={selectedSurfaces}
-            highlightMode={highlightMode}
-            onSurfaceClick={onSurfaceClick}
-          />
-        )}
-      </TextureLoader>
-    </Suspense>
+    <CarModelWithTexture
+      gltf={gltf}
+      computedScale={computedScale}
+      materialCache={materialCache}
+      envMapIntensity={envMapIntensity}
+      wrapConfig={wrapConfig}
+      wrapColors={wrapColors}
+      wrapFinishes={wrapFinishes}
+      selectedSurfaces={selectedSurfaces}
+      highlightMode={highlightMode}
+      onSurfaceClick={onSurfaceClick}
+    />
   );
 }
 
@@ -88,7 +69,6 @@ function CarModelWithTexture({
   gltf,
   computedScale,
   materialCache,
-  vinylTexture,
   envMapIntensity,
   wrapConfig,
   wrapColors,
@@ -100,7 +80,6 @@ function CarModelWithTexture({
   gltf: GLTF;
   computedScale: number;
   materialCache: React.RefObject<Map<string, THREE.Material>>;
-  vinylTexture: THREE.Texture | null;
   envMapIntensity: number;
   wrapConfig: WrapConfiguration;
   wrapColors: WrapColor[];
@@ -109,6 +88,14 @@ function CarModelWithTexture({
   highlightMode: boolean;
   onSurfaceClick?: (surfaceId: string) => void;
 }) {
+  // Load vinyl texture here to avoid cross-component state updates during render
+  const vinylTexture = useTexture('/textures/vinyl-tablecloth_albedo.png');
+  useLayoutEffect(() => {
+    if (vinylTexture) {
+      vinylTexture.wrapS = vinylTexture.wrapT = THREE.RepeatWrapping;
+      vinylTexture.repeat.set(4, 4);
+    }
+  }, [vinylTexture]);
   // Reuse a single highlight material instance to avoid creating many GPU materials
   const highlightMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
   if (!highlightMatRef.current) {
@@ -518,7 +505,11 @@ function SafeEnvironment({ preset, background, intensity, rotate }: { preset: En
   const extColorBufHalfFloat = !!ctx.getExtension('EXT_color_buffer_half_float');
   const hdrWebGL1 = extFloat && extFloatLinear && (extColorBufFloat || extColorBufHalfFloat);
   const hdrWebGL2 = isWebGL2 && (extColorBufFloat || extColorBufHalfFloat);
-  const supportsHDR = hdrWebGL1 || hdrWebGL2;
+  // Additional hardening: Chromium-based browsers (Brave/Chrome/Edge) can still fail PMREM shader validation.
+  // Prefer safe fallback on Chromium to avoid context loss and VALIDATE_STATUS errors.
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const isChromiumFamily = /Chrome|Chromium|Edg|Brave/i.test(ua) && !/Firefox/i.test(ua);
+  const supportsHDR = (hdrWebGL1 || hdrWebGL2) && !isChromiumFamily;
 
   if (!supportsHDR) {
     scene.background = background ? new THREE.Color('#000000') : scene.background;
