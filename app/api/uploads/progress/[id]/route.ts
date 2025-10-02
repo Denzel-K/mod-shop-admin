@@ -5,10 +5,10 @@ export const runtime = 'nodejs';
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const progress = UploadProgressTracker.getProgress(id);
 
     if (!progress) {
@@ -17,6 +17,7 @@ export async function GET(
 
     return NextResponse.json({ uploadId: id, progress }, { status: 200 });
   } catch (error) {
+    console.error('Failed to get upload progress:', error);
     return NextResponse.json({ error: 'Failed to get upload progress' }, { status: 500 });
   }
 }

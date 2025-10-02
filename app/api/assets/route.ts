@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     // 2) JSON finalize flow (direct-to-storage) with modelPath/thumbnailPath
     let fields: Map<string, string> = new Map();
     let files: Map<string, File> = new Map();
-    let jsonBody: any = null;
+    let jsonBody: Record<string, unknown> | null = null;
     if (isJson) {
       jsonBody = await req.json();
       // Normalize JSON fields into Map for reuse of normalization logic
@@ -96,8 +96,11 @@ export async function POST(req: NextRequest) {
         'name','description','scale','assetSource','make','model','year','variant','tags','metadata','creatorCredits','creatorCredits.text','creditsText','uploadId','modelPath','thumbnailPath'
       ];
       for (const k of keys) {
-        if (jsonBody[k] !== undefined && jsonBody[k] !== null) {
-          fields.set(k, typeof jsonBody[k] === 'string' ? jsonBody[k] : JSON.stringify(jsonBody[k]));
+        if (jsonBody && typeof jsonBody === 'object' && k in jsonBody) {
+          const v = (jsonBody as Record<string, unknown>)[k];
+          if (v !== undefined && v !== null) {
+            fields.set(k, typeof v === 'string' ? v : JSON.stringify(v));
+          }
         }
       }
     } else {
@@ -201,7 +204,7 @@ export async function POST(req: NextRequest) {
       UploadProgressTracker.updateProgress(uploadId!, 25, 'uploading');
       try {
         modelUpload = await storageService.upload({
-          buffer: (validatedModel as any).buffer,
+          buffer: (validatedModel as { extension: string; buffer?: Buffer }).buffer!,
           destination: `mod-shop/models/${modelFilename}`,
           contentType: getContentTypeForExtension(validatedModel!.extension),
           retryAttempts: 3,
@@ -221,7 +224,7 @@ export async function POST(req: NextRequest) {
       try {
         const io = new NodeIO();
         // Read document from the original uploaded buffer
-        const doc = await io.readBinary(validatedModel.buffer);
+        const doc = await io.readBinary((validatedModel as { extension: string; buffer?: Buffer }).buffer!);
         const root = doc.getRoot();
         const min = [Infinity, Infinity, Infinity];
         const max = [-Infinity, -Infinity, -Infinity];
@@ -270,7 +273,7 @@ export async function POST(req: NextRequest) {
       // Upload thumbnail with enhanced storage service
       try {
         thumbUpload = await storageService.upload({
-          buffer: (validatedThumb as any).buffer,
+          buffer: (validatedThumb as { extension: string; buffer?: Buffer }).buffer!,
           destination: `mod-shop/thumbnails/${thumbFilename}`,
           contentType: getContentTypeForExtension(validatedThumb!.extension),
           retryAttempts: 3,
@@ -307,6 +310,13 @@ export async function POST(req: NextRequest) {
         return undefined;
       })(),
     });
+
+    // Ensure uploads succeeded before creating the asset
+    if (!modelUpload || !thumbUpload) {
+      const errorMsg = 'Upload failed: model or thumbnail is missing';
+      UploadProgressTracker.setError(uploadId!, errorMsg);
+      return NextResponse.json({ error: errorMsg, uploadId }, { status: 500 });
+    }
 
     // Validation: if Sketchfab, require at least credits text
     if (normalized.assetSource === 'sketchfab' && !(normalized.creatorCredits && normalized.creatorCredits.text)) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Image from 'next/image';
 
 interface ImageSlideshowProps {
   images: string[];
@@ -89,12 +90,14 @@ export function ImageSlideshow({
           onTransitionEnd={handleTransitionEnd}
         >
           {extendedImages.map((image, index) => (
-            <div key={index} className="w-full h-full flex-shrink-0">
-              <img
+            <div key={index} className="w-full h-full flex-shrink-0 relative">
+              <Image
                 src={image}
                 alt={`Slide ${index + 1}`}
-                className="w-full h-full object-cover"
-                loading={index === 0 ? "eager" : "lazy"}
+                fill
+                priority={index === 0}
+                sizes="100vw"
+                className="object-cover"
               />
             </div>
           ))}

@@ -9,6 +9,9 @@ export async function GET(_req: NextRequest) {
     const health = await storage.healthCheck();
     return NextResponse.json({ health }, { status: 200 });
   } catch (error) {
+    // mark unused variables as used and provide minimal logging
+    void _req;
+    console.error('Storage health check failed:', error);
     return NextResponse.json({ error: 'Health check failed' }, { status: 500 });
   }
 }

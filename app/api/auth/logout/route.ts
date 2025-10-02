@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
+    // explicitly mark request as used to satisfy eslint no-unused-vars
+    void request;
     // Create response
     const response = NextResponse.json(
       { message: 'Logout successful' },

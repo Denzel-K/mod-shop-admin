@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface ModShopLogoProps {
   className?: string
   size?: "sm" | "md" | "lg" | "xl"
@@ -12,11 +14,14 @@ export function ModShopLogo({ className = "", size = "md" }: ModShopLogoProps) {
   }
 
   return (
-    <div className={`${sizeClasses[size]} ${className} flex items-center justify-center rounded-[8px] overflow-hidden`}>
-      <img
+    <div className={`${sizeClasses[size]} ${className} relative flex items-center justify-center rounded-[8px] overflow-hidden`}>
+      <Image
         src="/mod-shop-logo3.png"
         alt="Mod Shop - Car Customization Platform"
-        className="w-full h-full object-contain"
+        fill
+        priority={size === 'xl'}
+        sizes="(max-width: 640px) 36px, (max-width: 1024px) 44px, 52px"
+        className="object-contain"
       />
     </div>
   )
