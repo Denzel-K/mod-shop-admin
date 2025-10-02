@@ -230,7 +230,7 @@ export default function AssetViewerPanel({
           className={cn(
             "absolute left-4 top-4 bottom-4 z-10",
             "rounded-2xl border border-white/10",
-            "bg-slate-900/60 backdrop-blur-2xl backdrop-saturate-150",
+            "bg-slate-900/50",
             "overflow-hidden",
             "shadow-2xl shadow-black/40",
             "transition-all duration-300 ease-in-out",
@@ -285,7 +285,7 @@ export default function AssetViewerPanel({
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
                 onClick={() => setLeftSidebarOpen(false)}
               />
-              <div className="absolute left-2 top-2 bottom-2 w-[85%] max-w-sm rounded-2xl bg-slate-900/70 backdrop-blur-2xl backdrop-saturate-150 border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
+              <div className="absolute left-2 top-2 bottom-2 w-[85%] max-w-sm rounded-2xl bg-slate-900/50 border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
                 <div className="p-6 space-y-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Palette className="w-4 h-4 text-cyan-400" />
@@ -320,7 +320,7 @@ export default function AssetViewerPanel({
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
                 onClick={() => setRightSidebarOpen(false)}
               />
-              <div className="absolute right-2 top-2 bottom-2 w-[85%] max-w-sm rounded-2xl bg-slate-900/70 backdrop-blur-2xl backdrop-saturate-150 border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
+              <div className="absolute right-2 top-2 bottom-2 w-[85%] max-w-sm rounded-2xl bg-slate-900/50 border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Settings className="w-4 h-4 text-cyan-400" />
@@ -437,7 +437,7 @@ export default function AssetViewerPanel({
           className={cn(
             "absolute right-4 top-4 bottom-4 z-10",
             "rounded-2xl border border-white/10",
-            "bg-slate-900/60 backdrop-blur-2xl backdrop-saturate-150",
+            "bg-slate-900/50",
             "overflow-hidden",
             "shadow-2xl shadow-black/40",
             "transition-all duration-300 ease-in-out",
