@@ -178,6 +178,8 @@ export class EnhancedStorageService {
 
   // Public: return a read URL (may be proxied via /api/storage/objects when UBLA is enabled)
   public async getPublicReadUrl(destination: string): Promise<string> {
+    // Make sure we have checked UBLA status before deciding between proxy and public host
+    await this.detectUniformBucketLevelAccess();
     return this.buildReadUrlForPath(destination);
   }
 

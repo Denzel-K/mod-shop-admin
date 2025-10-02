@@ -41,10 +41,24 @@ export async function POST(req: NextRequest) {
     const modelPath = `mod-shop/models/${base}.${modelExt}`;
     const thumbPath = `mod-shop/thumbnails/${base}.${thumbExt}`;
 
-    const [{ url: modelUrl }, { url: thumbnailUrl }] = await Promise.all([
-      storage.getSignedUploadUrl({ destination: modelPath, contentType: model.contentType }),
-      storage.getSignedUploadUrl({ destination: thumbPath, contentType: thumbnail.contentType }),
-    ]);
+    // If proxy uploads are enabled, avoid CORS by uploading via our server route
+    const useProxy = process.env.STORAGE_PROXY_UPLOADS === '1' || process.env.STORAGE_PROXY_UPLOADS === 'true';
+    let modelUrl: string;
+    let thumbnailUrl: string;
+    if (useProxy) {
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+      const qpModel = new URLSearchParams({ path: modelPath, ct: model.contentType }).toString();
+      const qpThumb = new URLSearchParams({ path: thumbPath, ct: thumbnail.contentType }).toString();
+      modelUrl = `${baseUrl}/api/storage/upload?${qpModel}`;
+      thumbnailUrl = `${baseUrl}/api/storage/upload?${qpThumb}`;
+    } else {
+      const [{ url: mUrl }, { url: tUrl }] = await Promise.all([
+        storage.getSignedUploadUrl({ destination: modelPath, contentType: model.contentType }),
+        storage.getSignedUploadUrl({ destination: thumbPath, contentType: thumbnail.contentType }),
+      ]);
+      modelUrl = mUrl;
+      thumbnailUrl = tUrl;
+    }
 
     // Register uploadId as pending so progress endpoint doesn't 404
     // We use filename for display; either model filename or generated path
