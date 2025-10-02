@@ -438,7 +438,7 @@ export default function EnhancedModelViewer({
   envIntensity = 1.25,
   envMapIntensity = 1.6,
   autoRotateEnabled = true,
-  autoRotateSpeed = 0.52,
+  autoRotateSpeed = 0.72,
   wrapConfig,
   wrapColors,
   wrapFinishes,

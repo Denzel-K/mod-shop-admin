@@ -164,11 +164,11 @@ export default function EnvironmentControls({
                 value={[autoRotateSpeed]}
                 onValueChange={(v) => setAutoRotateSpeed(v[0] ?? autoRotateSpeed)}
                 min={0}
-                max={30}
+                max={10}
                 step={0.02}
                 className="w-full"
               />
-              <div className="text-xs text-slate-400">{autoRotateSpeed.toFixed(2)} (0–30)</div>
+              <div className="text-xs text-slate-400">{autoRotateSpeed.toFixed(2)} (0–10)</div>
             </div>
           )}
         </div>
