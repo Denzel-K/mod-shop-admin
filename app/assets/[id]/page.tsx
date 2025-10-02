@@ -53,70 +53,54 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200">
-      {/* Top bar */}
-      <header className="sticky top-0 z-20 border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-xl">
-        <div className="px-6 py-4 flex items-center justify-between relative">
+    <div className="fixed inset-0 flex flex-col bg-slate-950 text-slate-200">
+      {/* Top bar - Reduced height and increased transparency */}
+      <header className="sticky top-0 z-30 border-b border-slate-800/50 bg-slate-900/60 backdrop-blur-xl transition-all duration-300">
+        <div className="px-4 py-3 flex items-center justify-between relative">
           <div className="flex items-center gap-3">
-            <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_24px] shadow-cyan-400/50" />
-            <h1 className="text-white text-xl font-semibold tracking-wide">{asset.name}</h1>
-            <span className="text-xs text-slate-400 border border-slate-700 rounded px-1.5 py-0.5 uppercase">{asset.format}</span>
+            <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_20px] shadow-cyan-400/50" />
+            <h1 className="text-white text-lg font-semibold tracking-wide">{asset.name}</h1>
+            <span className="text-xs text-slate-400 border border-slate-700/50 rounded px-1.5 py-0.5 uppercase">{asset.format}</span>
             {asset.make && (
-              <span className="text-xs text-slate-400 border border-slate-700 rounded px-1.5 py-0.5">{asset.make}{asset.model ? ` • ${asset.model}` : ''}{asset.year ? ` • ${asset.year}` : ''}</span>
+              <span className="text-xs text-slate-400 border border-slate-700/50 rounded px-1.5 py-0.5">{asset.make}{asset.model ? ` • ${asset.model}` : ''}{asset.year ? ` • ${asset.year}` : ''}</span>
             )}
             {asset.assetSource && (
               <span className="text-[10px] text-cyan-300 border border-cyan-700/50 rounded px-1 py-0.5 uppercase">{asset.assetSource}</span>
             )}
             {asset.creatorCredits?.text && (
               <details className="ml-2 cursor-pointer">
-                <summary className="list-none text-xs text-slate-300 border border-slate-700 rounded px-1.5 py-0.5 hover:bg-slate-800/50">Credits</summary>
-                <div className="absolute mt-2 w-[min(560px,90vw)] p-3 bg-slate-900/95 text-slate-200 border border-slate-700 rounded shadow-xl backdrop-blur supports-[backdrop-filter]:bg-slate-900/70">
+                <summary className="list-none text-xs text-slate-300 border border-slate-700/50 rounded px-1.5 py-0.5 hover:bg-slate-800/50">Credits</summary>
+                <div className="absolute mt-2 w-[min(560px,90vw)] p-3 bg-slate-900/95 text-slate-200 border border-slate-700/50 rounded shadow-xl backdrop-blur-xl z-50">
                   <div className="text-xs leading-relaxed whitespace-pre-wrap">{asset.creatorCredits.text}</div>
                 </div>
               </details>
             )}
           </div>
-          <Link href="/dashboard" className="text-slate-300 hover:text-white border border-slate-700 bg-slate-800/70 hover:bg-slate-700 rounded px-3 py-1.5 text-sm">Back to Library</Link>
+          <Link href="/dashboard" className="text-slate-300 hover:text-white border border-slate-700/50 bg-slate-800/60 hover:bg-slate-700/80 rounded px-3 py-1.5 text-sm transition-colors">Back to Library</Link>
         </div>
       </header>
 
-      {/* Viewer section */}
-      <main className="px-6 py-6">
-        <div className="rounded-xl border border-slate-800 bg-slate-900 overflow-hidden">
-          {/* Responsive container: 60vh mobile, 70vh tablet, 100vh large screens */}
-          <div className="w-full lg:h-[80vh]">
-            <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-slate-400">Loading viewer…</div>}>
-              <AssetViewerPanel
-                url={asset.modelUrl}
-                assetId={asset._id}
-                initialScale={asset.scale || 1.0}
-                assetName={asset.name}
-                assetFormat={asset.format}
-                assetMetadata={asset.metadata}
-              />
-            </Suspense>
+      {/* Full-screen viewer section */}
+      <main className="flex-1 relative overflow-hidden">
+        <Suspense fallback={
+          <div className="absolute inset-0 flex items-center justify-center text-slate-400 bg-black">
+            <div className="text-center">
+              <div className="text-lg mb-2">Loading viewer…</div>
+              <div className="text-sm text-slate-500">Preparing 3D scene</div>
+            </div>
           </div>
-        </div>
-        {/* Tags */}
-        <div className="max-w-7xl mx-auto mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="md:col-span-2 space-y-2">
-            {asset.description && (
-              <div className="text-slate-300 text-sm border border-slate-800 rounded-lg p-3 bg-slate-900/60">{asset.description}</div>
-            )}
-          </div>
-          <div className="space-y-2">
-            {asset.tags && asset.tags.length > 0 && (
-              <div className="border border-slate-800 rounded-lg p-3 bg-slate-900/60">
-                <div className="text-xs text-slate-400 mb-2">Tags</div>
-                <div className="flex flex-wrap gap-2">
-                  {asset.tags.map((t) => (
-                    <span key={t} className="text-xs text-slate-300 border border-slate-700 rounded px-2 py-0.5">{t}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        }>
+          <AssetViewerPanel
+            url={asset.modelUrl}
+            assetId={asset._id}
+            initialScale={asset.scale || 1.0}
+            assetName={asset.name}
+            assetFormat={asset.format}
+            assetMetadata={asset.metadata}
+            assetDescription={asset.description}
+            assetTags={asset.tags}
+          />
+        </Suspense>
       </main>
     </div>
   );
