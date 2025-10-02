@@ -228,16 +228,17 @@ export default function AssetViewerPanel({
       {!isMobile && (
         <div 
           className={cn(
-            "absolute left-0 top-0 h-full z-10",
-            "border-r border-white/10 bg-slate-900/70 backdrop-blur-xl",
-            "overflow-y-auto overscroll-y-contain scroll-smooth scrollbar-subtle",
-            "shadow-2xl",
+            "absolute left-4 top-4 bottom-4 z-10",
+            "rounded-2xl border border-white/10",
+            "bg-slate-900/60 backdrop-blur-2xl backdrop-saturate-150",
+            "overflow-hidden",
+            "shadow-2xl shadow-black/40",
             "transition-all duration-300 ease-in-out",
             leftSidebarOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
           )}
           style={{ width: sidebarWidth }}
         >
-          <div style={{ width: sidebarWidth }}>
+          <div style={{ width: sidebarWidth }} className="h-full overflow-y-auto overscroll-y-contain scroll-smooth scrollbar-subtle">
             <div className="p-6 space-y-6">
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-4">
@@ -284,7 +285,7 @@ export default function AssetViewerPanel({
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
                 onClick={() => setLeftSidebarOpen(false)}
               />
-              <div className="absolute left-0 top-0 h-full w-[85%] max-w-sm bg-slate-900/80 backdrop-blur-xl border-r border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
+              <div className="absolute left-2 top-2 bottom-2 w-[85%] max-w-sm rounded-2xl bg-slate-900/70 backdrop-blur-2xl backdrop-saturate-150 border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
                 <div className="p-6 space-y-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Palette className="w-4 h-4 text-cyan-400" />
@@ -319,7 +320,7 @@ export default function AssetViewerPanel({
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
                 onClick={() => setRightSidebarOpen(false)}
               />
-              <div className="absolute right-0 top-0 h-full w-[85%] max-w-sm bg-slate-900/80 backdrop-blur-xl border-l border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
+              <div className="absolute right-2 top-2 bottom-2 w-[85%] max-w-sm rounded-2xl bg-slate-900/70 backdrop-blur-2xl backdrop-saturate-150 border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Settings className="w-4 h-4 text-cyan-400" />
@@ -388,7 +389,7 @@ export default function AssetViewerPanel({
             "hover:scale-105 active:scale-95"
           )}
           style={{
-            transform: leftSidebarOpen && !isMobile ? `translateX(${sidebarWidthPx - 16}px)` : 'translateX(0)',
+            transform: leftSidebarOpen && !isMobile ? `translateX(${sidebarWidthPx + 8}px)` : 'translateX(0)',
             transition: 'transform 300ms ease-in-out, all 200ms ease-in-out'
           }}
           aria-label="Toggle customization panel"
@@ -415,7 +416,7 @@ export default function AssetViewerPanel({
             "hover:scale-105 active:scale-95"
           )}
           style={{
-            transform: rightSidebarOpen && !isMobile ? `translateX(-${sidebarWidthPx - 16}px)` : 'translateX(0)',
+            transform: rightSidebarOpen && !isMobile ? `translateX(-${sidebarWidthPx + 8}px)` : 'translateX(0)',
             transition: 'transform 300ms ease-in-out, all 200ms ease-in-out'
           }}
           aria-label="Toggle environment panel"
@@ -434,16 +435,17 @@ export default function AssetViewerPanel({
       {!isMobile && (
         <div 
           className={cn(
-            "absolute right-0 top-0 h-full z-10",
-            "border-l border-white/10 bg-slate-900/70 backdrop-blur-xl",
-            "overflow-y-auto overscroll-y-contain scroll-smooth scrollbar-subtle",
-            "shadow-2xl",
+            "absolute right-4 top-4 bottom-4 z-10",
+            "rounded-2xl border border-white/10",
+            "bg-slate-900/60 backdrop-blur-2xl backdrop-saturate-150",
+            "overflow-hidden",
+            "shadow-2xl shadow-black/40",
             "transition-all duration-300 ease-in-out",
             rightSidebarOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
           )}
           style={{ width: sidebarWidth }}
         >
-          <div style={{ width: sidebarWidth }}>
+          <div style={{ width: sidebarWidth }} className="h-full overflow-y-auto overscroll-y-contain scroll-smooth scrollbar-subtle">
             <div className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Settings className="w-4 h-4 text-cyan-400" />
