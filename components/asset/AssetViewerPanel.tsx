@@ -9,8 +9,10 @@ import EnvironmentControls from "@/components/configurator/EnvironmentControls";
 import { cn } from "@/lib/utils";
 import { WrapColor, WrapFinish, WrapCategory, WrapConfiguration } from "@/types/wrap";
 import { IAssetMetadata } from "@/models/Asset";
-import wrapColorsData from "@/lib/data/wrap-colors.json";
-import wrapFinishesData from "@/lib/data/wrap-finishes.json";
+// import wrapColorsData from "@/lib/data/wrap-colors.json";
+// import wrapFinishesData from "@/lib/data/wrap-finishes.json";
+import wrapColorsData from "@/lib/data/wrap_colors.json";
+import wrapFinishesData from "@/lib/data/wrap_finishes.json";
 import { ChevronLeft, ChevronRight, Palette, Settings } from "lucide-react";
 
 type WrapColorsData = {

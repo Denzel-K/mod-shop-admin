@@ -1,0 +1,1632 @@
+{
+    "categories": [
+        {
+            "id": "classic",
+            "name": "Classic Colors",
+            "description": "Traditional automotive colors"
+        },
+        {
+            "id": "bold",
+            "name": "Bold & Vibrant",
+            "description": "Eye-catching bright colors"
+        },
+        {
+            "id": "luxury",
+            "name": "Luxury Tones",
+            "description": "Premium sophisticated colors"
+        },
+        {
+            "id": "racing",
+            "name": "Racing Colors",
+            "description": "High-performance inspired colors"
+        },
+        {
+            "id": "special",
+            "name": "Special Effects",
+            "description": "Color-shifting and unique finishes"
+        }
+    ],
+    "colors": [
+    {
+        "id": "gl001_piano_black",
+        "name": "Piano Black",
+        "hex": "#000000",
+        "rgb": [0, 0, 0],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series", "matte_series", "satin_metallic_series"],
+        "popularity": 95
+    },
+    {
+        "id": "xf001_piano_black_repair",
+        "name": "Piano Black (Repair)",
+        "hex": "#000000",
+        "rgb": [0, 0, 0],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 90
+    },
+    {
+        "id": "gl002_piano_white",
+        "name": "Piano White",
+        "hex": "#ffffff",
+        "rgb": [255, 255, 255],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 90
+    },
+    {
+        "id": "gl003_pepper_white",
+        "name": "Pepper White",
+        "hex": "#f0f0f0",
+        "rgb": [240, 240, 240],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 85
+    },
+    {
+        "id": "gl004_shell_pink",
+        "name": "Shell Pink",
+        "hex": "#ffb6c1",
+        "rgb": [255, 182, 193],
+        "category": "bold",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 70
+    },
+    {
+        "id": "gl005_piggy_pink",
+        "name": "Piggy Pink",
+        "hex": "#ff69b4",
+        "rgb": [255, 105, 180],
+        "category": "bold",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 65
+    },
+    {
+        "id": "gl006_ferrari_red",
+        "name": "Ferrari Red",
+        "hex": "#ff2800",
+        "rgb": [255, 40, 0],
+        "category": "racing",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 75
+    },
+    {
+        "id": "gl007_beetroot_purple",
+        "name": "Beetroot Purple",
+        "hex": "#cf2d71",
+        "rgb": [207, 45, 113],
+        "category": "luxury",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 55
+    },
+    {
+        "id": "gl008_stellalou_purple",
+        "name": "Stellalou Purple",
+        "hex": "#c7a4ff",
+        "rgb": [199, 164, 255],
+        "category": "luxury",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 50
+    },
+    {
+        "id": "gl009_cement_grey",
+        "name": "Cement Grey",
+        "hex": "#7e8274",
+        "rgb": [126, 130, 116],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 75
+    },
+    {
+        "id": "gl010a_nardo_grey_light",
+        "name": "Nardo Grey (Light)",
+        "hex": "#8e9492",
+        "rgb": [142, 148, 146],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 80
+    },
+    {
+        "id": "gl010b_nardo_grey_dark",
+        "name": "Nardo Grey (Dark)",
+        "hex": "#686a6c",
+        "rgb": [104, 106, 108],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 80
+    },
+    {
+        "id": "gl011_battleship_grey",
+        "name": "Battleship Grey",
+        "hex": "#848482",
+        "rgb": [132, 132, 130],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 75
+    },
+    {
+        "id": "gl012_volcano_grey",
+        "name": "Volcano Grey",
+        "hex": "#2a3439",
+        "rgb": [42, 52, 57],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 70
+    },
+    {
+        "id": "gl013_khaki_milan",
+        "name": "Khaki Milan",
+        "hex": "#c3b091",
+        "rgb": [195, 176, 145],
+        "category": "classic",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 60
+    },
+    {
+        "id": "gl014_flame_orange",
+        "name": "Flame Orange",
+        "hex": "#f34d20",
+        "rgb": [243, 77, 32],
+        "category": "bold",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 65
+    },
+    {
+        "id": "gl015_sunflower_yellow",
+        "name": "Sunflower Yellow",
+        "hex": "#fbbf24",
+        "rgb": [251, 191, 36],
+        "category": "racing",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 45
+    },
+    {
+        "id": "gl016_sky_blue",
+        "name": "Sky Blue",
+        "hex": "#87ceeb",
+        "rgb": [135, 206, 235],
+        "category": "bold",
+        "compatibleFinishes": ["gloss_series"],
+        "popularity": 70
+    },
+    {
+    "id": "gl017_ceramics_blue",
+    "name": "Ceramics Blue",
+    "hex": "#4797ca",
+    "rgb": [71, 151, 202],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 70
+    },
+    {
+    "id": "gl018_tiffany_blue",
+    "name": "Tiffany Blue",
+    "hex": "#0abab5",
+    "rgb": [10, 186, 181],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 70
+    },
+    {
+    "id": "gl019_apple_green",
+    "name": "Apple Green",
+    "hex": "#8db600",
+    "rgb": [141, 182, 0],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 60
+    },
+    {
+    "id": "gl020a_khaki_green_light",
+    "name": "Khaki Green (Light)",
+    "hex": "#8a865d",
+    "rgb": [138, 134, 93],
+    "category": "classic",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 60
+    },
+    {
+    "id": "gl020b_khaki_green_dark",
+    "name": "Khaki Green (Dark)",
+    "hex": "#454f31",
+    "rgb": [69, 79, 49],
+    "category": "classic",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 60
+    },
+    {
+    "id": "gl021_miami_blue",
+    "name": "Miami Blue",
+    "hex": "#00b5c8",
+    "rgb": [0, 181, 200],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 70
+    },
+    {
+    "id": "gl022_lava_orange",
+    "name": "Lava Orange",
+    "hex": "#cf1020",
+    "rgb": [207, 16, 32],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 65
+    },
+    {
+    "id": "gl023_carmine_red",
+    "name": "Carmine Red",
+    "hex": "#960018",
+    "rgb": [150, 0, 24],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 60
+    },
+    {
+    "id": "gl024_carmine_pink",
+    "name": "Carmine Pink",
+    "hex": "#eb4c42",
+    "rgb": [235, 76, 66],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 55
+    },
+    {
+    "id": "gl025_sakura_pink",
+    "name": "Sakura Pink",
+    "hex": "#ffb7c5",
+    "rgb": [255, 183, 197],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 55
+    },
+    {
+    "id": "gl026_avocado_green",
+    "name": "Avocado Green",
+    "hex": "#568203",
+    "rgb": [86, 130, 3],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 60
+    },
+    {
+    "id": "gl029_abu_dhabi_blue",
+    "name": "Abu Dhabi Blue",
+    "hex": "#2885b5",
+    "rgb": [40, 133, 181],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 70
+    },
+    {
+    "id": "gl030_provence_purple",
+    "name": "Provence Purple",
+    "hex": "#9e3332",
+    "rgb": [158, 51, 50],
+    "category": "luxury",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 55
+    },
+    {
+    "id": "gl032_crag_ocean_blue",
+    "name": "Crag Ocean Blue",
+    "hex": "#6b9dc2",
+    "rgb": [107, 157, 194],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 70
+    },
+    {
+    "id": "gl033_maize_yellow",
+    "name": "Maize Yellow",
+    "hex": "#fbbf24",
+    "rgb": [251, 191, 36],
+    "category": "racing",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 45
+    },
+    {
+    "id": "gl034_black_olive",
+    "name": "Black Olive",
+    "hex": "#3b3c36",
+    "rgb": [59, 60, 54],
+    "category": "classic",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 65
+    },
+    {
+    "id": "gl035_cragginess_green",
+    "name": "Cragginess Green",
+    "hex": "#316834",
+    "rgb": [49, 104, 52],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 60
+    },
+    {
+    "id": "cp_h001_amg_desert_yellow_benz",
+    "name": "AMG Desert Yellow (Benz)",
+    "hex": "#fbbf24",
+    "rgb": [251, 191, 36],
+    "category": "racing",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 45
+    },
+    {
+    "id": "cp_h002_first_light_kiss_nio",
+    "name": "First Light Kiss (NIO)",
+    "hex": "#c15c32",
+    "rgb": [193, 92, 50],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 65
+    },
+    {
+    "id": "cp_h003_ume_plum_sauce_oem",
+    "name": "Ume Plum Sauce (OEM)",
+    "hex": "#73435f",
+    "rgb": [115, 67, 95],
+    "category": "luxury",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 55
+    },
+    {
+    "id": "cp_h004_battle_green_audi",
+    "name": "Battle Green (Audi)",
+    "hex": "#006272",
+    "rgb": [0, 98, 114],
+    "category": "racing",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 60
+    },
+    {
+    "id": "cp_h005_glacier_blue_bentley",
+    "name": "Glacier Blue (Bentley)",
+    "hex": "#00ced1",
+    "rgb": [0, 206, 209],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 70
+    },
+    {
+    "id": "cp_h006_agate_grey_porsche",
+    "name": "Agate Grey (Porsche)",
+    "hex": "#818979",
+    "rgb": [129, 137, 121],
+    "category": "classic",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 75
+    },
+    {
+    "id": "cp_h007_matte_grey_porsche",
+    "name": "Matte Grey (Porsche)",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["matte_series"],
+    "popularity": 75
+    },
+    {
+    "id": "cp_h008_brooklyn_grey_bmw",
+    "name": "Brooklyn Grey (BMW)",
+    "hex": "#76777c",
+    "rgb": [118, 119, 124],
+    "category": "classic",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 75
+    },
+    {
+    "id": "cp_h009_oolong_milk_tea_pink",
+    "name": "Oolong Milk Tea Pink",
+    "hex": "#c59058",
+    "rgb": [197, 144, 88],
+    "category": "bold",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 55
+    },
+    {
+    "id": "cp_h010_misty_grey_purple",
+    "name": "Misty Grey Purple",
+    "hex": "#a18f5f",
+    "rgb": [161, 143, 95],
+    "category": "luxury",
+    "compatibleFinishes": ["gloss_series"],
+    "popularity": 55
+    },
+    {
+    "id": "ma001_matte_black",
+    "name": "Matte Black",
+    "hex": "#0a0a0a",
+    "rgb": [10, 10, 10],
+    "category": "classic",
+    "compatibleFinishes": ["matte_series"],
+    "popularity": 95
+    },
+    {
+    "id": "ma002_ceramic_black",
+    "name": "Ceramic Black",
+    "hex": "#000000",
+    "rgb": [0, 0, 0],
+    "category": "classic",
+    "compatibleFinishes": ["matte_series"],
+    "popularity": 90
+    },
+    {
+    "id": "ma003_frosted_black",
+    "name": "Frosted Black",
+    "hex": "#000000",
+    "rgb": [0, 0, 0],
+    "category": "classic",
+    "compatibleFinishes": ["matte_series"],
+    "popularity": 85
+    },
+    {
+    "id": "ma004_ceramic_white",
+    "name": "Ceramic White",
+    "hex": "#ffffff",
+    "rgb": [255, 255, 255],
+    "category": "classic",
+    "compatibleFinishes": ["matte_series"],
+    "popularity": 90
+    },
+    {
+    "id": "ma005_interstellar_grey",
+    "name": "Interstellar Grey",
+    "hex": "#67727f",
+    "rgb": [103, 114, 127],
+    "category": "classic",
+    "compatibleFinishes": ["matte_series"],
+    "popularity": 75
+    },
+    {
+    "id": "ma006_interstellar_black",
+    "name": "Interstellar Black",
+    "hex": "#000000",
+    "rgb": [0, 0, 0],
+    "category": "classic",
+    "compatibleFinishes": ["matte_series"],
+    "popularity": 95
+    },
+    {
+    "id": "dl001_deluster_khaki_green",
+    "name": "Deluster Khaki Green",
+    "hex": "#454f31",
+    "rgb": [69, 79, 49],
+    "category": "classic",
+    "compatibleFinishes": ["deluster_series"],
+    "popularity": 60
+    },
+    {
+    "id": "dl002_deluster_snowy_white",
+    "name": "Deluster Snowy White",
+    "hex": "#f0f0f0",
+    "rgb": [240, 240, 240],
+    "category": "classic",
+    "compatibleFinishes": ["deluster_series"],
+    "popularity": 90
+    },
+    {
+    "id": "dl003_deluster_volcano_grey",
+    "name": "Deluster Volcano Grey",
+    "hex": "#2a3439",
+    "rgb": [42, 52, 57],
+    "category": "classic",
+    "compatibleFinishes": ["deluster_series"],
+    "popularity": 70
+    },
+    {
+    "id": "dl004_deluster_khaki_milan",
+    "name": "Deluster Khaki Milan",
+    "hex": "#c3b091",
+    "rgb": [195, 176, 145],
+    "category": "classic",
+    "compatibleFinishes": ["deluster_series"],
+    "popularity": 60
+    },
+    {
+    "id": "dl005_deluster_aluminum_silver",
+    "name": "Deluster Aluminum Silver",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["deluster_series"],
+    "popularity": 85
+    },
+    {
+    "id": "dl006_deluster_carnation_pink",
+    "name": "Deluster Carnation Pink",
+    "hex": "#ffaacc",
+    "rgb": [255, 170, 204],
+    "category": "bold",
+    "compatibleFinishes": ["deluster_series"],
+    "popularity": 55
+    },
+    {
+    "id": "wl001a_pearl_white_red_matte",
+    "name": "Pearl White Red (Matte)",
+    "hex": "#f3dde7",
+    "rgb": [243, 221, 231],
+    "category": "special",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 30
+    },
+    {
+    "id": "wl001b_pearl_white_red_bright",
+    "name": "Pearl White Red (Bright)",
+    "hex": "#f3dde7",
+    "rgb": [243, 221, 231],
+    "category": "special",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 30
+    },
+    {
+    "id": "wl002a_pearl_white_blue_matte",
+    "name": "Pearl White Blue (Matte)",
+    "hex": "#e2e0f0",
+    "rgb": [226, 224, 240],
+    "category": "special",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 30
+    },
+    {
+    "id": "wl002b_pearl_white_blue_bright",
+    "name": "Pearl White Blue (Bright)",
+    "hex": "#e2e0f0",
+    "rgb": [226, 224, 240],
+    "category": "special",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 30
+    },
+    {
+    "id": "wl003a_pearl_white_purple_matte",
+    "name": "Pearl White Purple (Matte)",
+    "hex": "#e2d2e5",
+    "rgb": [226, 210, 229],
+    "category": "special",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 30
+    },
+    {
+    "id": "wl003b_pearl_white_purple_bright",
+    "name": "Pearl White Purple (Bright)",
+    "hex": "#e2d2e5",
+    "rgb": [226, 210, 229],
+    "category": "special",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 30
+    },
+    {
+    "id": "wl004a_pearl_white_gold_matte",
+    "name": "Pearl White Gold (Matte)",
+    "hex": "#e2e5e6",
+    "rgb": [226, 229, 230],
+    "category": "special",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 30
+    },
+    {
+    "id": "wl004b_pearl_white_gold_bright",
+    "name": "Pearl White Gold (Bright)",
+    "hex": "#e2e5e6",
+    "rgb": [226, 229, 230],
+    "category": "special",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 30
+    },
+    {
+    "id": "wl005a_dawn_white_matte",
+    "name": "Dawn White (Matte)",
+    "hex": "#f7fcfa",
+    "rgb": [247, 252, 250],
+    "category": "classic",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 90
+    },
+    {
+    "id": "wl005b_dawn_white_bright",
+    "name": "Dawn White (Bright)",
+    "hex": "#f7fcfa",
+    "rgb": [247, 252, 250],
+    "category": "classic",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 90
+    },
+    {
+    "id": "wl006_white_pearlescent",
+    "name": "White Pearlescent",
+    "hex": "#ffffff",
+    "rgb": [255, 255, 255],
+    "category": "classic",
+    "compatibleFinishes": ["white_iridescent_series"],
+    "popularity": 90
+    },
+    {
+    "id": "sm001_satin_metallic_white",
+    "name": "Satin Metallic White",
+    "hex": "#ffffff",
+    "rgb": [255, 255, 255],
+    "category": "classic",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 90
+    },
+    {
+    "id": "sm002_satin_metallic_black",
+    "name": "Satin Metallic Black",
+    "hex": "#000000",
+    "rgb": [0, 0, 0],
+    "category": "classic",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 95
+    },
+    {
+    "id": "sm003_satin_metallic_silver",
+    "name": "Satin Metallic Silver",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 85
+    },
+    {
+    "id": "sm004_satin_metallic_titanium_grey",
+    "name": "Satin Metallic Titanium Grey",
+    "hex": "#878681",
+    "rgb": [135, 134, 129],
+    "category": "classic",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "sm005_satin_metallic_dark_green",
+    "name": "Satin Metallic Dark Green",
+    "hex": "#316834",
+    "rgb": [49, 104, 52],
+    "category": "bold",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "sm006_satin_metallic_sakura_pink",
+    "name": "Satin Metallic Sakura Pink",
+    "hex": "#ffb7c5",
+    "rgb": [255, 183, 197],
+    "category": "bold",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 55
+    },
+    {
+    "id": "sm007_satin_metallic_light_blue",
+    "name": "Satin Metallic Light Blue",
+    "hex": "#add8e6",
+    "rgb": [173, 216, 230],
+    "category": "bold",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 70
+    },
+    {
+    "id": "sm008_satin_metallic_tiffany",
+    "name": "Satin Metallic Tiffany",
+    "hex": "#0abab5",
+    "rgb": [10, 186, 181],
+    "category": "bold",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 70
+    },
+    {
+    "id": "sm009_satin_metallic_romantic_pink",
+    "name": "Satin Metallic Romantic Pink",
+    "hex": "#ff69b4",
+    "rgb": [255, 105, 180],
+    "category": "bold",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 55
+    },
+    {
+    "id": "sm010_satin_metallic_deep_grey",
+    "name": "Satin Metallic Deep Grey",
+    "hex": "#4e4e4e",
+    "rgb": [78, 78, 78],
+    "category": "classic",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "sm011_satin_metallic_battle_grey",
+    "name": "Satin Metallic Battle Grey",
+    "hex": "#848482",
+    "rgb": [132, 132, 130],
+    "category": "classic",
+    "compatibleFinishes": ["satin_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "ub001_metallic_british_royal_green",
+    "name": "Metallic British Royal Green",
+    "hex": "#004225",
+    "rgb": [0, 66, 37],
+    "category": "racing",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "ub002_metallic_silver",
+    "name": "Metallic Silver",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 85
+    },
+    {
+    "id": "ub003_metallic_white",
+    "name": "Metallic White",
+    "hex": "#ffffff",
+    "rgb": [255, 255, 255],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 90
+    },
+    {
+    "id": "ub004a_metallic_champagne_gold_light",
+    "name": "Metallic Champagne Gold (Light)",
+    "hex": "#c1b38f",
+    "rgb": [193, 179, 143],
+    "category": "luxury",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 50
+    },
+    {
+    "id": "ub004b_metallic_champagne_gold_dark",
+    "name": "Metallic Champagne Gold (Dark)",
+    "hex": "#aa835c",
+    "rgb": [170, 131, 92],
+    "category": "luxury",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 50
+    },
+    {
+    "id": "ub005_metallic_soul_red",
+    "name": "Metallic Soul Red",
+    "hex": "#ff2800",
+    "rgb": [255, 40, 0],
+    "category": "racing",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "ub006_metallic_deep_grey",
+    "name": "Metallic Deep Grey",
+    "hex": "#4e4e4e",
+    "rgb": [78, 78, 78],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "ub007_metallic_midnight_gold",
+    "name": "Metallic Midnight Gold",
+    "hex": "#d3af37",
+    "rgb": [211, 175, 55],
+    "category": "luxury",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 50
+    },
+    {
+    "id": "ub008_metallic_maple_leaf_yellow",
+    "name": "Metallic Maple Leaf Yellow",
+    "hex": "#ffda03",
+    "rgb": [255, 218, 3],
+    "category": "racing",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 45
+    },
+    {
+    "id": "ub009_metallic_morganite_red",
+    "name": "Metallic Morganite Red",
+    "hex": "#dfcdc6",
+    "rgb": [223, 205, 198],
+    "category": "bold",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "ub010_metallic_black",
+    "name": "Metallic Black",
+    "hex": "#000000",
+    "rgb": [0, 0, 0],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 95
+    },
+    {
+    "id": "ub011_metallic_battle_grey",
+    "name": "Metallic Battle Grey",
+    "hex": "#848482",
+    "rgb": [132, 132, 130],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "ub012_metallic_tungsten_steel",
+    "name": "Metallic Tungsten Steel",
+    "hex": "#878681",
+    "rgb": [135, 134, 129],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "ub013_metallic_gem_blue",
+    "name": "Metallic Gem Blue",
+    "hex": "#4b3c8e",
+    "rgb": [75, 60, 142],
+    "category": "bold",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 70
+    },
+    {
+    "id": "ub014_metallic_midnight_purple",
+    "name": "Metallic Midnight Purple",
+    "hex": "#2e1a47",
+    "rgb": [46, 26, 71],
+    "category": "luxury",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 55
+    },
+    {
+    "id": "ub015_metallic_black_rose",
+    "name": "Metallic Black Rose",
+    "hex": "#891d29",
+    "rgb": [137, 29, 41],
+    "category": "luxury",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "ub016_metallic_blueberry",
+    "name": "Metallic Blueberry",
+    "hex": "#4f86f7",
+    "rgb": [79, 134, 247],
+    "category": "bold",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 70
+    },
+    {
+    "id": "cp_m004_gt_silver_porsche",
+    "name": "GT Silver (Porsche)",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 85
+    },
+    {
+    "id": "cp_m008_iceberry_pink_porsche",
+    "name": "Iceberry Pink (Porsche)",
+    "hex": "#f28e98",
+    "rgb": [242, 142, 152],
+    "category": "bold",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 55
+    },
+    {
+    "id": "cp_m009_emerald_green_benz",
+    "name": "Emerald Green (Benz)",
+    "hex": "#006742",
+    "rgb": [0, 103, 66],
+    "category": "bold",
+    "compatibleFinishes": ["ultra_bright_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "lm001_liquid_metallic_dragon_blood_red",
+    "name": "Liquid Metallic Dragon Blood Red",
+    "hex": "#790604",
+    "rgb": [121, 6, 4],
+    "category": "racing",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 60
+    },
+    {
+    "id": "lm003_liquid_metal_tungsten_steel",
+    "name": "Liquid Metal Tungsten Steel",
+    "hex": "#878681",
+    "rgb": [135, 134, 129],
+    "category": "classic",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 75
+    },
+    {
+    "id": "lm004_liquid_metal_somato_blue",
+    "name": "Liquid Metal Somato Blue",
+    "hex": "#0e5e55",
+    "rgb": [14, 94, 85],
+    "category": "bold",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 70
+    },
+    {
+    "id": "lm005_liquid_metal_silver",
+    "name": "Liquid Metal Silver",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 85
+    },
+    {
+    "id": "lm006_liquid_metal_gun_grey",
+    "name": "Liquid Metal Gun Grey",
+    "hex": "#818589",
+    "rgb": [129, 133, 137],
+    "category": "classic",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 75
+    },
+    {
+    "id": "lm007_liquid_metal_galaxy_silver",
+    "name": "Liquid Metal Galaxy Silver",
+    "hex": "#c7c9d5",
+    "rgb": [199, 201, 213],
+    "category": "classic",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 85
+    },
+    {
+    "id": "lm008_liquid_metal_gentian_blue",
+    "name": "Liquid Metal Gentian Blue",
+    "hex": "#0f5d84",
+    "rgb": [15, 93, 132],
+    "category": "bold",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 70
+    },
+    {
+    "id": "lm009_liquid_metal_deep_grey",
+    "name": "Liquid Metal Deep Grey",
+    "hex": "#4e4e4e",
+    "rgb": [78, 78, 78],
+    "category": "classic",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 75
+    },
+    {
+    "id": "lm010_liquid_metal_aluminum_silver",
+    "name": "Liquid Metal Aluminum Silver",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 85
+    },
+    {
+    "id": "lm011_matte_liquid_metal_silver",
+    "name": "Matte Liquid Metal Silver",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["liquid_metal_series"],
+    "popularity": 85
+    },
+    {
+    "id": "di001_pearl_lustre_white",
+    "name": "Pearl Lustre White",
+    "hex": "#ffffff",
+    "rgb": [255, 255, 255],
+    "category": "classic",
+    "compatibleFinishes": ["diamond_series"],
+    "popularity": 90
+    },
+    {
+    "id": "di002_pearl_lustre_black",
+    "name": "Pearl Lustre Black",
+    "hex": "#000000",
+    "rgb": [0, 0, 0],
+    "category": "classic",
+    "compatibleFinishes": ["diamond_series"],
+    "popularity": 95
+    },
+    {
+    "id": "di003_pearl_lustre_black",
+    "name": "Pearl Lustre Black",
+    "hex": "#000000",
+    "rgb": [0, 0, 0],
+    "category": "classic",
+    "compatibleFinishes": ["diamond_series"],
+    "popularity": 95
+    },
+    {
+    "id": "ch001a_diamond_white_blue_bright",
+    "name": "Diamond White Blue (Bright)",
+    "hex": "#00bfff",
+    "rgb": [0, 191, 255],
+    "category": "special",
+    "compatibleFinishes": ["chameleon_series"],
+    "popularity": 30
+    },
+    {
+    "id": "ch001b_diamond_white_blue_matte",
+    "name": "Diamond White Blue (Matte)",
+    "hex": "#00bfff",
+    "rgb": [0, 191, 255],
+    "category": "special",
+    "compatibleFinishes": ["chameleon_series"],
+    "popularity": 30
+    },
+    {
+    "id": "ch002a_diamond_white_gold_bright",
+    "name": "Diamond White Gold (Bright)",
+    "hex": "#d4af37",
+    "rgb": [212, 175, 55],
+    "category": "special",
+    "compatibleFinishes": ["chameleon_series"],
+    "popularity": 30
+    },
+    {
+    "id": "ch002b_diamond_white_gold_matte",
+    "name": "Diamond White Gold (Matte)",
+    "hex": "#d4af37",
+    "rgb": [212, 175, 55],
+    "category": "special",
+    "compatibleFinishes": ["chameleon_series"],
+    "popularity": 30
+    },
+    {
+    "id": "ch003a_diamond_white_red_bright",
+    "name": "Diamond White Red (Bright)",
+    "hex": "#ff0000",
+    "rgb": [255, 0, 0],
+    "category": "special",
+    "compatibleFinishes": ["chameleon_series"],
+    "popularity": 30
+    },
+    {
+    "id": "um001_ultra_matte_amg_mountain_grey_benz",
+    "name": "Ultra-Matte AMG Mountain Grey (Benz)",
+    "hex": "#767980",
+    "rgb": [118, 121, 128],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_matte_series"],
+    "popularity": 75
+    },
+    {
+    "id": "um002_ultra_matte_black_purple",
+    "name": "Ultra Matte Black Purple",
+    "hex": "#2e1a47",
+    "rgb": [46, 26, 71],
+    "category": "luxury",
+    "compatibleFinishes": ["ultra_matte_series"],
+    "popularity": 55
+    },
+    {
+    "id": "um003_ultra_matte_black_blue",
+    "name": "Ultra Matte Black Blue",
+    "hex": "#000e34",
+    "rgb": [0, 14, 52],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_matte_series"],
+    "popularity": 95
+    },
+    {
+    "id": "um004_ultra_matte_black_red",
+    "name": "Ultra Matte Black Red",
+    "hex": "#67032d",
+    "rgb": [103, 3, 45],
+    "category": "classic",
+    "compatibleFinishes": ["ultra_matte_series"],
+    "popularity": 95
+    },
+    {
+    "id": "um005_ultra_matte_pinot_noir_purple",
+    "name": "Ultra Matte Pinot Noir Purple",
+    "hex": "#531926",
+    "rgb": [83, 25, 38],
+    "category": "luxury",
+    "compatibleFinishes": ["ultra_matte_series"],
+    "popularity": 55
+    },
+    {
+    "id": "um006_ultra_matte_plated_romance_red",
+    "name": "Ultra Matte Plated Romance Red",
+    "hex": "#891d29",
+    "rgb": [137, 29, 41],
+    "category": "bold",
+    "compatibleFinishes": ["ultra_matte_series"],
+    "popularity": 60
+    },
+    {
+    "id": "um007_ultra_matte_plated_venom_green",
+    "name": "Ultra Matte Plated Venom Green",
+    "hex": "#728c00",
+    "rgb": [114, 140, 0],
+    "category": "bold",
+    "compatibleFinishes": ["ultra_matte_series"],
+    "popularity": 60
+    },
+    {
+    "id": "gm001_ghost_metal_grey_blue",
+    "name": "Ghost Metal Grey Blue",
+    "hex": "#2c333e",
+    "rgb": [44, 51, 62],
+    "category": "classic",
+    "compatibleFinishes": ["ghost_metal_series"],
+    "popularity": 75
+    },
+    {
+    "id": "gm002_ghost_metal_dark_green",
+    "name": "Ghost Metal Dark Green",
+    "hex": "#316834",
+    "rgb": [49, 104, 52],
+    "category": "bold",
+    "compatibleFinishes": ["ghost_metal_series"],
+    "popularity": 60
+    },
+    {
+    "id": "hy001a_fantasy_volcano_grey_bright",
+    "name": "Fantasy Volcano Grey (Bright)",
+    "hex": "#2a3439",
+    "rgb": [42, 52, 57],
+    "category": "classic",
+    "compatibleFinishes": ["phantom_series"],
+    "popularity": 70
+    },
+    {
+    "id": "hy001b_fantasy_volcano_grey_matte",
+    "name": "Fantasy Volcano Grey (Matte)",
+    "hex": "#2a3439",
+    "rgb": [42, 52, 57],
+    "category": "classic",
+    "compatibleFinishes": ["phantom_series"],
+    "popularity": 70
+    },
+    {
+    "id": "hy002_phantom_grey_purple",
+    "name": "Phantom Grey Purple",
+    "hex": "#605258",
+    "rgb": [96, 82, 88],
+    "category": "luxury",
+    "compatibleFinishes": ["phantom_series"],
+    "popularity": 55
+    },
+    {
+    "id": "hy003_phantom_moonstone_grey",
+    "name": "Phantom Moonstone Grey",
+    "hex": "#bcc3c3",
+    "rgb": [188, 195, 195],
+    "category": "classic",
+    "compatibleFinishes": ["phantom_series"],
+    "popularity": 75
+    },
+    {
+    "id": "hy005_phantom_grey_blue",
+    "name": "Phantom Grey Blue",
+    "hex": "#2c333e",
+    "rgb": [44, 51, 62],
+    "category": "classic",
+    "compatibleFinishes": ["phantom_series"],
+    "popularity": 75
+    },
+    {
+    "id": "hy006_fantasy_carmine_pink",
+    "name": "Fantasy Carmine Pink",
+    "hex": "#eb4c42",
+    "rgb": [235, 76, 66],
+    "category": "bold",
+    "compatibleFinishes": ["phantom_series"],
+    "popularity": 55
+    },
+    {
+    "id": "hy007_fantasy_turquoise",
+    "name": "Fantasy Turquoise",
+    "hex": "#40e0d0",
+    "rgb": [64, 224, 208],
+    "category": "bold",
+    "compatibleFinishes": ["phantom_series"],
+    "popularity": 70
+    },
+    {
+    "id": "hy008_fantasy_rock_grey",
+    "name": "Fantasy Rock Grey",
+    "hex": "#808c8c",
+    "rgb": [128, 140, 140],
+    "category": "classic",
+    "compatibleFinishes": ["phantom_series"],
+    "popularity": 75
+    },
+    {
+    "id": "mac001_macaron_jazz_blue",
+    "name": "Macaron Jazz Blue",
+    "hex": "#1a6a9f",
+    "rgb": [26, 106, 159],
+    "category": "bold",
+    "compatibleFinishes": ["macaron_series"],
+    "popularity": 70
+    },
+    {
+    "id": "mac002_macaron_moonlight_jade",
+    "name": "Macaron Moonlight Jade",
+    "hex": "#c7e5df",
+    "rgb": [199, 229, 223],
+    "category": "bold",
+    "compatibleFinishes": ["macaron_series"],
+    "popularity": 60
+    },
+    {
+    "id": "pm001_plated_romance_red",
+    "name": "Plated Romance Red",
+    "hex": "#891d29",
+    "rgb": [137, 29, 41],
+    "category": "bold",
+    "compatibleFinishes": ["plated_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "pm002_plated_venom_green",
+    "name": "Plated Venom Green",
+    "hex": "#728c00",
+    "rgb": [114, 140, 0],
+    "category": "bold",
+    "compatibleFinishes": ["plated_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "pm003_alexander_silver",
+    "name": "Alexander Silver",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["plated_metallic_series"],
+    "popularity": 85
+    },
+    {
+    "id": "cp_m001_moonlight_stone_grey_benz",
+    "name": "Moonlight Stone Grey (Benz)",
+    "hex": "#bcc8c6",
+    "rgb": [188, 200, 198],
+    "category": "classic",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "cp_m002_amg_mountain_grey_benz_satin_metallic",
+    "name": "AMG Mountain Grey (Benz) Satin Metallic",
+    "hex": "#767980",
+    "rgb": [118, 121, 128],
+    "category": "classic",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "cp_m003_coal_ash_porsche",
+    "name": "Coal Ash (Porsche)",
+    "hex": "#bcc3c3",
+    "rgb": [188, 195, 195],
+    "category": "classic",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "cp_m005_cherry_red_porsche",
+    "name": "Cherry Red (Porsche)",
+    "hex": "#891d29",
+    "rgb": [137, 29, 41],
+    "category": "bold",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "cp_m006_rubellite_red_porsche",
+    "name": "Rubellite Red (Porsche)",
+    "hex": "#cb4273",
+    "rgb": [203, 66, 115],
+    "category": "bold",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "cp_m007_grey_violet_bentley",
+    "name": "Grey Violet (Bentley)",
+    "hex": "#605258",
+    "rgb": [96, 82, 88],
+    "category": "luxury",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 55
+    },
+    {
+    "id": "cp_m010_agate_green_porsche",
+    "name": "Agate Green (Porsche)",
+    "hex": "#818979",
+    "rgb": [129, 137, 121],
+    "category": "classic",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "cp_m011_metallic_mamba_green_porsche",
+    "name": "Metallic Mamba Green (Porsche)",
+    "hex": "#568203",
+    "rgb": [86, 130, 3],
+    "category": "bold",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "cp_m012_gem_cyan_bmw",
+    "name": "Gem Cyan (BMW)",
+    "hex": "#00bfff",
+    "rgb": [0, 191, 255],
+    "category": "bold",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 70
+    },
+    {
+    "id": "cp_m013_aventurine_green_porsche",
+    "name": "Aventurine Green (Porsche)",
+    "hex": "#576e6a",
+    "rgb": [87, 110, 106],
+    "category": "bold",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "cp_m014_ice_crystal_blue_porsche",
+    "name": "Ice Crystal Blue (Porsche)",
+    "hex": "#a6e3e0",
+    "rgb": [166, 227, 224],
+    "category": "bold",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 70
+    },
+    {
+    "id": "cp_m015_blue_crystal_black_bmw",
+    "name": "Blue Crystal Black (BMW)",
+    "hex": "#000000",
+    "rgb": [0, 0, 0],
+    "category": "classic",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 95
+    },
+    {
+    "id": "cp_m016_compete_speed_lemon",
+    "name": "Compete Speed Lemon",
+    "hex": "#ffda03",
+    "rgb": [255, 218, 3],
+    "category": "racing",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 45
+    },
+    {
+    "id": "cp_m017_venice_purple_audi",
+    "name": "Venice Purple (Audi)",
+    "hex": "#605258",
+    "rgb": [96, 82, 88],
+    "category": "luxury",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 55
+    },
+    {
+    "id": "cp_m018_danquan_stone_blue_bmw",
+    "name": "Danquan Stone Blue (BMW)",
+    "hex": "#6b9dc2",
+    "rgb": [107, 157, 194],
+    "category": "bold",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 70
+    },
+    {
+    "id": "cp_m019_glowing_purple_small_sut",
+    "name": "Glowing Purple (small/SUT)",
+    "hex": "#5e5057",
+    "rgb": [94, 80, 87],
+    "category": "luxury",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 55
+    },
+    {
+    "id": "cp_m020_byron_bay_land_rover",
+    "name": "Byron Bay (Land Rover)",
+    "hex": "#041a40",
+    "rgb": [4, 26, 64],
+    "category": "bold",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 70
+    },
+    {
+    "id": "cp_m021_berina_grey_bmw",
+    "name": "Berina Grey (BMW)",
+    "hex": "#c3c7c7",
+    "rgb": [195, 199, 199],
+    "category": "classic",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 75
+    },
+    {
+    "id": "cp_m022_endless_mountain_green_byd",
+    "name": "Endless Mountain Green (BYD)",
+    "hex": "#316834",
+    "rgb": [49, 104, 52],
+    "category": "bold",
+    "compatibleFinishes": ["oem_car_paint_metallic_series"],
+    "popularity": 60
+    },
+    {
+    "id": "ho001_laser_black",
+    "name": "Laser Black",
+    "hex": "#000000",
+    "rgb": [0, 0, 0],
+    "category": "classic",
+    "compatibleFinishes": ["laser_series"],
+    "popularity": 95
+    },
+    {
+    "id": "ho002a_laser_white_bright",
+    "name": "Laser White (Bright)",
+    "hex": "#ffffff",
+    "rgb": [255, 255, 255],
+    "category": "classic",
+    "compatibleFinishes": ["laser_series"],
+    "popularity": 90
+    },
+    {
+    "id": "ho002b_laser_white_matte",
+    "name": "Laser White (Matte)",
+    "hex": "#ffffff",
+    "rgb": [255, 255, 255],
+    "category": "classic",
+    "compatibleFinishes": ["laser_series"],
+    "popularity": 90
+    },
+    {
+    "id": "ho003_laser_silver",
+    "name": "Laser Silver",
+    "hex": "#c0c0c0",
+    "rgb": [192, 192, 192],
+    "category": "classic",
+    "compatibleFinishes": ["laser_series"],
+    "popularity": 85
+    },
+    {
+    "id": "ho004_laser_tiffany",
+    "name": "Laser Tiffany",
+    "hex": "#0abab5",
+    "rgb": [10, 186, 181],
+    "category": "bold",
+    "compatibleFinishes": ["laser_series"],
+    "popularity": 70
+    },
+    {
+    "id": "ho005_laser_grey",
+    "name": "Laser Grey",
+    "hex": "#848482",
+    "rgb": [132, 132, 130],
+    "category": "classic",
+    "compatibleFinishes": ["laser_series"],
+    "popularity": 75
+    },
+    {
+    "id": "ho006_laser_sakura_pink",
+    "name": "Laser Sakura Pink",
+    "hex": "#ffb7c5",
+    "rgb": [255, 183, 197],
+    "category": "bold",
+    "compatibleFinishes": ["laser_series"],
+    "popularity": 55
+    },
+    {
+    "id": "yf001_color_shift_metallic_blue_gold_bright",
+    "name": "Color Shift Metallic Blue Gold (Bright)",
+    "hex": "#d4af37",
+    "rgb": [212, 175, 55],
+    "category": "special",
+    "compatibleFinishes": ["yuanfeng_series"],
+    "popularity": 30
+    },
+    {
+    "id": "yf002_color_shift_metallic_blue_green_bright",
+    "name": "Color Shift Metallic Blue Green (Bright)",
+    "hex": "#00bfff",
+    "rgb": [0, 191, 255],
+    "category": "special",
+    "compatibleFinishes": ["yuanfeng_series"],
+    "popularity": 30
+    },
+    {
+        "id": "yf003_color_shift_metallic_blue_gold_matte",
+        "name": "Color Shift Metallic Blue Gold (Matte)",
+        "hex": "#0000ff",
+        "rgb": [0, 0, 255],
+        "category": "special",
+        "compatibleFinishes": ["yuanfeng_series"],
+        "popularity": 30,
+        "colorShift": {
+            "primary": "#0000ff",
+            "secondary": "#ffd700"
+        }
+    },
+    {
+        "id": "yf004_color_shift_metallic_blue_green_matte",
+        "name": "Color Shift Metallic Blue Green (Matte)",
+        "hex": "#0000ff",
+        "rgb": [0, 0, 255],
+        "category": "special",
+        "compatibleFinishes": ["yuanfeng_series"],
+        "popularity": 30,
+        "colorShift": {
+        "primary": "#0000ff",
+        "secondary": "#008000"
+        }
+    },
+    {
+        "id": "st001_capri_grey_purple",
+        "name": "Capri Grey Purple",
+        "hex": "#605258",
+        "rgb": [96, 82, 88],
+        "category": "special",
+        "compatibleFinishes": ["specific_series"],
+        "popularity": 30
+    },
+    {
+        "id": "st002a_diamond_floral_pink_bright",
+        "name": "Diamond Floral Pink (Bright)",
+        "hex": "#ff69b4",
+        "rgb": [255, 105, 180],
+        "category": "special",
+        "compatibleFinishes": ["specific_series"],
+        "popularity": 30
+    },
+    {
+        "id": "st002b_diamond_floral_pink_matte",
+        "name": "Diamond Floral Pink (Matte)",
+        "hex": "#ff69b4",
+        "rgb": [255, 105, 180],
+        "category": "special",
+        "compatibleFinishes": ["specific_series"],
+        "popularity": 30
+    },
+    {
+        "id": "st003_madeira_black_red",
+        "name": "Madeira Black Red",
+        "hex": "#67032d",
+        "rgb": [103, 3, 45],
+        "category": "special",
+        "compatibleFinishes": ["specific_series"],
+        "popularity": 30
+    },
+    {
+        "id": "st005_glitter_starry_pink",
+        "name": "Glitter Starry Pink",
+        "hex": "#ff69b4",
+        "rgb": [255, 105, 180],
+        "category": "special",
+        "compatibleFinishes": ["specific_series"],
+        "popularity": 30
+    },
+    {
+        "id": "st006_peach_green_grape_pink",
+        "name": "Peach Green Grape Pink",
+        "hex": "#ffb7c5",
+        "rgb": [255, 183, 197],
+        "category": "special",
+        "compatibleFinishes": ["specific_series"],
+        "popularity": 30
+    },
+    {
+        "id": "st007_gradient_silver_magic_purple",
+        "name": "Gradient Silver Magic Purple",
+        "hex": "#7c3aed",
+        "rgb": [124, 58, 237],
+        "category": "special",
+        "compatibleFinishes": ["specific_series"],
+        "popularity": 30
+    },
+    {
+        "id": "st008_starry_sky_phantom_grey",
+        "name": "Starry Sky Phantom Grey",
+        "hex": "#4e4e4e",
+        "rgb": [78, 78, 78],
+        "category": "special",
+        "compatibleFinishes": ["specific_series"],
+        "popularity": 30
+    }
+    ]
+}    

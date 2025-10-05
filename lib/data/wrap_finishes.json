@@ -1,0 +1,247 @@
+{
+    "finishes": [
+        {
+            "id": "gloss_series",
+            "name": "Gloss Series",
+            "category": "gloss",
+            "description": "High-shine gloss finish for a classic and vibrant look",
+            "materialProperties": {
+            "roughness": 0.1,
+            "metalness": 0.0,
+            "clearcoat": 1.0,
+            "clearcoatRoughness": 0.03
+        },
+            "characteristics": ["easy_clean", "high_shine", "classic"]
+        },
+        {
+            "id": "matte_series",
+            "name": "Matte Series",
+            "category": "matte",
+            "description": "Non-reflective matte finish for a stealthy appearance",
+            "materialProperties": {
+            "roughness": 0.9,
+            "metalness": 0.0,
+            "clearcoat": 0.0,
+            "clearcoatRoughness": 0.0
+        },
+            "characteristics": ["stealth_look", "scratch_resistant", "modern"]
+        },
+        {
+            "id": "deluster_series",
+            "name": "Deluster Series",
+            "category": "satin",
+            "description": "Subdued deluster finish with a smooth texture",
+            "materialProperties": {
+                "roughness": 0.5,
+                "metalness": 0.0,
+                "clearcoat": 0.7,
+                "clearcoatRoughness": 0.15
+            },
+            "characteristics": ["moderate_shine", "refined", "subtle"]
+        },
+        {
+            "id": "white_iridescent_series",
+            "name": "White Iridescent Series",
+            "category": "pearlescent",
+            "description": "Iridescent white finish with shifting hues",
+            "materialProperties": {
+                "roughness": 0.2,
+                "metalness": 0.3,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.08
+            },
+            "characteristics": ["color_shift", "luxury_glow", "angle_dependent"]
+        },
+        {
+            "id": "satin_metallic_series",
+            "name": "Satin Metallic Series",
+            "category": "metallic_satin",
+            "description": "Satin metallic finish with subtle sheen",
+            "materialProperties": {
+                "roughness": 0.35,
+                "metalness": 0.6,
+                "clearcoat": 0.6,
+                "clearcoatRoughness": 0.2
+            },
+            "characteristics": ["subtle_metallic", "sophisticated", "moderate_shine"]
+        },
+        {
+            "id": "ultra_bright_metallic_series",
+            "name": "Ultra Bright Metallic Series",
+            "category": "metallic_gloss",
+            "description": "Ultra bright metallic finish with high reflectivity",
+            "materialProperties": {
+                "roughness": 0.15,
+                "metalness": 0.8,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.05
+            },
+            "characteristics": ["high_shine", "premium_look", "metallic_flake"]
+        },
+        {
+            "id": "liquid_metal_series",
+            "name": "Liquid Metal Series",
+            "category": "chrome",
+            "description": "Liquid metal finish with mirror-like reflectivity",
+            "materialProperties": {
+                "roughness": 0.02,
+                "metalness": 1.0,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.01
+            },
+            "characteristics": ["mirror_finish", "ultra_reflective", "statement_piece"]
+        },
+        {
+            "id": "diamond_series",
+            "name": "Diamond Series",
+            "category": "pearlescent",
+            "description": "Diamond-like pearlescent finish with sparkling effect",
+            "materialProperties": {
+                "roughness": 0.2,
+                "metalness": 0.3,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.08
+            },
+            "characteristics": ["sparkling", "luxury_glow", "angle_dependent"]
+        },
+        {
+            "id": "chameleon_series",
+            "name": "Chameleon Series",
+            "category": "special",
+            "description": "Chameleon finish with color-shifting properties",
+            "materialProperties": {
+                "roughness": 0.2,
+                "metalness": 0.3,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.08
+            },
+            "characteristics": ["color_shift", "unique", "angle_dependent"],
+            "   ": {
+                "primary": "#ffffff",
+                "secondary": "#ffffff"
+            }
+        },
+        {
+            "id": "ultra_matte_series",
+            "name": "Ultra-Matte Series",
+            "category": "matte",
+            "description": "Ultra-matte finish for a bold, non-reflective look",
+            "materialProperties": {
+                "roughness": 0.95,
+                "metalness": 0.0,
+                "clearcoat": 0.0,
+                "clearcoatRoughness": 0.0
+            },
+            "characteristics": ["stealth_look", "scratch_resistant", "bold"]
+        },
+        {
+            "id": "ghost_metal_series",
+            "name": "Ghost Metal Series",
+            "category": "metallic",
+            "description": "Ghost metal finish with subtle metallic depth",
+            "materialProperties": {
+                "roughness": 0.4,
+                "metalness": 0.4,
+                "clearcoat": 0.0,
+                "clearcoatRoughness": 0.0
+            },
+            "characteristics": ["subtle_metallic", "stealth", "unique_texture"]
+        },
+        {
+            "id": "phantom_series",
+            "name": "Phantom Series",
+            "category": "pearlescent",
+            "description": "Phantom finish with ethereal color shifts",
+            "materialProperties": {
+                "roughness": 0.2,
+                "metalness": 0.3,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.08
+            },
+            "characteristics": ["color_shift", "mysterious", "angle_dependent"]
+        },
+        {
+            "id": "macaron_series",
+            "name": "Macaron Series",
+            "category": "pastel",
+            "description": "Soft macaron finish with delicate pastel tones",
+            "materialProperties": {
+                "roughness": 0.3,
+                "metalness": 0.0,
+                "clearcoat": 0.7,
+                "clearcoatRoughness": 0.15
+            },
+            "characteristics": ["pastel", "soft", "elegant"]
+        },
+        {
+            "id": "plated_metallic_series",
+            "name": "Plated Metallic Series",
+            "category": "chrome",
+            "description": "Plated metallic finish with high shine",
+            "materialProperties": {
+                "roughness": 0.02,
+                "metalness": 1.0,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.01
+            },
+            "characteristics": ["high_shine", "premium", "reflective"]
+        },
+        {
+            "id": "oem_car_paint_metallic_series",
+            "name": "OEM Car Paint - Metallic Series",
+            "category": "metallic",
+            "description": "OEM metallic finishes inspired by premium car paints",
+            "materialProperties": {
+                "roughness": 0.15,
+                "metalness": 0.8,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.05
+            },
+            "characteristics": ["premium_look", "durable", "authentic"]
+        },
+        {
+            "id": "laser_series",
+            "name": "Laser Series",
+            "category": "pearlescent",
+            "description": "Laser pearlescent finish with laser-like precision",
+            "materialProperties": {
+                "roughness": 0.2,
+                "metalness": 0.3,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.08
+            },
+            "characteristics": ["sparkling", "high_tech", "angle_dependent"]
+        },
+        {
+            "id": "yuanfeng_series",
+            "name": "Yuanfeng Series",
+            "category": "special",
+            "description": "Yuanfeng finish with unique color shifting",
+            "materialProperties": {
+                "roughness": 0.2,
+                "metalness": 0.3,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.08
+            },
+            "characteristics": ["color_shift", "exotic", "angle_dependent"],
+            "colorShift": {
+                "primary": "#0000ff",
+                "secondary": "#ffd700"
+            }
+        },
+        {
+            "id": "specific_series",
+            "name": "Specific Series",
+            "category": "special",
+            "description": "Specific finishes with unique effects",
+            "materialProperties": {
+                "roughness": 0.2,
+                "metalness": 0.3,
+                "clearcoat": 1.0,
+                "clearcoatRoughness": 0.08
+            },
+            "characteristics": ["unique", "custom", "special_effects"]
+        }
+    ]
+}
+ 
