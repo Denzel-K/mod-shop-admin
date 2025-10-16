@@ -10,7 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useState } from "react";
 import { Copy } from "lucide-react";
 
-export function AssetCard({ asset, onEdit, onDelete }: { asset: Asset; onEdit: (a: Asset) => void; onDelete: (id: string) => void }) {
+export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: Asset; onEdit: (a: Asset) => void; onDelete: (id: string) => void; currentAdminId?: string }) {
   const [creditsOpen, setCreditsOpen] = useState<boolean>(false); // popover visibility
   const creditsText = asset.creatorCredits?.text?.trim() || '';
   const [copied, setCopied] = useState(false);
@@ -108,8 +108,6 @@ export function AssetCard({ asset, onEdit, onDelete }: { asset: Asset; onEdit: (
           </div>
         </div>
 
-        {/* No in-card truncated credits; popover replaces it */}
-
         {/* Tags (always compact, subtle) */}
         {asset.tags && asset.tags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
@@ -133,14 +131,16 @@ export function AssetCard({ asset, onEdit, onDelete }: { asset: Asset; onEdit: (
           <Eye className="w-4 h-4" />
         </Link>
         <div className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onEdit(asset)}
-            className="inline-flex items-center gap-1 text-slate-200 hover:text-white transition-colors px-2 py-1 rounded hover:bg-slate-800/60 border border-transparent hover:border-slate-700"
-            title="Edit"
-          >
-            <Pencil className="w-4 h-4" />
-          </button>
+          {asset.curatedBy?.adminId && currentAdminId && asset.curatedBy.adminId === currentAdminId && (
+            <button
+              type="button"
+              onClick={() => onEdit(asset)}
+              className="inline-flex items-center gap-1 text-slate-200 hover:text-white transition-colors px-2 py-1 rounded hover:bg-slate-800/60 border border-transparent hover:border-slate-700"
+              title="Edit"
+            >
+              <Pencil className="w-4 h-4" />
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onDelete(asset._id)}
@@ -154,3 +154,4 @@ export function AssetCard({ asset, onEdit, onDelete }: { asset: Asset; onEdit: (
     </div>
   );
 }
+

@@ -23,6 +23,7 @@ export default function DashboardClient() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [filters, setFilters] = useState<AssetFilters>({});
   const [searchQ, setSearchQ] = useState<string>('');
+  const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -79,6 +80,22 @@ export default function DashboardClient() {
     // Always fetch on mount
     fetchAssets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fetch current admin id once for UI authorization
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const id = data?.admin?.id as string | undefined;
+        if (id) setCurrentAdminId(id);
+      } catch {
+        // no-op
+      }
+    };
+    run();
   }, []);
 
   useEffect(() => {
@@ -175,7 +192,7 @@ export default function DashboardClient() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 px-4 sm:px-6 lg:px-8">
             {assets.map((asset) => (
-              <AssetCard key={asset._id} asset={asset} onEdit={(a) => { setEditingAsset(a); setShowUpload(true); }} onDelete={(id) => setDeletingId(id)} />
+              <AssetCard key={asset._id} asset={asset} currentAdminId={currentAdminId ?? undefined} onEdit={(a) => { setEditingAsset(a); setShowUpload(true); }} onDelete={(id) => setDeletingId(id)} />
             ))}
           </div>
         )}

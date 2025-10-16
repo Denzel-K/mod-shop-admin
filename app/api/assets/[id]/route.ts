@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Asset, { type IAsset } from '@/models/Asset';
-import Admin from '@/models/Admin';
-import type { Types } from 'mongoose';
 import { verifyAdmin } from '@/lib/auth';
 import { getStorageService } from '@/lib/enhanced-storage';
 
@@ -33,6 +31,22 @@ export async function PATCH(
   try {
     await connectDB();
     const { id } = await params;
+    // Require authenticated admin
+    const auth = await verifyAdmin();
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized: admin session required' }, { status: 401 });
+    }
+
+    // Fetch current asset for authorization and validation
+    const current = await Asset.findById(id).lean<IAsset | null>();
+    if (!current) return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
+
+    // Enforce curator-only editing
+    const curatorId = current.curatedBy?.adminId ? String(current.curatedBy.adminId) : null;
+    if (!curatorId || curatorId !== String(auth.adminId)) {
+      return NextResponse.json({ error: 'Forbidden: only the asset curator can edit this asset' }, { status: 403 });
+    }
+
     type PatchBody = Partial<IAsset>;
     const body = (await req.json().catch(() => ({}))) as PatchBody;
     const updates: Partial<IAsset> = {};
@@ -68,25 +82,10 @@ export async function PATCH(
       updates.metadata = body.metadata; // trust client; server schema enforces shape loosely
     }
 
-    // Stamp curator from session
-    const auth = await verifyAdmin();
-    if (!auth) {
-      return NextResponse.json({ error: 'Unauthorized: admin session required' }, { status: 401 });
-    }
-    const adminDoc = await Admin.findById(auth.adminId).lean<{ _id: Types.ObjectId; fullname: string; email: string } | null>();
-    updates.curatedBy = {
-      mode: 'self',
-      adminId: adminDoc?._id,
-      name: adminDoc?.fullname,
-      email: adminDoc?.email,
-    };
-    updates.curatedAt = new Date();
+    // Do NOT change curator on edit; keep original curator metadata intact
 
     // Validation rule: if sketchfab source is set or remains sketchfab, ensure credits.text exists
     if (updates.assetSource === 'sketchfab' || updates.creatorCredits?.text) {
-      // fetch current to validate combined state
-      const current = await Asset.findById(id).lean<IAsset | null>();
-      if (!current) return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
       const finalSource = (updates.assetSource ?? current.assetSource);
       const finalCredits = updates.creatorCredits ?? (current.creatorCredits);
       if (finalSource === 'sketchfab' && !(finalCredits && typeof finalCredits.text === 'string' && finalCredits.text.trim())) {
@@ -111,6 +110,16 @@ export async function DELETE(
     const { id } = await params;
     const asset = await Asset.findById(id).lean<IAsset | null>();
     if (!asset) return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
+
+    // Require authenticated admin and enforce curator-only deletion
+    const auth = await verifyAdmin();
+    if (!auth) {
+      return NextResponse.json({ error: 'Unauthorized: admin session required' }, { status: 401 });
+    }
+    const curatorId = asset.curatedBy?.adminId ? String(asset.curatedBy.adminId) : null;
+    if (!curatorId || curatorId !== String(auth.adminId)) {
+      return NextResponse.json({ error: 'Forbidden: only the asset curator can delete this asset' }, { status: 403 });
+    }
 
     const storageService = getStorageService();
     const deletionResults: { model: boolean; thumbnail: boolean } = {
