@@ -1,15 +1,38 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LogIn } from 'lucide-react';
 import LoginForm from '@/components/auth/LoginForm';
 import PasswordResetForm from '@/components/auth/PasswordResetForm';
 import { ModShopLogo } from '@/components/mod-shop-logo';
 import { ImageSlideshow } from '@/components/slideshow/ImageSlideshow';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<'login' | 'reset'>('login');
   const [activePanel, setActivePanel] = useState<'landing' | 'signin'>('landing');
+  const [isChecking, setIsChecking] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    let mounted = true;
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/me', { method: 'GET', credentials: 'include' });
+        if (res.ok) {
+          router.replace('/dashboard');
+          return;
+        }
+      } catch {
+      } finally {
+        if (mounted) setIsChecking(false);
+      }
+    };
+    checkAuth();
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
 
   // Sample car and garage images - replace with actual image paths
   const slideshowImages = [
@@ -20,6 +43,33 @@ export default function Home() {
     'https://i.pinimg.com/736x/ab/59/c2/ab59c24662fa944c3a707b7e265f2a42.jpg',
     'https://i.pinimg.com/1200x/73/7b/c2/737bc257905df5e5236061c79e5010b8.jpg'
   ];
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.04)_1px,transparent_1px)] bg-[size:50px_50px]" />
+          <div className="absolute -top-20 -left-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute -bottom-24 -right-24 w-[28rem] h-[28rem] bg-blue-500/10 rounded-full blur-3xl animate-pulse delay-1000" />
+        </div>
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="relative">
+            <div className="absolute -inset-6 rounded-3xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 blur-2xl animate-pulse" />
+            <div className="absolute inset-0 rounded-3xl border border-cyan-400/20 animate-[spin_8s_linear_infinite]" />
+            <div className="relative bg-slate-900/60 border border-cyan-500/20 rounded-2xl p-6 shadow-2xl shadow-cyan-500/10">
+              <ModShopLogo size="xl" />
+            </div>
+          </div>
+          <div className="mt-6 text-slate-300 flex items-center space-x-2">
+            <div className="h-2 w-2 rounded-full bg-cyan-400 animate-bounce [animation-delay:-0.2s]" />
+            <div className="h-2 w-2 rounded-full bg-cyan-300 animate-bounce [animation-delay:0s]" />
+            <div className="h-2 w-2 rounded-full bg-cyan-200 animate-bounce [animation-delay:0.2s]" />
+            <span className="ml-3 text-sm text-slate-400">Preparing your workspace…</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 relative overflow-hidden">
@@ -204,3 +254,4 @@ export default function Home() {
     </div>
   );
 }
+
