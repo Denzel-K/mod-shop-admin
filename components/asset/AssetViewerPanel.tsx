@@ -125,7 +125,7 @@ export default function AssetViewerPanel({
       const next = prev.includes(surfaceId)
         ? prev.filter((s) => s !== surfaceId)
         : [...prev, surfaceId];
-      // Auto-manage highlight mode so selection changes reflect immediately in the scene
+      // Auto-enable highlight when there is at least one selection, otherwise disable
       setHighlightMode(next.length > 0);
       return next;
     });
@@ -138,6 +138,8 @@ export default function AssetViewerPanel({
 
   const handleColorSelect = (colorId: string) => {
     setSelectedColor(colorId);
+    // When a color is selected, turn off highlight mode for a clearer final preview
+    setHighlightMode(false);
     // Apply to selected surfaces
     if (selectedSurfaces.length > 0) {
       const newConfig = { ...wrapConfig };

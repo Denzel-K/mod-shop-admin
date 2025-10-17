@@ -160,31 +160,43 @@ function CarModelWithTexture({
           }
         }
         
-        // Apply highlight effect for selected surfaces as an emissive overlay without replacing materials
-        // Backup and restore emissive properties to avoid permanent mutation
-        const applyEmissiveHighlight = (m: THREE.Material) => {
+        // Apply highlight effect using emissive overlay per mesh.
+        // Back up once per mesh and restore across all its materials without premature deletion.
+        const isSelectedForHighlight = highlightMode && selectedSurfaces.includes(obj.name);
+        const applyEmissiveToMaterial = (m: THREE.Material, color: THREE.Color, intensity: number) => {
           const mat = m as THREE.MeshStandardMaterial;
           if (!('emissive' in mat)) return;
-          if (highlightMode && selectedSurfaces.includes(obj.name)) {
-            if (!mesh.userData._emissiveBackup) {
-              mesh.userData._emissiveBackup = {
-                emissive: mat.emissive.clone ? mat.emissive.clone() : new THREE.Color(mat.emissive),
-                emissiveIntensity: (mat).emissiveIntensity ?? 1,
-              };
-            }
-            mat.emissive = new THREE.Color(0x00ffff);
-            (mat).emissiveIntensity = 0.6;
-          } else if (mesh.userData._emissiveBackup) {
-            const b = mesh.userData._emissiveBackup;
-            mat.emissive = b.emissive;
-            (mat).emissiveIntensity = b.emissiveIntensity;
-            delete mesh.userData._emissiveBackup;
-          }
+          mat.emissive = color;
+          (mat).emissiveIntensity = intensity;
+          (mat).needsUpdate = true;
         };
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach((m) => applyEmissiveHighlight(m));
-        } else if (mesh.material) {
-          applyEmissiveHighlight(mesh.material);
+        if (isSelectedForHighlight) {
+          // Ensure backup exists
+          if (!mesh.userData._emissiveBackup) {
+            // Use first material to capture baseline emissive
+            const captureFrom = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+            const base = captureFrom as THREE.MeshStandardMaterial;
+            mesh.userData._emissiveBackup = {
+              emissive: base?.emissive?.clone ? base.emissive.clone() : new THREE.Color(base?.emissive ?? 0x000000),
+              emissiveIntensity: (base)?.emissiveIntensity ?? 1,
+            };
+          }
+          const hiColor = new THREE.Color(0x00ffff);
+          const hiIntensity = 0.6;
+          if (Array.isArray(mesh.material)) {
+            mesh.material.forEach((m) => applyEmissiveToMaterial(m, hiColor, hiIntensity));
+          } else if (mesh.material) {
+            applyEmissiveToMaterial(mesh.material, hiColor, hiIntensity);
+          }
+        } else if (mesh.userData._emissiveBackup) {
+          // Restore from backup for all materials, then delete backup
+          const b = mesh.userData._emissiveBackup;
+          if (Array.isArray(mesh.material)) {
+            mesh.material.forEach((m) => applyEmissiveToMaterial(m, b.emissive, b.emissiveIntensity));
+          } else if (mesh.material) {
+            applyEmissiveToMaterial(mesh.material, b.emissive, b.emissiveIntensity);
+          }
+          delete mesh.userData._emissiveBackup;
         }
       }
     });

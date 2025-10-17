@@ -129,17 +129,19 @@ export default function SurfaceSelector({
         </Badge>
       </div>
 
-      {/* Highlight Mode Toggle */}
-      <div className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg">
-        <div className="flex items-center gap-2">
-          {highlightMode ? <Eye className="w-4 h-4 text-cyan-400" /> : <EyeOff className="w-4 h-4 text-slate-400" />}
-          <span className="text-sm text-slate-300">Highlight Mode</span>
+      {/* Highlight Mode Toggle (only when at least one surface is selected) */}
+      {selectedCount > 0 && (
+        <div className="flex items-center justify-between p-3 bg-slate-800/30 rounded-lg">
+          <div className="flex items-center gap-2">
+            {highlightMode ? <Eye className="w-4 h-4 text-cyan-400" /> : <EyeOff className="w-4 h-4 text-slate-400" />}
+            <span className="text-sm text-slate-300">Highlight Mode</span>
+          </div>
+          <Switch
+            checked={highlightMode}
+            onCheckedChange={onHighlightModeToggle}
+          />
         </div>
-        <Switch
-          checked={highlightMode}
-          onCheckedChange={onHighlightModeToggle}
-        />
-      </div>
+      )}
 
       {/* Quick Actions */}
       <div className="flex gap-2">
