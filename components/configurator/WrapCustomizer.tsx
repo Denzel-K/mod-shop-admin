@@ -14,6 +14,7 @@ interface WrapCustomizerProps {
   selectedFinish?: string;
   onColorSelect: (colorId: string) => void;
   onFinishSelect: (finishId: string) => void;
+  hasSelection?: boolean;
 }
 
 export default function WrapCustomizer({
@@ -23,6 +24,7 @@ export default function WrapCustomizer({
   selectedFinish,
   onColorSelect,
   onFinishSelect,
+  hasSelection,
 }: WrapCustomizerProps) {
   // No color search or finish dropdown filters; reduce clutter
   const finishesScrollRef = useRef<HTMLDivElement | null>(null);
@@ -57,6 +59,18 @@ export default function WrapCustomizer({
     setCurrentPage(1);
   }, [selectedFinish]);
 
+  // Auto-select the first visible color after switching finishes
+  useEffect(() => {
+    if (!hasSelection) return;
+    if (!selectedFinish) return;
+    // After finish change, pick the first color currently rendered (page 1 by reset)
+    const firstVisible = (filteredColors[0] ?? null);
+    if (firstVisible && selectedColor !== firstVisible.id) {
+      onColorSelect(firstVisible.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFinish, hasSelection, filteredColors]);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -68,7 +82,22 @@ export default function WrapCustomizer({
         <div className="text-lg font-semibold text-slate-100">Wrap Selection</div>
       </div>
 
+      {/* Empty state when no surfaces are selected */}
+      {!hasSelection && (
+        <div className="p-6 rounded-xl border border-slate-700/60 bg-slate-900/40 text-center">
+          <div className="relative w-16 h-16 mx-auto mb-4">
+            <div className="absolute inset-0 rounded-2xl border border-cyan-500/20 animate-pulse" />
+            <div className="absolute inset-2 rounded-xl bg-slate-800/50 flex items-center justify-center">
+              <Sparkles className="w-7 h-7 text-cyan-400/80 animate-[spin_6s_linear_infinite]" />
+            </div>
+          </div>
+          <div className="text-slate-200 font-medium">Select a surface to start</div>
+          <div className="text-slate-400 text-sm mt-1">Choose one or more body panels in the list above to reveal finishes and colors.</div>
+        </div>
+      )}
+
       {/* Finish Selection (Horizontal) */}
+      {hasSelection && (
       <div className="space-y-2">
         <label className="text-sm text-slate-300">Finishes</label>
         <div className="-mx-2 px-2">
@@ -88,7 +117,6 @@ export default function WrapCustomizer({
                   <div key={finish.id} className="relative flex items-center">
                     <button
                       onClick={() => {
-                        onColorSelect("");
                         onFinishSelect(finish.id);
                       }}
                       className={cn(
@@ -148,8 +176,10 @@ export default function WrapCustomizer({
           </div>
         </div>
       </div>
+      )}
 
       {/* Color Grid */}
+      {hasSelection && (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-sm text-slate-300">Colors</label>
@@ -215,9 +245,10 @@ export default function WrapCustomizer({
           </div>
         )}
       </div>
+      )}
 
       {/* Current Selection Preview */}
-      {selectedColorData && selectedFinishData && (
+      {hasSelection && selectedColorData && selectedFinishData && (
         <div className="space-y-3 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
           <div className="flex items-center gap-2 text-sm text-slate-300">
             <Sparkles className="w-4 h-4" />

@@ -272,6 +272,7 @@ export default function AssetViewerPanel({
                   selectedFinish={selectedFinish}
                   onColorSelect={handleColorSelect}
                   onFinishSelect={handleFinishSelect}
+                  hasSelection={selectedSurfaces.length > 0}
                 />
               ) : null}
             </div>
@@ -318,6 +319,7 @@ export default function AssetViewerPanel({
                       selectedFinish={selectedFinish}
                       onColorSelect={handleColorSelect}
                       onFinishSelect={handleFinishSelect}
+                      hasSelection={selectedSurfaces.length > 0}
                     />
                   ) : null}
                 </div>
