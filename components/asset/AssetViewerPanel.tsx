@@ -7,7 +7,7 @@ import WrapCustomizer from "@/components/configurator/WrapCustomizer";
 import SurfaceSelector from "@/components/configurator/SurfaceSelector";
 import EnvironmentControls from "@/components/configurator/EnvironmentControls";
 import { cn } from "@/lib/utils";
-import { WrapColor, WrapFinish, WrapCategory, WrapConfiguration } from "@/types/wrap";
+import { WrapColor, WrapFinish, WrapConfiguration } from "@/types/wrap";
 import { IAssetMetadata } from "@/models/Asset";
 // import wrapColorsData from "@/lib/data/wrap-colors.json";
 // import wrapFinishesData from "@/lib/data/wrap-finishes.json";
@@ -16,7 +16,8 @@ import wrapFinishesData from "@/lib/data/wrap_finishes.json";
 import { ChevronLeft, ChevronRight, Palette, Settings } from "lucide-react";
 
 type WrapColorsData = {
-  categories: WrapCategory[];
+  // categories kept in data for potential future use but not used in UI anymore
+  categories?: unknown[];
   colors: WrapColor[];
 };
 
@@ -67,7 +68,7 @@ export default function AssetViewerPanel({
     },
   });
   const [selectedColor, setSelectedColor] = useState<string>("");
-  const [selectedFinish, setSelectedFinish] = useState<string>("gloss");
+  const [selectedFinish, setSelectedFinish] = useState<string>("gloss_series");
 
   // Reset viewer state when asset changes to prevent cross-contamination
   useEffect(() => {
@@ -82,7 +83,7 @@ export default function AssetViewerPanel({
       },
     });
     setSelectedColor("");
-    setSelectedFinish("gloss");
+    setSelectedFinish("gloss_series");
   }, [assetId, envPreset, envIntensity, hdriBackground]);
   
   // Responsive breakpoints with dynamic updates
@@ -116,7 +117,7 @@ export default function AssetViewerPanel({
   // Load wrap data
   const wrapColors: WrapColor[] = (wrapColorsData as WrapColorsData).colors;
   const wrapFinishes: WrapFinish[] = (wrapFinishesData as WrapFinishesData).finishes;
-  const wrapCategories: WrapCategory[] = (wrapColorsData as WrapColorsData).categories;
+  // categories are no longer used in UI since colors are driven by finish compatibility
 
   // Handle surface selection
   const handleSurfaceToggle = (surfaceId: string) => {
@@ -153,6 +154,11 @@ export default function AssetViewerPanel({
 
   const handleFinishSelect = (finishId: string) => {
     setSelectedFinish(finishId);
+    // If current selectedColor is incompatible with new finish, clear it
+    const color = wrapColors.find(c => c.id === selectedColor);
+    if (color && !(color.compatibleFinishes || []).includes(finishId)) {
+      setSelectedColor("");
+    }
     // Apply to selected surfaces
     if (selectedSurfaces.length > 0) {
       const newConfig = { ...wrapConfig };
@@ -256,15 +262,16 @@ export default function AssetViewerPanel({
                   onHighlightModeToggle={setHighlightMode}
                 />
               </div>
-              <WrapCustomizer
-                colors={wrapColors}
-                finishes={wrapFinishes}
-                categories={wrapCategories}
-                selectedColor={selectedColor}
-                selectedFinish={selectedFinish}
-                onColorSelect={handleColorSelect}
-                onFinishSelect={handleFinishSelect}
-              />
+              {assetMetadata?.wrappableSurfaces && Object.keys(assetMetadata.wrappableSurfaces).length > 0 ? (
+                <WrapCustomizer
+                  colors={wrapColors}
+                  finishes={wrapFinishes}
+                  selectedColor={selectedColor}
+                  selectedFinish={selectedFinish}
+                  onColorSelect={handleColorSelect}
+                  onFinishSelect={handleFinishSelect}
+                />
+              ) : null}
             </div>
           </div>
         </div>
@@ -301,15 +308,16 @@ export default function AssetViewerPanel({
                     highlightMode={highlightMode}
                     onHighlightModeToggle={setHighlightMode}
                   />
-                  <WrapCustomizer
-                    colors={wrapColors}
-                    finishes={wrapFinishes}
-                    categories={wrapCategories}
-                    selectedColor={selectedColor}
-                    selectedFinish={selectedFinish}
-                    onColorSelect={handleColorSelect}
-                    onFinishSelect={handleFinishSelect}
-                  />
+                  {assetMetadata?.wrappableSurfaces && Object.keys(assetMetadata.wrappableSurfaces).length > 0 ? (
+                    <WrapCustomizer
+                      colors={wrapColors}
+                      finishes={wrapFinishes}
+                      selectedColor={selectedColor}
+                      selectedFinish={selectedFinish}
+                      onColorSelect={handleColorSelect}
+                      onFinishSelect={handleFinishSelect}
+                    />
+                  ) : null}
                 </div>
               </div>
             </div>

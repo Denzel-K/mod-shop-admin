@@ -1,17 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Palette, Sparkles } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Palette, Sparkles, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import type { WrapColor, WrapFinish, WrapCategory } from "@/types/wrap";
+import type { WrapColor, WrapFinish } from "@/types/wrap";
 
 interface WrapCustomizerProps {
   colors: WrapColor[];
   finishes: WrapFinish[];
-  categories: WrapCategory[];
   selectedColor?: string;
   selectedFinish?: string;
   onColorSelect: (colorId: string) => void;
@@ -21,30 +19,23 @@ interface WrapCustomizerProps {
 export default function WrapCustomizer({
   colors,
   finishes,
-  categories,
   selectedColor,
   selectedFinish,
   onColorSelect,
   onFinishSelect,
 }: WrapCustomizerProps) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedFinishCategory, setSelectedFinishCategory] = useState<string>("all");
+  // No color search or finish dropdown filters; reduce clutter
+
+  const compatibleColors = useMemo(() => {
+    if (!selectedFinish) return [] as WrapColor[];
+    return colors.filter((c) => c.compatibleFinishes?.includes(selectedFinish));
+  }, [colors, selectedFinish]);
 
   const filteredColors = useMemo(() => {
-    return colors.filter((color) => {
-      const matchesSearch = color.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || color.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [colors, searchTerm, selectedCategory]);
+    return compatibleColors;
+  }, [compatibleColors]);
 
-  const filteredFinishes = useMemo(() => {
-    return finishes.filter((finish) => {
-      const matchesCategory = selectedFinishCategory === "all" || finish.category === selectedFinishCategory;
-      return matchesCategory;
-    });
-  }, [finishes, selectedFinishCategory]);
+  const filteredFinishes = useMemo(() => finishes, [finishes]);
 
   const selectedColorData = colors.find(c => c.id === selectedColor);
   const selectedFinishData = finishes.find(f => f.id === selectedFinish);
@@ -60,89 +51,66 @@ export default function WrapCustomizer({
         <div className="text-lg font-semibold text-slate-100">Wrap Selection</div>
       </div>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <Input
-          placeholder="Search colors..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 bg-slate-900/60 border-slate-600 text-slate-100 placeholder:text-slate-500 focus-visible:ring-cyan-600/40"
-        />
-      </div>
-
-      {/* Finish Selection */}
-      <div className="space-y-3">
-        <div className="space-y-2">
-          <label className="text-sm text-slate-300">Finish Type</label>
-          <Select value={selectedFinishCategory} onValueChange={setSelectedFinishCategory}>
-            <SelectTrigger className="bg-slate-900/60 border-slate-600 text-slate-100">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-slate-950/90 text-slate-100 border-slate-700">
-              <SelectItem value="all">All Finishes</SelectItem>
-              <SelectItem value="gloss">Gloss</SelectItem>
-              <SelectItem value="satin">Satin</SelectItem>
-              <SelectItem value="matte">Matte</SelectItem>
-              <SelectItem value="metallic">Metallic</SelectItem>
-              <SelectItem value="chrome">Chrome</SelectItem>
-              <SelectItem value="textured">Textured</SelectItem>
-              <SelectItem value="pearlescent">Pearlescent</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          {filteredFinishes.map((finish) => {
-            const isSelected = selectedFinish === finish.id;
-            return (
-              <button
-                key={finish.id}
-                onClick={() => onFinishSelect(finish.id)}
-                className={cn(
-                  "w-full p-2.5 rounded-md border text-left transition-colors",
-                  isSelected
-                    ? "bg-cyan-600/20 border-cyan-600 text-cyan-300"
-                    : "bg-slate-900/50 border-slate-700 text-slate-200 hover:bg-slate-800/70"
-                )}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="font-medium text-sm">{finish.name}</div>
-                </div>
-                {finish.description && (
-                  <div className="text-xs text-slate-400 mt-1 line-clamp-2">{finish.description}</div>
-                )}
-                {finish.characteristics?.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {finish.characteristics.slice(0, 3).map((char) => (
-                      <Badge key={char} variant="outline" className="text-[10px] text-slate-200 border-slate-600">
-                        {char.replace('_', ' ')}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Category Filter */}
+      {/* Finish Selection (Horizontal) */}
       <div className="space-y-2">
-        <label className="text-sm text-slate-300">Color Category</label>
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="bg-slate-900/60 border-slate-600 text-slate-100">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-slate-950/90 text-slate-100 border-slate-700">
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((category) => (
-              <SelectItem key={category.id} value={category.id}>
-                {category.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <label className="text-sm text-slate-300">Finishes</label>
+        <div className="relative -mx-2 px-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-subtle">
+            {filteredFinishes.map((finish) => {
+              const isSelected = selectedFinish === finish.id;
+              return (
+                <div key={finish.id} className="relative flex items-center">
+                  <button
+                    onClick={() => {
+                      onColorSelect("");
+                      onFinishSelect(finish.id);
+                    }}
+                    className={cn(
+                      "px-3 py-2 rounded-full border text-xs whitespace-nowrap transition-colors",
+                      isSelected
+                        ? "bg-cyan-600/20 border-cyan-600 text-cyan-300"
+                        : "bg-slate-900/50 border-slate-700 text-slate-200 hover:bg-slate-800/70"
+                    )}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {finish.name}
+                      {isSelected && (finish.description || (finish.characteristics?.length ?? 0) > 0) ? (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              aria-label={`More info about ${finish.name}`}
+                              className="inline-flex items-center justify-center ml-1 p-0.5 rounded-full text-slate-300 hover:text-white hover:bg-slate-800/70 border border-slate-700"
+                              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { (e.currentTarget as HTMLElement).click(); } }}
+                            >
+                              <Info className="w-3.5 h-3.5" />
+                            </span>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-64 bg-slate-950/95 text-slate-100 border-slate-700">
+                            <div className="text-sm font-medium mb-1">{finish.name}</div>
+                            {finish.description && (
+                              <div className="text-xs text-slate-300 mb-2">{finish.description}</div>
+                            )}
+                            {finish.characteristics?.length ? (
+                              <div className="flex flex-wrap gap-1">
+                                {finish.characteristics.map((char) => (
+                                  <Badge key={char} variant="outline" className="text-[10px] text-slate-200 border-slate-600">
+                                    {char.replace('_', ' ')}
+                                  </Badge>
+                                ))}
+                              </div>
+                            ) : null}
+                          </PopoverContent>
+                        </Popover>
+                      ) : null}
+                    </span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Color Grid */}
@@ -150,25 +118,36 @@ export default function WrapCustomizer({
         <div className="flex items-center justify-between">
           <label className="text-sm text-slate-300">Colors</label>
           <Badge variant="secondary" className="text-xs">
-            {filteredColors.length} available
+            {selectedFinish ? filteredColors.length : 0} available
           </Badge>
         </div>
-        <div className="grid grid-cols-5 gap-1 max-h-44 overflow-y-auto">
-          {filteredColors.map((color) => (
-            <button
-              key={color.id}
-              onClick={() => onColorSelect(color.id)}
-              className={cn(
-                "aspect-square rounded-md border transition-all hover:scale-[1.03]",
-                selectedColor === color.id
-                  ? "border-cyan-400 ring-1 ring-cyan-400/40"
-                  : "border-slate-600 hover:border-slate-500"
-              )}
-              style={{ backgroundColor: color.hex }}
-              title={color.name}
-            />
-          ))}
-        </div>
+        {!selectedFinish ? (
+          <div className="text-xs text-slate-400 p-3 bg-slate-800/40 rounded border border-slate-700">
+            Select a finish to see compatible colors.
+          </div>
+        ) : (
+          <div className="grid grid-cols-5 gap-2 max-h-52 overflow-y-auto">
+            {filteredColors.map((color) => (
+              <div key={color.id} className="flex flex-col items-center gap-1">
+                <button
+                  onClick={() => onColorSelect(color.id)}
+                  className={cn(
+                    "w-full aspect-square rounded-md border transition-all hover:scale-[1.03]",
+                    selectedColor === color.id
+                      ? "border-cyan-400 ring-1 ring-cyan-400/40"
+                      : "border-slate-600 hover:border-slate-500"
+                  )}
+                  style={{ backgroundColor: color.hex }}
+                  title={`${color.name} (${color.id})`}
+                />
+                <div className="w-full text-center">
+                  <div className="text-[10px] text-slate-300 truncate" title={color.name}>{color.name}</div>
+                  <div className="text-[9px] text-slate-500 truncate font-mono" title={color.id}>{color.id}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Current Selection Preview */}

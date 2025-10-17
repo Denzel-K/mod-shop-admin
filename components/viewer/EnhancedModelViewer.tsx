@@ -96,26 +96,7 @@ function CarModelWithTexture({
       vinylTexture.repeat.set(4, 4);
     }
   }, [vinylTexture]);
-  // Reuse a single highlight material instance to avoid creating many GPU materials
-  const highlightMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
-  if (!highlightMatRef.current) {
-    highlightMatRef.current = new THREE.MeshStandardMaterial({
-      color: 0x00ffff,
-      emissive: 0x004444,
-      transparent: true,
-      opacity: 0.8,
-    });
-  }
-
-  // Dispose highlight material on unmount
-  useLayoutEffect(() => {
-    return () => {
-      if (highlightMatRef.current) {
-        highlightMatRef.current.dispose();
-        highlightMatRef.current = null;
-      }
-    };
-  }, []);
+  // No separate highlight material; use emissive overlay on existing materials
   // Apply wrap materials to surfaces
   useLayoutEffect(() => {
     gltf.scene.traverse((obj: THREE.Object3D) => {
@@ -179,19 +160,31 @@ function CarModelWithTexture({
           }
         }
         
-        // Apply highlight effect for selected surfaces
-        // selectedSurfaces contains technical surface identifiers
-        if (highlightMode && selectedSurfaces.includes(obj.name)) {
-          const originalMaterial = mesh.material;
-          if (highlightMatRef.current) {
-            mesh.material = highlightMatRef.current;
-            // Store original material for restoration
-            mesh.userData.originalMaterial = originalMaterial;
+        // Apply highlight effect for selected surfaces as an emissive overlay without replacing materials
+        // Backup and restore emissive properties to avoid permanent mutation
+        const applyEmissiveHighlight = (m: THREE.Material) => {
+          const mat = m as THREE.MeshStandardMaterial;
+          if (!('emissive' in mat)) return;
+          if (highlightMode && selectedSurfaces.includes(obj.name)) {
+            if (!mesh.userData._emissiveBackup) {
+              mesh.userData._emissiveBackup = {
+                emissive: mat.emissive.clone ? mat.emissive.clone() : new THREE.Color(mat.emissive),
+                emissiveIntensity: (mat).emissiveIntensity ?? 1,
+              };
+            }
+            mat.emissive = new THREE.Color(0x00ffff);
+            (mat).emissiveIntensity = 0.6;
+          } else if (mesh.userData._emissiveBackup) {
+            const b = mesh.userData._emissiveBackup;
+            mat.emissive = b.emissive;
+            (mat).emissiveIntensity = b.emissiveIntensity;
+            delete mesh.userData._emissiveBackup;
           }
-        } else if (mesh.userData.originalMaterial && !highlightMode) {
-          // Restore original material when highlight mode is disabled
-          mesh.material = mesh.userData.originalMaterial;
-          delete mesh.userData.originalMaterial;
+        };
+        if (Array.isArray(mesh.material)) {
+          mesh.material.forEach((m) => applyEmissiveHighlight(m));
+        } else if (mesh.material) {
+          applyEmissiveHighlight(mesh.material);
         }
       }
     });
