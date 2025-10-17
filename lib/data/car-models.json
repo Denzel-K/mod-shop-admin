@@ -160,7 +160,7 @@
     "country": "Italy"
   },
   "Mazda": {
-    "models": ["Mazda2", "Mazda3", "Mazda6", "MX-5", "CX-3", "CX-30", "CX-5", "CX-9", "RX-7", "RX-8", "Protegé", "Millenia", "929", "626", "323"],
+    "models": ["Mazda2", "Mazda3", "Mazda6", "MX-5", "CX-3", "CX-30", "CX-5", "CX-8", "CX-9", "RX-7", "RX-8", "Protegé", "Millenia", "929", "626", "323"],
     "icon": "car",
     "country": "Japan"
   },
