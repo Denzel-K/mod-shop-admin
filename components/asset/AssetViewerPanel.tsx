@@ -25,7 +25,7 @@ type WrapFinishesData = {
   finishes: WrapFinish[];
 };
 
-type EnvPreset = "city" | "sunset" | "dawn" | "warehouse" | "night" | "park";
+type EnvPreset = "city" | "sunset" | "dawn" | "night" | "park";
 type PlatformStyle = "circle" | "rounded" | "grid";
 type GroundVariant = "plain" | "concrete" | "asphalt" | "carpet" | "studio";
 

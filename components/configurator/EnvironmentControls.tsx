@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
-type EnvPreset = "city" | "sunset" | "dawn" | "warehouse" | "night" | "park";
+type EnvPreset = "city" | "sunset" | "dawn" | "night" | "park";
 type PlatformStyle = "circle" | "rounded" | "grid";
 type GroundVariant = "plain" | "concrete" | "asphalt" | "carpet" | "studio";
 
@@ -64,7 +64,7 @@ export default function EnvironmentControls({
                 <SelectValue placeholder="Select preset" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 text-slate-100 border-slate-700">
-                {(['city','sunset','dawn','warehouse','night','park'] as EnvPreset[]).map((p) => (
+                {(['city','sunset','dawn','night','park'] as EnvPreset[]).map((p) => (
                   <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
                 ))}
               </SelectContent>
