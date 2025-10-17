@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Plus } from "lucide-react";
@@ -63,9 +63,10 @@ export function KeyValueInput({
 
   // Track pending state: when either input has text but not yet added
   const pending = !!(newKey.trim() || newValue.trim());
-  // Notify parent on every render if pending state changes across renders
-  // (simple approach: call onPendingChange each render; parent should handle idempotency)
-  onPendingChange?.(pending);
+  // Notify parent when pending state changes (avoid setState during render)
+  useEffect(() => {
+    onPendingChange?.(pending);
+  }, [pending, onPendingChange]);
 
   return (
     <div className={cn("space-y-3", className)}>
