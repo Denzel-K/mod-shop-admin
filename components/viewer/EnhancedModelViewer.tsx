@@ -161,42 +161,61 @@ function CarModelWithTexture({
         }
         
         // Apply highlight effect using emissive overlay per mesh.
-        // Back up once per mesh and restore across all its materials without premature deletion.
+        // Back up per material (uuid) and restore exactly to avoid sticky highlights.
         const isSelectedForHighlight = highlightMode && selectedSurfaces.includes(obj.name);
         const applyEmissiveToMaterial = (m: THREE.Material, color: THREE.Color, intensity: number) => {
           const mat = m as THREE.MeshStandardMaterial;
           if (!('emissive' in mat)) return;
-          mat.emissive = color;
+          if (mat.emissive && typeof (mat.emissive).copy === 'function') {
+            (mat.emissive).copy(color);
+          } else {
+            (mat).emissive = color.clone();
+          }
           (mat).emissiveIntensity = intensity;
           (mat).needsUpdate = true;
         };
         if (isSelectedForHighlight) {
-          // Ensure backup exists
-          if (!mesh.userData._emissiveBackup) {
-            // Use first material to capture baseline emissive
-            const captureFrom = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-            const base = captureFrom as THREE.MeshStandardMaterial;
-            mesh.userData._emissiveBackup = {
-              emissive: base?.emissive?.clone ? base.emissive.clone() : new THREE.Color(base?.emissive ?? 0x000000),
-              emissiveIntensity: (base)?.emissiveIntensity ?? 1,
-            };
+          // Ensure per-material backup map exists
+          if (!mesh.userData._emissiveBackupMap) {
+            mesh.userData._emissiveBackupMap = {} as Record<string, { emissiveHex: number; emissiveIntensity: number }>;
           }
           const hiColor = new THREE.Color(0x00ffff);
           const hiIntensity = 0.6;
+          const backupMap: Record<string, { emissiveHex: number; emissiveIntensity: number }> = mesh.userData._emissiveBackupMap;
+          const backupAndApply = (m: THREE.Material) => {
+            const mat = m as THREE.MeshStandardMaterial & { uuid: string };
+            const key = (mat).uuid as string;
+            if (key && !backupMap[key]) {
+              const baseEmissive = mat?.emissive instanceof THREE.Color ? mat.emissive : new THREE.Color((mat)?.emissive ?? 0x000000);
+              backupMap[key] = {
+                emissiveHex: baseEmissive.getHex(),
+                emissiveIntensity: (mat)?.emissiveIntensity ?? 1,
+              };
+            }
+            applyEmissiveToMaterial(m, hiColor, hiIntensity);
+          };
           if (Array.isArray(mesh.material)) {
-            mesh.material.forEach((m) => applyEmissiveToMaterial(m, hiColor, hiIntensity));
+            mesh.material.forEach((m) => backupAndApply(m));
           } else if (mesh.material) {
-            applyEmissiveToMaterial(mesh.material, hiColor, hiIntensity);
+            backupAndApply(mesh.material);
           }
-        } else if (mesh.userData._emissiveBackup) {
-          // Restore from backup for all materials, then delete backup
-          const b = mesh.userData._emissiveBackup;
+        } else if (mesh.userData._emissiveBackupMap) {
+          // Restore each material from its own backup, then delete the map
+          const backupMap: Record<string, { emissiveHex: number; emissiveIntensity: number }> = mesh.userData._emissiveBackupMap;
+          const restoreOne = (m: THREE.Material) => {
+            const mat = m as THREE.MeshStandardMaterial & { uuid: string };
+            const key = (mat).uuid as string;
+            const b = key ? backupMap[key] : undefined;
+            const restoreColor = new THREE.Color(b?.emissiveHex ?? 0x000000);
+            const restoreIntensity = b?.emissiveIntensity ?? 1;
+            applyEmissiveToMaterial(m, restoreColor, restoreIntensity);
+          };
           if (Array.isArray(mesh.material)) {
-            mesh.material.forEach((m) => applyEmissiveToMaterial(m, b.emissive, b.emissiveIntensity));
+            mesh.material.forEach((m) => restoreOne(m));
           } else if (mesh.material) {
-            applyEmissiveToMaterial(mesh.material, b.emissive, b.emissiveIntensity);
+            restoreOne(mesh.material);
           }
-          delete mesh.userData._emissiveBackup;
+          delete mesh.userData._emissiveBackupMap;
         }
       }
     });
