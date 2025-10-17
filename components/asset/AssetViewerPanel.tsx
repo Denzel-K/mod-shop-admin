@@ -25,7 +25,7 @@ type WrapFinishesData = {
   finishes: WrapFinish[];
 };
 
-type EnvPreset = "city" | "studio" | "sunset" | "dawn" | "warehouse" | "apartment" | "night" | "forest" | "park" | "lobby";
+type EnvPreset = "city" | "sunset" | "dawn" | "warehouse" | "night" | "park";
 type PlatformStyle = "circle" | "rounded" | "grid";
 type GroundVariant = "plain" | "concrete" | "asphalt" | "carpet" | "studio";
 
@@ -345,8 +345,6 @@ export default function AssetViewerPanel({
                     setEnvPreset={setEnvPreset}
                     hdriBackground={hdriBackground}
                     setHdriBackground={setHdriBackground}
-                    envIntensity={envIntensity}
-                    setEnvIntensity={setEnvIntensity}
                     platformStyle={platformStyle}
                     setPlatformStyle={setPlatformStyle}
                     groundVariant={groundVariant}
@@ -470,8 +468,6 @@ export default function AssetViewerPanel({
                 setEnvPreset={setEnvPreset}
                 hdriBackground={hdriBackground}
                 setHdriBackground={setHdriBackground}
-                envIntensity={envIntensity}
-                setEnvIntensity={setEnvIntensity}
                 platformStyle={platformStyle}
                 setPlatformStyle={setPlatformStyle}
                 groundVariant={groundVariant}

@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
-type EnvPreset = "city" | "studio" | "sunset" | "dawn" | "warehouse" | "apartment" | "night" | "forest" | "park" | "lobby";
+type EnvPreset = "city" | "sunset" | "dawn" | "warehouse" | "night" | "park";
 type PlatformStyle = "circle" | "rounded" | "grid";
 type GroundVariant = "plain" | "concrete" | "asphalt" | "carpet" | "studio";
 
@@ -15,8 +15,6 @@ interface EnvironmentControlsProps {
   setEnvPreset: (v: EnvPreset) => void;
   hdriBackground: boolean;
   setHdriBackground: (v: boolean) => void;
-  envIntensity: number;
-  setEnvIntensity: (v: number) => void;
   platformStyle: PlatformStyle;
   setPlatformStyle: (v: PlatformStyle) => void;
   groundVariant: GroundVariant;
@@ -32,8 +30,6 @@ export default function EnvironmentControls({
   setEnvPreset,
   hdriBackground,
   setHdriBackground,
-  envIntensity,
-  setEnvIntensity,
   platformStyle,
   setPlatformStyle,
   groundVariant,
@@ -68,7 +64,7 @@ export default function EnvironmentControls({
                 <SelectValue placeholder="Select preset" />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 text-slate-100 border-slate-700">
-                {(['city','studio','sunset','dawn','warehouse','apartment','night','forest','park','lobby'] as EnvPreset[]).map((p) => (
+                {(['city','sunset','dawn','warehouse','night','park'] as EnvPreset[]).map((p) => (
                   <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
                 ))}
               </SelectContent>
@@ -77,18 +73,6 @@ export default function EnvironmentControls({
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-400">Use as background</span>
             <Switch checked={hdriBackground} onCheckedChange={setHdriBackground} />
-          </div>
-          <div className="grid gap-1">
-            <label className="text-xs text-slate-400">Environment intensity</label>
-            <Slider
-              value={[envIntensity]}
-              onValueChange={(v) => setEnvIntensity(v[0] ?? envIntensity)}
-              min={0}
-              max={2}
-              step={0.01}
-              className="w-full"
-            />
-            <div className="text-[10px] text-slate-500">{envIntensity.toFixed(2)}</div>
           </div>
         </div>
       </div>
