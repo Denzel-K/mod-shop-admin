@@ -14,13 +14,15 @@ interface KeyValueInputProps {
     value?: string;
   };
   className?: string;
+  onPendingChange?: (pending: boolean) => void;
 }
 
 export function KeyValueInput({ 
   value, 
   onChange, 
   placeholder = { key: "Surface name", value: "Technical identifier" },
-  className 
+  className,
+  onPendingChange,
 }: KeyValueInputProps) {
   const [newKey, setNewKey] = useState("");
   const [newValue, setNewValue] = useState("");
@@ -33,6 +35,7 @@ export function KeyValueInput({
       });
       setNewKey("");
       setNewValue("");
+      onPendingChange?.(false);
     }
   };
 
@@ -57,6 +60,12 @@ export function KeyValueInput({
       addPair();
     }
   };
+
+  // Track pending state: when either input has text but not yet added
+  const pending = !!(newKey.trim() || newValue.trim());
+  // Notify parent on every render if pending state changes across renders
+  // (simple approach: call onPendingChange each render; parent should handle idempotency)
+  onPendingChange?.(pending);
 
   return (
     <div className={cn("space-y-3", className)}>
@@ -111,9 +120,10 @@ export function KeyValueInput({
           size="sm"
           onClick={addPair}
           disabled={!newKey.trim() || !newValue.trim() || !!value[newKey.trim()]}
-          className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 p-1 h-8 w-8 disabled:opacity-50"
+          className="text-slate-400 hover:text-cyan-400 hover:bg-cyan-500/10 px-2 h-8 disabled:opacity-50 flex items-center gap-1"
         >
           <Plus className="w-4 h-4" />
+          <span className="text-xs">Add</span>
         </Button>
       </div>
 
@@ -125,3 +135,4 @@ export function KeyValueInput({
     </div>
   );
 }
+

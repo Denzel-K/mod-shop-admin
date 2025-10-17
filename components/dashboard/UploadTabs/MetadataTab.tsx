@@ -28,6 +28,7 @@ export type MetadataTabProps = {
   metadataJson: string;
   setMetadataJson: (v: string) => void;
   isEdit?: boolean;
+  onPendingChange?: (pending: boolean) => void;
 };
 
 const DEFAULT_METADATA_TEMPLATE = `{
@@ -127,6 +128,7 @@ export function MetadataTab(props: MetadataTabProps) {
     metadataJson,
     setMetadataJson,
     isEdit,
+    onPendingChange,
   } = props;
 
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -141,8 +143,8 @@ export function MetadataTab(props: MetadataTabProps) {
         <div className="flex flex-wrap gap-2 text-xs text-slate-300 mb-2 items-center ">
           <span className="text-slate-400">Metadata input:</span>
           <div className="border-[1.5px] border-slate-700 px-2 py-[4px] rounded-md space-x-2">  
-            <button type="button" onClick={() => setMetadataMode('keyvalue')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='keyvalue'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>Key-Value</button>
-            <button type="button" onClick={() => setMetadataMode('json')} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='json'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>JSON</button>
+            <button type="button" onClick={() => { onPendingChange?.(false); setMetadataMode('keyvalue'); }} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='keyvalue'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>Key-Value</button>
+            <button type="button" onClick={() => { onPendingChange?.(false); setMetadataMode('json'); }} className={`px-2 py-1 rounded border transition-colors ${metadataMode==='json'? 'border-cyan-600 bg-cyan-600/20 text-cyan-300':'border-slate-700 bg-slate-800/40 hover:bg-slate-800/70'}`}>JSON</button>
           </div>
         </div>
       </div>
@@ -175,7 +177,7 @@ export function MetadataTab(props: MetadataTabProps) {
                   return (
                     <button
                       key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
+                      onClick={() => { onPendingChange?.(false); setSelectedCategory(category.id); }}
                       className="p-4 bg-slate-800/30 hover:bg-slate-800/50 border border-slate-700 rounded-lg transition-colors text-left group"
                     >
                       <div className="flex items-start gap-3">
@@ -240,7 +242,7 @@ export function MetadataTab(props: MetadataTabProps) {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => setSelectedCategory('')}
+                        onClick={() => { onPendingChange?.(false); setSelectedCategory(''); }}
                         className="text-slate-400 hover:text-slate-200 hover:bg-blue-400 border-[1.6px] border-gray-700"
                       >
                         ← Back to Categories
@@ -252,6 +254,7 @@ export function MetadataTab(props: MetadataTabProps) {
                       value={categoryData || {}} 
                       onChange={setCategoryData} 
                       placeholder={category.placeholder}
+                      onPendingChange={onPendingChange}
                     />
                   </div>
                 );

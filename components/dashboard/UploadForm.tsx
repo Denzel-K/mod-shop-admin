@@ -74,6 +74,8 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'completed' | 'failed'>('idle');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Track if any KeyValueInput has a pending (not yet added) pair
+  const [kvPending, setKvPending] = useState<boolean>(false);
 
   const isSketchfab = assetSource === 'sketchfab';
   const sketchfabValid = !isSketchfab || (creatorText.trim().length > 0);
@@ -111,9 +113,11 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
 
   const isEdit = !!asset;
   const canSubmit = useMemo(() => {
+    if (kvPending) return false; // block submit if any pending key-value pair exists
     if (isEdit) return !!name && sketchfabValid && !submitting; // editing metadata only
     return !!name && !!modelFile && !!thumbFile && sketchfabValid && !submitting; // creating requires files
-  }, [isEdit, name, modelFile, thumbFile, submitting, sketchfabValid]);
+  }, [isEdit, name, modelFile, thumbFile, submitting, sketchfabValid, kvPending]);
+  const disabledReason = kvPending ? 'Finish adding the key-value pair(s) in Metadata before submitting.' : '';
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -384,15 +388,25 @@ export function UploadForm({ onClose, onUploaded, setUploading, asset }: { onClo
             metadataJson={metadataJson}
             setMetadataJson={setMetadataJson}
             isEdit={isEdit}
+            onPendingChange={setKvPending}
           />
         </TabsContent>
         <div className="flex items-center justify-end gap-3 pt-2">
           <Button type="button" onClick={onClose} disabled={submitting} variant="outline" className="bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700 disabled:opacity-50">Cancel</Button>
-          <Button type="submit" disabled={!canSubmit} className="bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-50 flex items-center gap-2">
+          <Button
+            type="submit"
+            disabled={!canSubmit}
+            aria-disabled={!canSubmit}
+            title={!canSubmit ? disabledReason : ''}
+            className={`bg-cyan-600 hover:bg-cyan-500 text-white disabled:opacity-50 ${!canSubmit ? 'cursor-not-allowed' : ''} flex items-center gap-2`}
+          >
             {submitting && <span className="inline-block h-4 w-4 border-2 border-white/60 border-t-transparent rounded-full animate-spin" />}
             {submitting ? (isEdit ? 'Saving…' : 'Uploading…') : (isEdit ? 'Save changes' : 'Upload')}
           </Button>
         </div>
+        {!canSubmit && kvPending && (
+          <div className="text-xs text-amber-400 text-right pr-2">Finish adding the key-value pair(s) in Metadata before submitting.</div>
+        )}
         {!isEdit && uploadId && (
           <div className="pt-2">
             <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
