@@ -9,8 +9,6 @@ import EnvironmentControls from "@/components/configurator/EnvironmentControls";
 import { cn } from "@/lib/utils";
 import { WrapColor, WrapFinish, WrapConfiguration } from "@/types/wrap";
 import { IAssetMetadata } from "@/models/Asset";
-// import wrapColorsData from "@/lib/data/wrap-colors.json";
-// import wrapFinishesData from "@/lib/data/wrap-finishes.json";
 import wrapColorsData from "@/lib/data/wrap_colors.json";
 import wrapFinishesData from "@/lib/data/wrap_finishes.json";
 import { ChevronLeft, ChevronRight, Palette, Settings } from "lucide-react";
@@ -26,8 +24,6 @@ type WrapFinishesData = {
 };
 
 type EnvPreset = "city" | "sunset" | "dawn" | "night" | "park";
-type PlatformStyle = "circle" | "rounded" | "grid";
-type GroundVariant = "plain" | "concrete" | "asphalt" | "carpet" | "studio";
 
 export default function AssetViewerPanel({
   url,
@@ -51,8 +47,6 @@ export default function AssetViewerPanel({
   const [envPreset, setEnvPreset] = useState<EnvPreset>("city");
   const [hdriBackground, setHdriBackground] = useState<boolean>(false);
   const [envIntensity, setEnvIntensity] = useState<number>(1.25);
-  const [platformStyle, setPlatformStyle] = useState<PlatformStyle>("circle");
-  const [groundVariant, setGroundVariant] = useState<GroundVariant>("plain");
   const [autoRotateEnabled, setAutoRotateEnabled] = useState<boolean>(true);
   const [autoRotateSpeed, setAutoRotateSpeed] = useState<number>(0.52);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(true);
@@ -222,8 +216,6 @@ export default function AssetViewerPanel({
           envPreset={envPreset}
           hdriBackground={hdriBackground}
           envIntensity={envIntensity}
-          platformStyle={platformStyle}
-          groundVariant={groundVariant}
           autoRotateEnabled={autoRotateEnabled}
           autoRotateSpeed={autoRotateSpeed}
           wrapConfig={wrapConfig}
@@ -345,10 +337,6 @@ export default function AssetViewerPanel({
                     setEnvPreset={setEnvPreset}
                     hdriBackground={hdriBackground}
                     setHdriBackground={setHdriBackground}
-                    platformStyle={platformStyle}
-                    setPlatformStyle={setPlatformStyle}
-                    groundVariant={groundVariant}
-                    setGroundVariant={setGroundVariant}
                     autoRotateEnabled={autoRotateEnabled}
                     setAutoRotateEnabled={setAutoRotateEnabled}
                     autoRotateSpeed={autoRotateSpeed}
@@ -468,10 +456,6 @@ export default function AssetViewerPanel({
                 setEnvPreset={setEnvPreset}
                 hdriBackground={hdriBackground}
                 setHdriBackground={setHdriBackground}
-                platformStyle={platformStyle}
-                setPlatformStyle={setPlatformStyle}
-                groundVariant={groundVariant}
-                setGroundVariant={setGroundVariant}
                 autoRotateEnabled={autoRotateEnabled}
                 setAutoRotateEnabled={setAutoRotateEnabled}
                 autoRotateSpeed={autoRotateSpeed}

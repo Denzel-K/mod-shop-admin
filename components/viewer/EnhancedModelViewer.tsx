@@ -1,8 +1,8 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Bounds, useGLTF, Html, ContactShadows, Grid, useProgress, MeshReflectorMaterial, Sky, Lightformer, Environment, useTexture } from '@react-three/drei';
-import { Suspense, useMemo, useLayoutEffect, useRef } from 'react';
+import { OrbitControls, Bounds, useGLTF, Html, ContactShadows, useProgress, Sky, Lightformer, Environment } from '@react-three/drei';
+import { Suspense, useMemo, useLayoutEffect, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { EffectComposer as ThreeEffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -88,14 +88,27 @@ function CarModelWithTexture({
   highlightMode: boolean;
   onSurfaceClick?: (surfaceId: string) => void;
 }) {
-  // Load vinyl texture here to avoid cross-component state updates during render
-  const vinylTexture = useTexture('/textures/vinyl-tablecloth_albedo.png');
-  useLayoutEffect(() => {
-    if (vinylTexture) {
-      vinylTexture.wrapS = vinylTexture.wrapT = THREE.RepeatWrapping;
-      vinylTexture.repeat.set(4, 4);
-    }
-  }, [vinylTexture]);
+  // Load vinyl texture via TextureLoader to avoid Suspense-triggered updates during render
+  const [vinylTexture, setVinylTexture] = useState<THREE.Texture | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      '/textures/vinyl-tablecloth_albedo.png',
+      (tex) => {
+        if (cancelled) return;
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(4, 4);
+        tex.needsUpdate = true;
+        setVinylTexture(tex);
+      },
+      undefined,
+      () => {
+        if (!cancelled) setVinylTexture(null);
+      }
+    );
+    return () => { cancelled = true; };
+  }, []);
   // No separate highlight material; use emissive overlay on existing materials
   // Apply wrap materials to surfaces
   useLayoutEffect(() => {
@@ -270,14 +283,10 @@ function Loader() {
 }
 
 type EnvPreset = 'city' | 'studio' | 'sunset' | 'dawn' | 'warehouse' | 'apartment' | 'night' | 'forest' | 'park' | 'lobby';
-type PlatformStyle = 'circle' | 'rounded' | 'grid';
-type GroundVariant = 'plain' | 'concrete' | 'asphalt' | 'carpet' | 'studio';
 
 interface SceneProps {
   url: string;
   scale?: number;
-  platformStyle: PlatformStyle;
-  groundVariant: GroundVariant;
   envMapIntensity: number;
   envPreset: EnvPreset;
   hdriBackground: boolean;
@@ -295,8 +304,6 @@ interface SceneProps {
 function Scene({
   url,
   scale,
-  platformStyle,
-  groundVariant,
   envMapIntensity,
   envPreset,
   hdriBackground,
@@ -312,48 +319,51 @@ function Scene({
 }: SceneProps) {
   const platformRef = useRef<THREE.Group>(null);
 
-  const materialProps = useMemo(() => {
-    switch (groundVariant) {
-      case 'concrete':
-        return { color: '#2a2f36', roughness: 0.9, metalness: 0.05 } as THREE.MeshStandardMaterialParameters;
-      case 'asphalt':
-        return { color: '#24282e', roughness: 0.94, metalness: 0.03 };
-      case 'carpet':
-        return { color: '#2b2f36', roughness: 0.96, metalness: 0.02 };
-      case 'studio':
-        return { color: '#1a1f24', roughness: 0.55, metalness: 0.22 };
+  const groundTexturePath = useMemo(() => {
+    switch (envPreset) {
+      case 'dawn':
+        return '/ground-textures/desert-rocks/desert-rocks1-albedo.png';
+      case 'sunset':
+        return '/ground-textures/pea-gravel-unity/pea-gravel_albedo.png';
+      case 'city':
+        return '/ground-textures/gravel/gravel_albedo.png';
+      case 'park':
+        return '/ground-textures/whispy-grass-meadow/wispy-grass-meadow_albedo.png';
+      case 'night':
+        return '/ground-textures/rocky-dirt/rocky_dirt1-albedo.png';
       default:
-        return { color: '#1f2937', roughness: 0.88, metalness: 0.18 };
+        return '/ground-textures/gravel/gravel_albedo.png';
     }
-  }, [groundVariant]);
+  }, [envPreset]);
+
+  const [groundTex, setGroundTex] = useState<THREE.Texture | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      groundTexturePath,
+      (tex) => {
+        if (cancelled) return;
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(3, 3);
+        tex.anisotropy = 8;
+        tex.needsUpdate = true;
+        setGroundTex(tex);
+      },
+      undefined,
+      () => {
+        if (cancelled) return;
+        setGroundTex(null);
+      }
+    );
+    return () => { cancelled = true; };
+  }, [groundTexturePath]);
 
   const ambientIntensity = useMemo(() => {
     return Math.min(0.2 + 0.4 * envIntensity, 1.0);
   }, [envIntensity]);
 
-  function RoundedRect({ width = 16, height = 10, radius = 1 }: { width?: number; height?: number; radius?: number }) {
-    const shape = useMemo(() => {
-      const s = new THREE.Shape();
-      const w = width, h = height, r = radius;
-      s.moveTo(-w / 2 + r, -h / 2);
-      s.lineTo(w / 2 - r, -h / 2);
-      s.quadraticCurveTo(w / 2, -h / 2, w / 2, -h / 2 + r);
-      s.lineTo(w / 2, h / 2 - r);
-      s.quadraticCurveTo(w / 2, h / 2, w / 2 - r, h / 2);
-      s.lineTo(-w / 2 + r, h / 2);
-      s.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r);
-      s.lineTo(-w / 2, -h / 2 + r);
-      s.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + r, -h / 2);
-      s.closePath();
-      return s;
-    }, [width, height, radius]);
-    return (
-      <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]} receiveShadow>
-        <shapeGeometry args={[shape, 64]} />
-        <meshStandardMaterial {...materialProps} />
-      </mesh>
-    );
-  }
+  
 
   return (
     <>
@@ -361,6 +371,7 @@ function Scene({
       <fog attach="fog" args={[ '#0b1220', 30, 90 ]} />
 
       <ambientLight intensity={ambientIntensity} />
+      <hemisphereLight intensity={0.25} groundColor={0x222222} color={0xffffff} />
       <pointLight position={[6, 6, 6]} intensity={0.9} castShadow distance={30} decay={2} />
       <pointLight position={[-6, 3, -4]} intensity={0.6} distance={25} decay={2} />
       <directionalLight position={[-5, 8, 2]} intensity={0.7} castShadow />
@@ -380,42 +391,15 @@ function Scene({
           />
         </Bounds>
         <SafeEnvironment preset={envPreset} background={hdriBackground} intensity={envIntensity} rotate />
-        
-        {/* Floor / platform variants */}
-        <group ref={platformRef}>
-          {platformStyle === 'circle' && (
-            <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]} receiveShadow>
-              <circleGeometry args={[10, 64]} />
-              <meshStandardMaterial {...materialProps} />
-            </mesh>
-          )}
-          {platformStyle === 'rounded' && <RoundedRect />}
-          {platformStyle === 'grid' && (
-            <group>
-              <mesh rotation-x={-Math.PI / 2} position={[0, -0.0005, 0]} receiveShadow>
-                <planeGeometry args={[40, 40, 1, 1]} />
-                <meshStandardMaterial {...materialProps} />
-              </mesh>
-              <Grid cellSize={0.5} cellThickness={0.5} sectionSize={4} sectionThickness={1} infiniteGrid fadeDistance={30} fadeStrength={1} position={[0, 0.002, 0]} />
-            </group>
-          )}
-          {groundVariant === 'studio' && (
-            <mesh rotation-x={-Math.PI / 2} position={[0, -0.0001, 0]} receiveShadow>
-              <planeGeometry args={[40, 40]} />
-              <MeshReflectorMaterial
-                blur={[300, 30]}
-                resolution={1024}
-                mixBlur={1}
-                mixStrength={6}
-                roughness={0.35}
-                depthScale={0.5}
-                minDepthThreshold={0.4}
-                maxDepthThreshold={1.4}
-                color="#1a1f24"
-                metalness={0.35}
-              />
-            </mesh>
-          )}
+        <group ref={platformRef} position={[0, 0, 0]}>
+          <mesh rotation-x={-Math.PI / 2} position={[0, -0.002, 0]} receiveShadow>
+            <circleGeometry args={[10, 96]} />
+            <meshStandardMaterial map={groundTex ?? undefined} roughness={0.92} metalness={0.08} color={'#9aa0a6'} />
+          </mesh>
+          <mesh rotation-x={-Math.PI / 2} position={[0, -0.001, 0]} receiveShadow>
+            <ringGeometry args={[10.2, 10.7, 96]} />
+            <meshStandardMaterial color={'#111827'} roughness={0.6} metalness={0.2} />
+          </mesh>
         </group>
         <ContactShadows position={[0, 0.001, 0]} opacity={0.65} scale={22} blur={2.8} far={22} resolution={1024} frames={1} />
       </Suspense>
@@ -436,8 +420,6 @@ function Scene({
 interface EnhancedModelViewerProps {
   url: string;
   scale?: number;
-  platformStyle?: PlatformStyle;
-  groundVariant?: GroundVariant;
   envPreset?: EnvPreset;
   hdriBackground?: boolean;
   envIntensity?: number;
@@ -455,8 +437,6 @@ interface EnhancedModelViewerProps {
 export default function EnhancedModelViewer({
   url,
   scale,
-  platformStyle = 'circle',
-  groundVariant = 'plain',
   envPreset = 'city',
   hdriBackground = false,
   envIntensity = 1.25,
@@ -488,8 +468,6 @@ export default function EnhancedModelViewer({
         <Scene
           url={url}
           scale={scale}
-          platformStyle={platformStyle}
-          groundVariant={groundVariant}
           envPreset={envPreset}
           hdriBackground={hdriBackground}
           envIntensity={envIntensity}

@@ -3,24 +3,16 @@
 import { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import { Settings, Sun, Camera, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { cn } from "@/lib/utils";
 
 type EnvPreset = "city" | "sunset" | "dawn" | "night" | "park";
-type PlatformStyle = "circle" | "rounded" | "grid";
-type GroundVariant = "plain" | "concrete" | "asphalt" | "carpet" | "studio";
 
 interface EnvironmentControlsProps {
   envPreset: EnvPreset;
   setEnvPreset: (v: EnvPreset) => void;
   hdriBackground: boolean;
   setHdriBackground: (v: boolean) => void;
-  platformStyle: PlatformStyle;
-  setPlatformStyle: (v: PlatformStyle) => void;
-  groundVariant: GroundVariant;
-  setGroundVariant: (v: GroundVariant) => void;
   autoRotateEnabled: boolean;
   setAutoRotateEnabled: (v: boolean) => void;
   autoRotateSpeed: number;
@@ -32,10 +24,6 @@ export default function EnvironmentControls({
   setEnvPreset,
   hdriBackground,
   setHdriBackground,
-  platformStyle,
-  setPlatformStyle,
-  groundVariant,
-  setGroundVariant,
   autoRotateEnabled,
   setAutoRotateEnabled,
   autoRotateSpeed,
@@ -51,6 +39,24 @@ export default function EnvironmentControls({
     night: null,
     park: null,
   });
+
+  const prettyPreset = useMemo(() => envPreset.charAt(0).toUpperCase() + envPreset.slice(1), [envPreset]);
+  const groundName = useMemo(() => {
+    switch (envPreset) {
+      case 'dawn':
+        return 'Desert rocks';
+      case 'sunset':
+        return 'Pea gravel';
+      case 'city':
+        return 'Gravel';
+      case 'park':
+        return 'Wispy grass meadow';
+      case 'night':
+        return 'Rocky dirt';
+      default:
+        return 'Gravel';
+    }
+  }, [envPreset]);
 
   const scrollItemIntoView = (preset: EnvPreset) => {
     const el = itemRefs.current[preset];
@@ -132,26 +138,25 @@ export default function EnvironmentControls({
                 {presets.map((p) => {
                   const active = envPreset === p;
                   return (
-                    <div key={p} className="shrink-0 flex flex-col items-center gap-1 w-20">
+                    <div key={p} className="shrink-0 flex flex-col items-center gap-1 w-24">
                       <button
                         ref={(el) => { itemRefs.current[p] = el }}
                         type="button"
                         onClick={() => setEnvPreset(p)}
                         role="option"
                         aria-selected={active}
-                        className={cn(
-                          "relative w-20 h-12 rounded-md border transition-colors focus:outline-none",
+                        className={`relative w-24 h-16 rounded-md border transition-colors focus:outline-none ${
                           active
                             ? "border-cyan-500 ring-2 ring-cyan-500/40"
                             : "border-slate-700 hover:border-slate-500"
-                        )}
+                        }`}
                         title={p}
                       >
                         <Image
                           src={`/HDRI-thumbnails/${p}.svg`}
                           alt={`${p} HDRI`}
                           fill
-                          sizes="120px"
+                          sizes="80px"
                           className="object-cover rounded-md"
                           priority={active}
                         />
@@ -159,7 +164,7 @@ export default function EnvironmentControls({
                           <span className="pointer-events-none absolute inset-0 rounded-md ring-1 ring-cyan-500/60" />
                         )}
                       </button>
-                      <div className="text-[10px] leading-3 capitalize text-center text-slate-300 w-full">
+                      <div className="text-[12px] font-semibold leading-3 capitalize text-center text-slate-300 w-full">
                         {p}
                       </div>
                     </div>
@@ -181,51 +186,36 @@ export default function EnvironmentControls({
             <span className="text-xs text-slate-400">Use as background</span>
             <Switch checked={hdriBackground} onCheckedChange={setHdriBackground} />
           </div>
-        </div>
-      </div>
-
-      {/* Platform & Ground */}
-      <div className="space-y-4">
-        <div className="text-sm text-slate-300">Platform & Ground</div>
-        
-        {/* Platform Style */}
-        <div className="space-y-2">
-          <label className="text-xs text-slate-400">Platform style</label>
-          <div className="grid grid-cols-3 gap-1">
-            {([
-              ["circle", "Circle"],
-              ["rounded", "Rounded"],
-              ["grid", "Grid"],
-            ] as [PlatformStyle, string][]).map(([val, label]) => (
-              <button
-                key={val}
-                onClick={() => setPlatformStyle(val)}
-                className={cn(
-                  "px-2 py-1.5 rounded text-xs transition-colors",
-                  platformStyle === val
-                    ? "bg-cyan-600/20 border border-cyan-600 text-cyan-300"
-                    : "bg-slate-800 border border-slate-700 text-slate-200 hover:bg-slate-700"
-                )}
-              >
-                {label}
-              </button>
-            ))}
+          {/* Ground texture preview tied to HDRI preset */}
+          <div className="grid gap-2">
+            <label className="text-xs text-slate-400">{`Ground texture for ${prettyPreset}`}</label>
+            <div className="relative w-full h-24 rounded-md overflow-hidden border border-slate-700 bg-slate-800">
+              <Image
+                src={(() => {
+                  switch (envPreset) {
+                    case 'dawn':
+                      return '/ground-textures/desert-rocks/desert-rocks1-albedo.png';
+                    case 'sunset':
+                      return '/ground-textures/pea-gravel-unity/pea-gravel_albedo.png';
+                    case 'city':
+                      return '/ground-textures/gravel/gravel_albedo.png';
+                    case 'park':
+                      return '/ground-textures/whispy-grass-meadow/wispy-grass-meadow_albedo.png';
+                    case 'night':
+                      return '/ground-textures/rocky-dirt/rocky_dirt1-albedo.png';
+                    default:
+                      return '/ground-textures/gravel/gravel_albedo.png';
+                  }
+                })()}
+                alt={`${envPreset} ground preview`}
+                fill
+                sizes="320px"
+                className="object-cover"
+                priority
+              />
+              <div className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[14px] bg-black/40 font-semibold text-slate-200">{groundName}</div>
+            </div>
           </div>
-        </div>
-
-        {/* Ground Variant */}
-        <div className="space-y-2">
-          <label className="text-xs text-slate-400">Ground material</label>
-          <Select value={groundVariant} onValueChange={(v) => setGroundVariant(v as GroundVariant)}>
-            <SelectTrigger className="w-full bg-slate-800 text-slate-200 border border-slate-700">
-              <SelectValue placeholder="Select ground" />
-            </SelectTrigger>
-            <SelectContent className="bg-slate-900 text-slate-100 border-slate-700">
-              {(["plain", "concrete", "asphalt", "carpet", "studio"] as GroundVariant[]).map((p) => (
-                <SelectItem key={p} value={p} className="capitalize">{p}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
