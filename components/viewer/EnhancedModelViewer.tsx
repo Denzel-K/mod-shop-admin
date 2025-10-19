@@ -12,6 +12,8 @@ import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { WrapConfiguration, WrapColor, WrapFinish } from '@/types/wrap';
 import type { GLTF } from 'three-stdlib';
+import { ENVIRONMENT_PRESETS } from '@/lib/viewer/environment';
+import type { EnvPreset } from '@/lib/viewer/environment';
 
 type EnvMapMat = THREE.Material & { envMapIntensity?: number };
 
@@ -282,7 +284,7 @@ function Loader() {
   );
 }
 
-type EnvPreset = 'city' | 'studio' | 'sunset' | 'dawn' | 'warehouse' | 'apartment' | 'night' | 'forest' | 'park' | 'lobby';
+// EnvPreset is sourced from the centralized environment mapping
 
 interface SceneProps {
   url: string;
@@ -291,6 +293,7 @@ interface SceneProps {
   envPreset: EnvPreset;
   hdriBackground: boolean;
   envIntensity: number;
+  envBlur: number;
   autoRotateEnabled: boolean;
   autoRotateSpeed: number;
   wrapConfig: WrapConfiguration;
@@ -308,6 +311,7 @@ function Scene({
   envPreset,
   hdriBackground,
   envIntensity,
+  envBlur,
   autoRotateEnabled,
   autoRotateSpeed,
   wrapConfig,
@@ -319,22 +323,7 @@ function Scene({
 }: SceneProps) {
   const platformRef = useRef<THREE.Group>(null);
 
-  const groundTexturePath = useMemo(() => {
-    switch (envPreset) {
-      case 'dawn':
-        return '/ground-textures/desert-rocks/desert-rocks1-albedo.png';
-      case 'sunset':
-        return '/ground-textures/pea-gravel-unity/pea-gravel_albedo.png';
-      case 'city':
-        return '/ground-textures/gravel/gravel_albedo.png';
-      case 'park':
-        return '/ground-textures/whispy-grass-meadow/wispy-grass-meadow_albedo.png';
-      case 'night':
-        return '/ground-textures/rocky-dirt/rocky_dirt1-albedo.png';
-      default:
-        return '/ground-textures/gravel/gravel_albedo.png';
-    }
-  }, [envPreset]);
+  const groundTexturePath = useMemo(() => ENVIRONMENT_PRESETS[envPreset]?.groundTexture ?? '/ground-textures/gravel/gravel_albedo.png', [envPreset]);
 
   const [groundTex, setGroundTex] = useState<THREE.Texture | null>(null);
   useEffect(() => {
@@ -390,7 +379,7 @@ function Scene({
             onSurfaceClick={onSurfaceClick}
           />
         </Bounds>
-        <SafeEnvironment preset={envPreset} background={hdriBackground} intensity={envIntensity} rotate />
+        <SafeEnvironment preset={envPreset} background={hdriBackground} intensity={envIntensity} rotate blur={envBlur} />
         <group ref={platformRef} position={[0, 0, 0]}>
           <mesh rotation-x={-Math.PI / 2} position={[0, -0.002, 0]} receiveShadow>
             <circleGeometry args={[10, 96]} />
@@ -423,6 +412,7 @@ interface EnhancedModelViewerProps {
   envPreset?: EnvPreset;
   hdriBackground?: boolean;
   envIntensity?: number;
+  envBlur?: number;
   envMapIntensity?: number;
   autoRotateEnabled?: boolean;
   autoRotateSpeed?: number;
@@ -440,6 +430,7 @@ export default function EnhancedModelViewer({
   envPreset = 'city',
   hdriBackground = false,
   envIntensity = 1.25,
+  envBlur = 0.2,
   envMapIntensity = 1.6,
   autoRotateEnabled = true,
   autoRotateSpeed = 0.72,
@@ -471,6 +462,7 @@ export default function EnhancedModelViewer({
           envPreset={envPreset}
           hdriBackground={hdriBackground}
           envIntensity={envIntensity}
+          envBlur={envBlur}
           envMapIntensity={envMapIntensity}
           autoRotateEnabled={autoRotateEnabled}
           autoRotateSpeed={autoRotateSpeed}
@@ -489,7 +481,7 @@ export default function EnhancedModelViewer({
 }
 
 // Capability-checked environment: HDRI presets when supported, fallback otherwise
-function SafeEnvironment({ preset, background, intensity, rotate }: { preset: EnvPreset; background: boolean; intensity: number; rotate?: boolean }) {
+function SafeEnvironment({ preset, background, intensity, rotate, blur = 0.2 }: { preset: EnvPreset; background: boolean; intensity: number; rotate?: boolean; blur?: number }) {
   const { gl, scene } = useThree();
   const groupRef = useRef<THREE.Group>(null);
 
@@ -530,7 +522,7 @@ function SafeEnvironment({ preset, background, intensity, rotate }: { preset: En
 
   return (
     <group ref={groupRef}>
-      <Environment preset={preset} background={background} blur={background ? 0 : 0.2} />
+      <Environment preset={preset} background={background} blur={background ? 0 : blur} />
     </group>
   );
 }

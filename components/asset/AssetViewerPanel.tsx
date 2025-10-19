@@ -12,6 +12,7 @@ import { IAssetMetadata } from "@/models/Asset";
 import wrapColorsData from "@/lib/data/wrap_colors.json";
 import wrapFinishesData from "@/lib/data/wrap_finishes.json";
 import { ChevronLeft, ChevronRight, Palette, Settings } from "lucide-react";
+import { ENVIRONMENT_PRESETS } from "@/lib/viewer/environment";
 
 type WrapColorsData = {
   // categories kept in data for potential future use but not used in UI anymore
@@ -47,6 +48,7 @@ export default function AssetViewerPanel({
   const [envPreset, setEnvPreset] = useState<EnvPreset>("city");
   const [hdriBackground, setHdriBackground] = useState<boolean>(false);
   const [envIntensity, setEnvIntensity] = useState<number>(1.25);
+  const [envBlur, setEnvBlur] = useState<number>(ENVIRONMENT_PRESETS[envPreset]?.defaultBlur ?? 0.2);
   const [autoRotateEnabled, setAutoRotateEnabled] = useState<boolean>(true);
   const [autoRotateSpeed, setAutoRotateSpeed] = useState<number>(0.52);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(true);
@@ -79,6 +81,11 @@ export default function AssetViewerPanel({
     setSelectedColor("");
     setSelectedFinish("gloss_series");
   }, [assetId, envPreset, envIntensity, hdriBackground]);
+
+  // Update blur default when preset changes
+  useEffect(() => {
+    setEnvBlur(ENVIRONMENT_PRESETS[envPreset]?.defaultBlur ?? 0.2);
+  }, [envPreset]);
   
   // Responsive breakpoints with dynamic updates
   const [isMobile, setIsMobile] = useState(false);
@@ -216,6 +223,7 @@ export default function AssetViewerPanel({
           envPreset={envPreset}
           hdriBackground={hdriBackground}
           envIntensity={envIntensity}
+          envBlur={envBlur}
           autoRotateEnabled={autoRotateEnabled}
           autoRotateSpeed={autoRotateSpeed}
           wrapConfig={wrapConfig}
@@ -337,6 +345,8 @@ export default function AssetViewerPanel({
                     setEnvPreset={setEnvPreset}
                     hdriBackground={hdriBackground}
                     setHdriBackground={setHdriBackground}
+                    envBlur={envBlur}
+                    setEnvBlur={setEnvBlur}
                     autoRotateEnabled={autoRotateEnabled}
                     setAutoRotateEnabled={setAutoRotateEnabled}
                     autoRotateSpeed={autoRotateSpeed}
@@ -456,6 +466,8 @@ export default function AssetViewerPanel({
                 setEnvPreset={setEnvPreset}
                 hdriBackground={hdriBackground}
                 setHdriBackground={setHdriBackground}
+                envBlur={envBlur}
+                setEnvBlur={setEnvBlur}
                 autoRotateEnabled={autoRotateEnabled}
                 setAutoRotateEnabled={setAutoRotateEnabled}
                 autoRotateSpeed={autoRotateSpeed}

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Settings, Sun, Camera, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
+import { ENVIRONMENT_PRESETS } from "@/lib/viewer/environment";
 
 type EnvPreset = "city" | "sunset" | "dawn" | "night" | "park";
 
@@ -13,6 +14,8 @@ interface EnvironmentControlsProps {
   setEnvPreset: (v: EnvPreset) => void;
   hdriBackground: boolean;
   setHdriBackground: (v: boolean) => void;
+  envBlur: number;
+  setEnvBlur: (v: number) => void;
   autoRotateEnabled: boolean;
   setAutoRotateEnabled: (v: boolean) => void;
   autoRotateSpeed: number;
@@ -24,6 +27,8 @@ export default function EnvironmentControls({
   setEnvPreset,
   hdriBackground,
   setHdriBackground,
+  envBlur,
+  setEnvBlur,
   autoRotateEnabled,
   setAutoRotateEnabled,
   autoRotateSpeed,
@@ -136,6 +141,7 @@ export default function EnvironmentControls({
                 aria-label="HDRI presets"
               >
                 {presets.map((p) => {
+                  const cfg = ENVIRONMENT_PRESETS[p];
                   const active = envPreset === p;
                   return (
                     <div key={p} className="shrink-0 flex flex-col items-center gap-1 w-24">
@@ -153,8 +159,8 @@ export default function EnvironmentControls({
                         title={p}
                       >
                         <Image
-                          src={`/HDRI-thumbnails/${p}.svg`}
-                          alt={`${p} HDRI`}
+                          src={cfg?.thumbnail ?? `/HDRI-thumbnails/${p}.svg`}
+                          alt={`${cfg?.label ?? p} HDRI`}
                           fill
                           sizes="80px"
                           className="object-cover rounded-md"
@@ -165,7 +171,7 @@ export default function EnvironmentControls({
                         )}
                       </button>
                       <div className="text-[12px] font-semibold leading-3 capitalize text-center text-slate-300 w-full">
-                        {p}
+                        {cfg?.label ?? p}
                       </div>
                     </div>
                   );
@@ -186,34 +192,32 @@ export default function EnvironmentControls({
             <span className="text-xs text-slate-400">Use as background</span>
             <Switch checked={hdriBackground} onCheckedChange={setHdriBackground} />
           </div>
+          {/* Blur slider */}
+          <div className="grid gap-1">
+            <label className="text-xs text-slate-400">HDRI blur</label>
+            <Slider
+              value={[envBlur]}
+              onValueChange={(v) => setEnvBlur(v[0] ?? envBlur)}
+              min={0}
+              max={0.6}
+              step={0.01}
+              className="w-full"
+            />
+            <div className="text-xs text-slate-400">{envBlur.toFixed(2)} (0–0.60)</div>
+          </div>
           {/* Ground texture preview tied to HDRI preset */}
           <div className="grid gap-2">
             <label className="text-xs text-slate-400">{`Ground texture for ${prettyPreset}`}</label>
             <div className="relative w-full h-24 rounded-md overflow-hidden border border-slate-700 bg-slate-800">
               <Image
-                src={(() => {
-                  switch (envPreset) {
-                    case 'dawn':
-                      return '/ground-textures/desert-rocks/desert-rocks1-albedo.png';
-                    case 'sunset':
-                      return '/ground-textures/pea-gravel-unity/pea-gravel_albedo.png';
-                    case 'city':
-                      return '/ground-textures/gravel/gravel_albedo.png';
-                    case 'park':
-                      return '/ground-textures/whispy-grass-meadow/wispy-grass-meadow_albedo.png';
-                    case 'night':
-                      return '/ground-textures/rocky-dirt/rocky_dirt1-albedo.png';
-                    default:
-                      return '/ground-textures/gravel/gravel_albedo.png';
-                  }
-                })()}
+                src={ENVIRONMENT_PRESETS[envPreset]?.groundTexture ?? '/ground-textures/gravel/gravel_albedo.png'}
                 alt={`${envPreset} ground preview`}
                 fill
                 sizes="320px"
                 className="object-cover"
                 priority
               />
-              <div className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[14px] bg-black/40 font-semibold text-slate-200">{groundName}</div>
+              <div className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[14px] bg-black/40 font-semibold text-slate-200">{ENVIRONMENT_PRESETS[envPreset]?.groundName ?? groundName}</div>
             </div>
           </div>
         </div>
