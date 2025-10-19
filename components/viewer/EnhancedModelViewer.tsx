@@ -522,7 +522,7 @@ function SafeEnvironment({ preset, background, intensity, rotate, blur = 0.2 }: 
 
   return (
     <group ref={groupRef}>
-      <Environment preset={preset} background={background} blur={background ? 0 : blur} />
+      <Environment preset={preset} background={background} blur={blur} />
     </group>
   );
 }
