@@ -430,7 +430,7 @@ export default function EnhancedModelViewer({
   envPreset = 'city',
   hdriBackground = false,
   envIntensity = 1.25,
-  envBlur = 0.2,
+  envBlur = 0.02,
   envMapIntensity = 1.6,
   autoRotateEnabled = true,
   autoRotateSpeed = 0.72,
@@ -481,7 +481,7 @@ export default function EnhancedModelViewer({
 }
 
 // Capability-checked environment: HDRI presets when supported, fallback otherwise
-function SafeEnvironment({ preset, background, intensity, rotate, blur = 0.2 }: { preset: EnvPreset; background: boolean; intensity: number; rotate?: boolean; blur?: number }) {
+function SafeEnvironment({ preset, background, intensity, rotate, blur = 0.02 }: { preset: EnvPreset; background: boolean; intensity: number; rotate?: boolean; blur?: number }) {
   const { gl, scene } = useThree();
   const groupRef = useRef<THREE.Group>(null);
 
@@ -520,9 +520,14 @@ function SafeEnvironment({ preset, background, intensity, rotate, blur = 0.2 }: 
     );
   }
 
+  const cfg = ENVIRONMENT_PRESETS[preset];
   return (
     <group ref={groupRef}>
-      <Environment preset={preset} background={background} blur={blur} />
+      {cfg?.files ? (
+        <Environment files={cfg.files} background={background} blur={blur} />
+      ) : (
+        <Environment preset={cfg?.dreiPreset ?? 'city'} background={background} blur={blur} />
+      )}
     </group>
   );
 }

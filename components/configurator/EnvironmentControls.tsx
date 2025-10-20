@@ -6,8 +6,7 @@ import { Settings, Sun, Camera, RotateCcw, ChevronLeft, ChevronRight } from "luc
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ENVIRONMENT_PRESETS } from "@/lib/viewer/environment";
-
-type EnvPreset = "city" | "sunset" | "dawn" | "night" | "park";
+import type { EnvPreset } from "@/lib/viewer/environment";
 
 interface EnvironmentControlsProps {
   envPreset: EnvPreset;
@@ -34,7 +33,7 @@ export default function EnvironmentControls({
   autoRotateSpeed,
   setAutoRotateSpeed,
 }: EnvironmentControlsProps) {
-  const presets = useMemo(() => (['city','sunset','dawn','night','park'] as EnvPreset[]), []);
+  const presets = useMemo(() => (['city','sunset','dawn','night','park','snowy-mountain'] as EnvPreset[]), []);
   const activeIndex = useMemo(() => presets.indexOf(envPreset), [presets, envPreset]);
   const listRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<Record<EnvPreset, HTMLButtonElement | null>>({
@@ -43,6 +42,7 @@ export default function EnvironmentControls({
     dawn: null,
     night: null,
     park: null,
+    'snowy-mountain': null,
   });
 
   const prettyPreset = useMemo(() => envPreset.charAt(0).toUpperCase() + envPreset.slice(1), [envPreset]);

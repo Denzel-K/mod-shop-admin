@@ -13,6 +13,7 @@ import wrapColorsData from "@/lib/data/wrap_colors.json";
 import wrapFinishesData from "@/lib/data/wrap_finishes.json";
 import { ChevronLeft, ChevronRight, Palette, Settings } from "lucide-react";
 import { ENVIRONMENT_PRESETS } from "@/lib/viewer/environment";
+import type { EnvPreset } from "@/lib/viewer/environment";
 
 type WrapColorsData = {
   // categories kept in data for potential future use but not used in UI anymore
@@ -24,7 +25,7 @@ type WrapFinishesData = {
   finishes: WrapFinish[];
 };
 
-type EnvPreset = "city" | "sunset" | "dawn" | "night" | "park";
+// EnvPreset is now imported from shared environment config
 
 export default function AssetViewerPanel({
   url,
