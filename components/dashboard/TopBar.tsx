@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { LogOut, Mail, User, Users, Menu } from "lucide-react";
+import { LogOut, Mail, User, Users, Menu, FileBox } from "lucide-react";
 
 type TopBarProps = {
   onUploadClick?: () => void;
@@ -75,6 +75,7 @@ export function TopBar({ onLogout, title, subtitle = "3D Models" }: TopBarProps)
   }, [pathname, title]);
 
   const isMailActive = pathname?.startsWith('/mail') ?? false;
+  const isLibraryActive = pathname === '/library';
   const isInvitesActive = pathname?.startsWith('/dashboard/invitations') ?? false;
 
   const canSeeMail = role === 'super-admin' || role === 'manager';
@@ -93,6 +94,15 @@ export function TopBar({ onLogout, title, subtitle = "3D Models" }: TopBarProps)
 
         {/* Desktop actions */}
         <div className="hidden sm:flex items-center gap-2">
+          <Button
+            asChild
+            variant="outline"
+            className={`bg-slate-800/80 text-slate-300 hover:bg-slate-700 border ${isLibraryActive ? 'border-cyan-600 ring-2 ring-cyan-700/40' : 'border-slate-700'}`}
+          >
+            <Link href="/library">
+              <FileBox className="w-4 h-4 mr-2" /> Library
+            </Link>
+          </Button>
           {canSeeMail && (
             <Button
               asChild
@@ -161,6 +171,9 @@ export function TopBar({ onLogout, title, subtitle = "3D Models" }: TopBarProps)
       {menuOpen && (
         <div className="sm:hidden px-4 pb-3">
           <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-2 space-y-2">
+            <Button asChild variant="outline" className={`w-full justify-start bg-slate-800/80 text-slate-300 hover:bg-slate-700 border ${isLibraryActive ? 'border-cyan-600' : 'border-slate-700'}`}>
+              <Link href="/library"><FileBox className="w-4 h-4 mr-2" /> Library</Link>
+            </Button>
             {canSeeMail && (
               <Button asChild className={`w-full justify-start bg-slate-800 hover:bg-slate-700 text-slate-100 border ${isMailActive ? 'border-cyan-600' : 'border-slate-700'}`}>
                 <Link href="/mail"><Mail className="w-4 h-4 mr-2" /> Mail</Link>

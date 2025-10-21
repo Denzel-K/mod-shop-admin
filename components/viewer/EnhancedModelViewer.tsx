@@ -14,6 +14,7 @@ import { WrapConfiguration, WrapColor, WrapFinish } from '@/types/wrap';
 import type { GLTF } from 'three-stdlib';
 import { ENVIRONMENT_PRESETS } from '@/lib/viewer/environment';
 import type { EnvPreset } from '@/lib/viewer/environment';
+import { useEnvPresets } from '@/lib/viewer/useEnvPresets';
 
 type EnvMapMat = THREE.Material & { envMapIntensity?: number };
 
@@ -322,8 +323,8 @@ function Scene({
   onSurfaceClick,
 }: SceneProps) {
   const platformRef = useRef<THREE.Group>(null);
-
-  const groundTexturePath = useMemo(() => ENVIRONMENT_PRESETS[envPreset]?.groundTexture ?? '/ground-textures/gravel/gravel_albedo.png', [envPreset]);
+  const { presets: presetMap } = useEnvPresets();
+  const groundTexturePath = useMemo(() => (presetMap[envPreset]?.groundTexture ?? ENVIRONMENT_PRESETS[envPreset]?.groundTexture) || '/ground-textures/gravel/gravel_albedo.png', [presetMap, envPreset]);
 
   const [groundTex, setGroundTex] = useState<THREE.Texture | null>(null);
   useEffect(() => {
@@ -484,6 +485,7 @@ export default function EnhancedModelViewer({
 function SafeEnvironment({ preset, background, intensity, rotate, blur = 0.02 }: { preset: EnvPreset; background: boolean; intensity: number; rotate?: boolean; blur?: number }) {
   const { gl, scene } = useThree();
   const groupRef = useRef<THREE.Group>(null);
+  const { presets: presetMap } = useEnvPresets();
 
   useFrame(() => {
     if (!rotate) return;
@@ -520,7 +522,7 @@ function SafeEnvironment({ preset, background, intensity, rotate, blur = 0.02 }:
     );
   }
 
-  const cfg = ENVIRONMENT_PRESETS[preset];
+  const cfg = presetMap[preset] ?? ENVIRONMENT_PRESETS[preset];
   return (
     <group ref={groupRef}>
       {cfg?.files ? (

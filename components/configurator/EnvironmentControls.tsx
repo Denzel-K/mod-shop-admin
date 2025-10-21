@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ENVIRONMENT_PRESETS } from "@/lib/viewer/environment";
 import type { EnvPreset } from "@/lib/viewer/environment";
+import { useEnvPresets } from "@/lib/viewer/useEnvPresets";
 
 interface EnvironmentControlsProps {
   envPreset: EnvPreset;
@@ -33,7 +34,8 @@ export default function EnvironmentControls({
   autoRotateSpeed,
   setAutoRotateSpeed,
 }: EnvironmentControlsProps) {
-  const presets = useMemo(() => (['city','sunset','dawn','night','park','snowy-mountain'] as EnvPreset[]), []);
+  const { presets: presetMap } = useEnvPresets();
+  const presets = useMemo(() => Object.keys(presetMap) as EnvPreset[], [presetMap]);
   const activeIndex = useMemo(() => presets.indexOf(envPreset), [presets, envPreset]);
   const listRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<Record<EnvPreset, HTMLButtonElement | null>>({
@@ -141,7 +143,7 @@ export default function EnvironmentControls({
                 aria-label="HDRI presets"
               >
                 {presets.map((p) => {
-                  const cfg = ENVIRONMENT_PRESETS[p];
+                  const cfg = presetMap[p] ?? ENVIRONMENT_PRESETS[p];
                   const active = envPreset === p;
                   return (
                     <div key={p} className="shrink-0 flex flex-col items-center gap-1 w-24">
@@ -210,14 +212,14 @@ export default function EnvironmentControls({
             <label className="text-xs text-slate-400">{`Ground texture for ${prettyPreset}`}</label>
             <div className="relative w-full h-24 rounded-md overflow-hidden border border-slate-700 bg-slate-800">
               <Image
-                src={ENVIRONMENT_PRESETS[envPreset]?.groundTexture ?? '/ground-textures/gravel/gravel_albedo.png'}
+                src={(presetMap[envPreset]?.groundTexture ?? ENVIRONMENT_PRESETS[envPreset]?.groundTexture) || '/ground-textures/gravel/gravel_albedo.png'}
                 alt={`${envPreset} ground preview`}
                 fill
                 sizes="320px"
                 className="object-cover"
                 priority
               />
-              <div className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[14px] bg-black/40 font-semibold text-slate-200">{ENVIRONMENT_PRESETS[envPreset]?.groundName ?? groundName}</div>
+              <div className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[14px] bg-black/40 font-semibold text-slate-200">{(presetMap[envPreset]?.groundName ?? ENVIRONMENT_PRESETS[envPreset]?.groundName) || groundName}</div>
             </div>
           </div>
         </div>

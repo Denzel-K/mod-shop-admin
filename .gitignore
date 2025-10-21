@@ -42,3 +42,10 @@ yarn-error.log*
 next-env.d.ts
 
 prompts.txt
+
+/ground-textures
+/HDRI-backgrounds
+/HDRI-thumbnails
+/scenes
+
+ground-textures HDRI-backgrounds HDRI-thumbnails scenes
