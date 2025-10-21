@@ -48,4 +48,4 @@ prompts.txt
 /public/HDRI-thumbnails
 /public/scenes
 
-# public/ground-textures public/HDRI-backgrounds public/HDRI-thumbnails public/scenes
+# `public/ground-textures` `public/HDRI-backgrounds` `public/HDRI-thumbnails` `public/scenes`

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyAdmin } from '@/lib/auth'
 import { getStorageService } from '@/lib/enhanced-storage'
-import { ENVIRONMENT_PRESETS } from '@/lib/viewer/environment'
+import { normalizeToRuntime, denormalizeFromRuntime, type StoredConfig } from '@/lib/viewer/environmentRepo'
 
 export const runtime = 'nodejs'
 
@@ -17,11 +17,15 @@ export async function GET() {
     const file = bucket.file(CONFIG_PATH)
     const [exists] = await file.exists()
     if (!exists) {
-      return NextResponse.json({ presets: ENVIRONMENT_PRESETS }, { status: 200 })
+      // No stored config yet: return defaults (normalized w/ defaultBlur=0)
+      const normalized = normalizeToRuntime({})
+      return NextResponse.json({ presets: normalized }, { status: 200 })
     }
     const [buf] = await file.download()
-    const json = JSON.parse(buf.toString('utf-8'))
-    return NextResponse.json({ presets: json?.presets || ENVIRONMENT_PRESETS }, { status: 200 })
+    const json = JSON.parse(buf.toString('utf-8')) as StoredConfig | { presets: Record<string, import('@/lib/viewer/environmentRepo').StoredPreset> }
+    const raw = (json && 'presets' in json ? json.presets : {}) as StoredConfig['presets']
+    const normalized = normalizeToRuntime(raw)
+    return NextResponse.json({ presets: normalized }, { status: 200 })
   } catch (e) {
     console.error('[Env Presets GET] Failed:', e)
     return NextResponse.json({ error: 'Failed to load presets' }, { status: 500 })
@@ -44,7 +48,15 @@ export async function PUT(req: NextRequest) {
     if (!bucket) return NextResponse.json({ error: 'Storage not configured' }, { status: 500 })
 
     const file = bucket.file(CONFIG_PATH)
-    const data = Buffer.from(JSON.stringify({ presets: body.presets }, null, 2))
+    // Accept either a stored shape or a runtime map; persist in stored shape
+    let toStore: StoredConfig
+    if (body.presets && typeof body.presets === 'object' && !Array.isArray(body.presets)) {
+      // If entries include complex runtime values, convert
+      toStore = denormalizeFromRuntime(body.presets)
+    } else {
+      toStore = { presets: {} }
+    }
+    const data = Buffer.from(JSON.stringify(toStore, null, 2))
     await file.save(data, {
       resumable: false,
       contentType: 'application/json',
