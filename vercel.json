@@ -1,40 +1,13 @@
 {
   "functions": {
     "app/**": {
-      "excludeFiles": [
-        "public/ground-textures/**",
-        "public/HDRI-backgrounds/**",
-        "public/scenes/**",
-        "public/HDRI-thumbnails/**",
-        "public/models/**",
-        "public/textures/**",
-        "public/thumbnails/**",
-        "lib/data/wrap-color-chart.pdf"
-      ]
+      "excludeFiles": "{public/ground-textures/**,public/HDRI-backgrounds/**,public/scenes/**,public/HDRI-thumbnails/**,public/models/**,public/textures/**,public/thumbnails/**,lib/data/wrap-color-chart.pdf}"
     },
     "api/**": {
-      "excludeFiles": [
-        "public/ground-textures/**",
-        "public/HDRI-backgrounds/**",
-        "public/scenes/**",
-        "public/HDRI-thumbnails/**",
-        "public/models/**",
-        "public/textures/**",
-        "public/thumbnails/**",
-        "lib/data/wrap-color-chart.pdf"
-      ]
+      "excludeFiles": "{public/ground-textures/**,public/HDRI-backgrounds/**,public/scenes/**,public/HDRI-thumbnails/**,public/models/**,public/textures/**,public/thumbnails/**,lib/data/wrap-color-chart.pdf}"
     },
     "pages/**": {
-      "excludeFiles": [
-        "public/ground-textures/**",
-        "public/HDRI-backgrounds/**",
-        "public/scenes/**",
-        "public/HDRI-thumbnails/**",
-        "public/models/**",
-        "public/textures/**",
-        "public/thumbnails/**",
-        "lib/data/wrap-color-chart.pdf"
-      ]
+      "excludeFiles": "{public/ground-textures/**,public/HDRI-backgrounds/**,public/scenes/**,public/HDRI-thumbnails/**,public/models/**,public/textures/**,public/thumbnails/**,lib/data/wrap-color-chart.pdf}"
     }
   }
 }
