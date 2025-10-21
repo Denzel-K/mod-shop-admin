@@ -33,6 +33,7 @@ export async function GET(req: NextRequest) {
     const assetSource = sp.get('assetSource')?.trim();
     const tag = sp.get('tag')?.trim();
     const curatedBy = sp.get('curatedBy')?.trim();
+    const lastEditedBy = sp.get('lastEditedBy')?.trim();
     const limitStr = sp.get('limit')?.trim();
 
     // Build a typed Mongo query
@@ -55,6 +56,7 @@ export async function GET(req: NextRequest) {
     if (assetSource && ['sketchfab','turbosquid','internal','other'].includes(assetSource)) query.assetSource = assetSource;
     if (tag) query.tags = tag;
     if (curatedBy) query['curatedBy.adminId'] = curatedBy;
+    if (lastEditedBy) query['lastEditedBy.adminId'] = lastEditedBy;
 
     // Parse limit parameter
     let limit = 50; // default limit
@@ -335,6 +337,7 @@ export async function POST(req: NextRequest) {
     const adminDoc = await Admin.findById(auth.adminId).lean<{ _id: Types.ObjectId; fullname: string; email: string } | null>();
 
     // Create asset record
+    const now = new Date();
     const asset = await Asset.create({
       name: normalized.name || name,
       description: normalized.description || undefined,
@@ -359,7 +362,29 @@ export async function POST(req: NextRequest) {
         name: adminDoc?.fullname,
         email: adminDoc?.email,
       },
-      curatedAt: new Date(),
+      curatedAt: now,
+      lastEditedBy: {
+        adminId: adminDoc?._id,
+        name: adminDoc?.fullname,
+        email: adminDoc?.email,
+        at: now,
+      },
+      progress: {
+        primaryInfo: 50,
+        overall: 50,
+        breakdown: {},
+        metadataCompleted: {},
+      },
+      contributions: [
+        {
+          adminId: adminDoc?._id,
+          name: adminDoc?.fullname,
+          email: adminDoc?.email,
+          at: now,
+          delta: 50,
+          categories: [],
+        }
+      ],
     });
 
     UploadProgressTracker.complete(uploadId);

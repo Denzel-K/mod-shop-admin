@@ -27,4 +27,30 @@ export type Asset = {
   metadata?: AssetMetadata;
   curatedBy?: { mode?: 'self' | 'proxy' | 'automation' | 'import'; adminId?: string; name?: string; email?: string };
   curatedAt?: string | Date;
+  lastEditedBy?: { adminId?: string; name?: string; email?: string; at?: string | Date };
+  contributions?: Array<{ adminId?: string; name?: string; email?: string; at?: string | Date; delta?: number; categories?: Array<keyof AssetMetadata> }>;
+  progress?: {
+    overall?: number;
+    primaryInfo?: number;
+    breakdown?: {
+      wrappableSurfaces?: number;
+      rims?: number;
+      windows?: number;
+      doors?: number;
+      tyres?: number;
+      interior?: number;
+      lights?: number;
+      other?: number;
+    };
+    metadataCompleted?: {
+      wrappableSurfaces?: boolean;
+      rims?: boolean;
+      windows?: boolean;
+      doors?: boolean;
+      tyres?: boolean;
+      interior?: boolean;
+      lights?: boolean;
+      other?: boolean;
+    }
+  };
 }

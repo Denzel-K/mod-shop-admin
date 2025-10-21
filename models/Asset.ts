@@ -27,6 +27,53 @@ export interface IAssetMetadata {
   other?: Record<string, Record<string, string>>;
 }
 
+export type MetadataCategory = keyof IAssetMetadata;
+
+export interface IAssetProgressBreakdown {
+  wrappableSurfaces?: number;
+  rims?: number;
+  windows?: number;
+  doors?: number;
+  tyres?: number;
+  interior?: number;
+  lights?: number;
+  other?: number;
+}
+
+export interface IAssetProgressMetaCompleted {
+  wrappableSurfaces?: boolean;
+  rims?: boolean;
+  windows?: boolean;
+  doors?: boolean;
+  tyres?: boolean;
+  interior?: boolean;
+  lights?: boolean;
+  other?: boolean;
+}
+
+export interface IAssetProgress {
+  overall?: number; // 0-100
+  primaryInfo?: number; // e.g., 50 when created
+  breakdown?: IAssetProgressBreakdown; // per-category percentages summing to 50
+  metadataCompleted?: IAssetProgressMetaCompleted; // which metadata categories already counted
+}
+
+export interface IEditorRef {
+  adminId?: mongoose.Types.ObjectId;
+  name?: string;
+  email?: string;
+  at?: Date;
+}
+
+export interface IAssetContribution {
+  adminId?: mongoose.Types.ObjectId;
+  name?: string;
+  email?: string;
+  at?: Date;
+  delta?: number; // awarded percentage for this edit
+  categories?: MetadataCategory[]; // which categories contributed
+}
+
 export interface IAsset {
   name: string;
   description?: string;
@@ -50,6 +97,10 @@ export interface IAsset {
   // Curator info
   curatedBy?: ICuratorInfo;
   curatedAt?: Date;
+  // Edit tracking
+  lastEditedBy?: IEditorRef;
+  contributions?: IAssetContribution[];
+  progress?: IAssetProgress;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -85,6 +136,44 @@ const CuratorSchema = new Schema<ICuratorInfo>(
   { _id: false }
 );
 
+const EditorSchema = new Schema<IEditorRef>(
+  {
+    adminId: { type: Schema.Types.ObjectId, ref: 'Admin', default: undefined },
+    name: { type: String, trim: true },
+    email: { type: String, trim: true },
+    at: { type: Date, default: undefined },
+  },
+  { _id: false }
+);
+
+const ProgressSchema = new Schema<IAssetProgress>(
+  {
+    overall: { type: Number, default: 0 },
+    primaryInfo: { type: Number, default: 0 },
+    breakdown: {
+      wrappableSurfaces: { type: Number, default: 0 },
+      rims: { type: Number, default: 0 },
+      windows: { type: Number, default: 0 },
+      doors: { type: Number, default: 0 },
+      tyres: { type: Number, default: 0 },
+      interior: { type: Number, default: 0 },
+      lights: { type: Number, default: 0 },
+      other: { type: Number, default: 0 },
+    },
+    metadataCompleted: {
+      wrappableSurfaces: { type: Boolean, default: false },
+      rims: { type: Boolean, default: false },
+      windows: { type: Boolean, default: false },
+      doors: { type: Boolean, default: false },
+      tyres: { type: Boolean, default: false },
+      interior: { type: Boolean, default: false },
+      lights: { type: Boolean, default: false },
+      other: { type: Boolean, default: false },
+    },
+  },
+  { _id: false }
+);
+
 const AssetSchema: Schema<IAsset> = new Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -109,6 +198,19 @@ const AssetSchema: Schema<IAsset> = new Schema(
     // Curator fields
     curatedBy: { type: CuratorSchema, default: undefined },
     curatedAt: { type: Date, default: undefined },
+    // Edit tracking
+    lastEditedBy: { type: EditorSchema, default: undefined },
+    contributions: { type: [
+      new Schema<IAssetContribution>({
+        adminId: { type: Schema.Types.ObjectId, ref: 'Admin', default: undefined },
+        name: { type: String, trim: true },
+        email: { type: String, trim: true },
+        at: { type: Date, default: undefined },
+        delta: { type: Number, default: 0 },
+        categories: { type: [String], default: undefined },
+      }, { _id: false })
+    ], default: undefined },
+    progress: { type: ProgressSchema, default: undefined },
   },
   { timestamps: true }
 );
@@ -117,5 +219,6 @@ AssetSchema.index({ createdAt: -1 });
 AssetSchema.index({ name: 1 });
 AssetSchema.index({ make: 1, model: 1, year: 1 });
 AssetSchema.index({ 'curatedBy.adminId': 1 });
+AssetSchema.index({ 'lastEditedBy.adminId': 1 });
 
 export default (mongoose.models.Asset as mongoose.Model<IAsset>) || mongoose.model<IAsset>('Asset', AssetSchema);

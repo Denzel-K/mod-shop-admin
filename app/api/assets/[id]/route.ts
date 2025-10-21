@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Asset, { type IAsset } from '@/models/Asset';
+import Asset, { type IAsset, type IAssetMetadata, type IAssetProgress, type IEditorRef, type IAssetContribution, type MetadataCategory } from '@/models/Asset';
 import { verifyAdmin } from '@/lib/auth';
 import { getStorageService } from '@/lib/enhanced-storage';
+import { Types } from 'mongoose';
 
 export const runtime = 'nodejs';
 
@@ -41,11 +42,7 @@ export async function PATCH(
     const current = await Asset.findById(id).lean<IAsset | null>();
     if (!current) return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
 
-    // Enforce curator-only editing
-    const curatorId = current.curatedBy?.adminId ? String(current.curatedBy.adminId) : null;
-    if (!curatorId || curatorId !== String(auth.adminId)) {
-      return NextResponse.json({ error: 'Forbidden: only the asset curator can edit this asset' }, { status: 403 });
-    }
+    // Any authenticated admin can edit; we'll track lastEditedBy and contributions
 
     type PatchBody = Partial<IAsset>;
     const body = (await req.json().catch(() => ({}))) as PatchBody;
@@ -92,7 +89,99 @@ export async function PATCH(
         return NextResponse.json({ error: 'creatorCredits.text is required when assetSource is sketchfab' }, { status: 400 });
       }
     }
-    const asset = await Asset.findByIdAndUpdate(id, updates, { new: true }).lean<IAsset>();
+    // Compute progress deltas based on metadata categories completed
+    const adminId = auth.adminId;
+
+    const weightMap: Record<MetadataCategory, number> = {
+      wrappableSurfaces: 20,
+      rims: 5,
+      windows: 5,
+      doors: 5,
+      tyres: 5,
+      interior: 5,
+      lights: 3,
+      other: 2,
+    };
+
+    // Fetch editor profile
+    let editorMeta: { name?: string; email?: string } = {};
+    try {
+      const adminDoc = await (await import('@/models/Admin')).default.findById(adminId).lean<{ fullname?: string; email?: string } | null>();
+      if (adminDoc) editorMeta = { name: adminDoc.fullname, email: adminDoc.email };
+    } catch {}
+
+    // Start with existing progress
+    const progress: IAssetProgress = current.progress || { overall: 0, primaryInfo: 0, breakdown: {}, metadataCompleted: {} };
+    // Ensure nested shapes are present and typed
+    const breakdown: Partial<Record<MetadataCategory, number>> = (progress.breakdown as Partial<Record<MetadataCategory, number>>) || {};
+    const metadataCompleted: Partial<Record<MetadataCategory, boolean>> = (progress.metadataCompleted as Partial<Record<MetadataCategory, boolean>>) || {};
+    let awarded = 0;
+    const now = new Date();
+
+    // If metadata updated, mark categories completed and award weights once
+    if (updates.metadata && typeof updates.metadata === 'object') {
+      const categories = Object.keys(weightMap) as MetadataCategory[];
+      const newMeta = updates.metadata as IAssetMetadata;
+      for (const cat of categories) {
+        const metaVal = newMeta[cat];
+        const isNonEmpty = !!(metaVal && typeof metaVal === 'object' && Object.keys(metaVal).length > 0);
+        const already = metadataCompleted[cat] === true;
+        if (isNonEmpty && !already) {
+          metadataCompleted[cat] = true;
+          breakdown[cat] = (breakdown[cat] || 0) + weightMap[cat];
+          awarded += weightMap[cat];
+        }
+      }
+    }
+
+    // Primary info inferred: if current had no make/model/year and now provided, consider awarding up to 50 if not already set
+    if (progress.primaryInfo === undefined || progress.primaryInfo < 50) {
+      const hadPrimary = Boolean(current.make || current.model || current.year);
+      const nowPrimary = Boolean(updates.make || updates.model || updates.year || current.make || current.model || current.year);
+      if (!hadPrimary && nowPrimary) {
+        progress.primaryInfo = 50;
+        awarded += Math.max(0, 50 - (progress.overall || 0));
+      } else if (progress.primaryInfo === undefined) {
+        progress.primaryInfo = 0;
+      }
+    }
+
+    progress.breakdown = breakdown;
+    progress.metadataCompleted = metadataCompleted;
+    const breakdownSum = Object.values(breakdown).reduce((a, b) => a + (b || 0), 0);
+    const newOverall = Math.min(100, Math.max(progress.overall || 0, (progress.primaryInfo || 0) + breakdownSum));
+    progress.overall = newOverall;
+
+    const setUpdate: Partial<IAsset> & { lastEditedBy: IEditorRef; progress: IAssetProgress } = {
+      ...updates,
+      lastEditedBy: {
+        adminId: adminId ? new Types.ObjectId(String(adminId)) : undefined,
+        name: editorMeta.name,
+        email: editorMeta.email,
+        at: now,
+      },
+      progress,
+    };
+
+    const pushUpdate: { contributions?: IAssetContribution } = {};
+    if (awarded > 0) {
+      pushUpdate.contributions = {
+        adminId: adminId ? new Types.ObjectId(String(adminId)) : undefined,
+        name: editorMeta.name,
+        email: editorMeta.email,
+        at: now,
+        delta: awarded,
+        categories: updates.metadata ? (Object.keys(updates.metadata as IAssetMetadata) as MetadataCategory[]) : [],
+      };
+    }
+
+    // Use findByIdAndUpdate with $set and optional $push
+    const updateDoc: { $set: typeof setUpdate; $push?: typeof pushUpdate } = { $set: setUpdate };
+    if (pushUpdate.contributions) {
+      updateDoc.$push = pushUpdate;
+    }
+
+    const asset = await Asset.findByIdAndUpdate(id, updateDoc as import('mongoose').UpdateQuery<IAsset>, { new: true }).lean<IAsset>();
     if (!asset) return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
     return NextResponse.json({ asset }, { status: 200 });
   } catch (error) {

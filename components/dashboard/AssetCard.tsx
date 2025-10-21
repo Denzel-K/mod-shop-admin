@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, Pencil, Trash2, Quote } from "lucide-react";
+import { Eye, Pencil, Trash2, Quote, Gauge } from "lucide-react";
 import type { Asset } from "@/types/asset";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Toggle } from "@/components/ui/toggle";
@@ -14,6 +14,7 @@ export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: 
   const [creditsOpen, setCreditsOpen] = useState<boolean>(false); // popover visibility
   const creditsText = asset.creatorCredits?.text?.trim() || '';
   const [copied, setCopied] = useState(false);
+  const [progressOpen, setProgressOpen] = useState<boolean>(false);
   const onCopy = async () => {
     if (!creditsText) return;
     try {
@@ -62,6 +63,56 @@ export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: 
                 {asset.assetSource}
               </span>
             )}
+            {/* Progress toggle */}
+            <TooltipProvider>
+              <Tooltip>
+                <Popover open={progressOpen} onOpenChange={setProgressOpen}>
+                  <PopoverTrigger asChild>
+                    <TooltipTrigger asChild>
+                      <Toggle
+                        size="sm"
+                        pressed={progressOpen}
+                        onPressedChange={(pressed) => setProgressOpen(pressed)}
+                        className="data-[state=on]:bg-slate-800/70 data-[state=on]:text-cyan-200 bg-slate-800/40 text-slate-200 hover:bg-slate-800/60 hover:text-white"
+                        aria-label="Toggle completion"
+                      >
+                        <Gauge className="w-4 h-4" />
+                      </Toggle>
+                    </TooltipTrigger>
+                  </PopoverTrigger>
+                  <TooltipContent className="bg-slate-900 border-slate-800 text-slate-200">View completion</TooltipContent>
+                  <PopoverContent className="bg-slate-900 border-slate-800 text-slate-200 w-80">
+                    <div className="mb-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">Completion</span>
+                        <span className="text-xs text-slate-400">{asset.progress?.overall ?? 0}%</span>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-1 text-[11px] text-slate-300">
+                        {(() => {
+                          const b = asset.progress?.breakdown || {} as Record<string, number>;
+                          const entries = Object.entries(b).filter(([_, v]) => (v || 0) > 0);
+                          if (entries.length === 0) return <span className="col-span-2 text-slate-500">No metadata contributions yet.</span>;
+                          return entries.map(([k, v]) => (
+                            <span key={k} className="flex items-center justify-between border border-slate-800 rounded px-2 py-1 bg-slate-800/40">
+                              <span className="truncate mr-2">{k}</span>
+                              <span className="text-slate-400">{v}%</span>
+                            </span>
+                          ));
+                        })()}
+                      </div>
+                    </div>
+                    <div className="mt-2 border-t border-slate-800 pt-2 text-[11px] text-slate-400">
+                      <div className="flex items-center justify-between">
+                        <span>Last edited by</span>
+                        <span className="truncate max-w-[60%] text-right" title={asset.lastEditedBy?.email || asset.lastEditedBy?.name}>
+                          {asset.lastEditedBy?.name || asset.lastEditedBy?.email || '—'}
+                        </span>
+                     </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </Tooltip>
+            </TooltipProvider>
             {/* Credits toggle to the right of assetSource */}
             <TooltipProvider>
               <Tooltip>
@@ -131,7 +182,7 @@ export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: 
           <Eye className="w-4 h-4" />
         </Link>
         <div className="ml-auto flex items-center gap-2">
-          {asset.curatedBy?.adminId && currentAdminId && asset.curatedBy.adminId === currentAdminId && (
+          {currentAdminId && (
             <button
               type="button"
               onClick={() => onEdit(asset)}

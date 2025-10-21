@@ -37,7 +37,7 @@ export default function DashboardClient() {
       if (filters.model) params.set('model', filters.model);
       if (filters.year) params.set('year', String(filters.year));
       if (filters.assetSource) params.set('assetSource', filters.assetSource);
-      if (filters.curatedBy) params.set('curatedBy', filters.curatedBy);
+      if (filters.lastEditedBy) params.set('lastEditedBy', filters.lastEditedBy);
       const qs = params.toString();
       const url = qs ? `/api/assets?${qs}` : '/api/assets';
       const res = await fetch(url, { cache: 'no-store' });
@@ -61,7 +61,7 @@ export default function DashboardClient() {
     const model = searchParams.get('model') || undefined;
     const yearStr = searchParams.get('year') || undefined;
     const assetSource = searchParams.get('assetSource') || undefined;
-    const curatedBy = searchParams.get('curatedBy') || undefined;
+    const lastEditedBy = searchParams.get('lastEditedBy') || undefined;
     const tag = undefined;
     const initial: AssetFilters = {
       q, // kept in filters for compatibility, but search uses searchQ state
@@ -69,7 +69,7 @@ export default function DashboardClient() {
       model,
       year: yearStr ? Number(yearStr) : undefined,
       assetSource: (assetSource as AssetFilters['assetSource']) || undefined,
-      curatedBy,
+      lastEditedBy,
       tag,
     };
     // Only set if any param present to avoid unnecessary state update

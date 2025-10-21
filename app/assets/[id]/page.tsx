@@ -27,6 +27,8 @@ async function getAssetAbsolute(baseUrl: string, id: string) {
     variant?: string;
     tags?: string[];
     metadata?: IAssetMetadata;
+    progress?: { overall?: number; breakdown?: Record<string, number> };
+    lastEditedBy?: { name?: string; email?: string; at?: string | Date };
   } | null;
 }
 
@@ -57,7 +59,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
       {/* Top bar - Reduced height and increased transparency */}
       <header className="sticky top-0 z-30 border-b border-slate-800/50 bg-slate-900/60 backdrop-blur-xl transition-all duration-300">
         <div className="px-4 py-3 flex items-center justify-between relative">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 relative">
             <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_20px] shadow-cyan-400/50" />
             <h1 className="text-white text-lg font-semibold tracking-wide">{asset.name}</h1>
             <span className="text-xs text-slate-400 border border-slate-700/50 rounded px-1.5 py-0.5 uppercase">{asset.format}</span>
@@ -67,6 +69,34 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             {asset.assetSource && (
               <span className="text-[10px] text-cyan-300 border border-cyan-700/50 rounded px-1 py-0.5 uppercase">{asset.assetSource}</span>
             )}
+            {/* Completion badge and breakdown */}
+            <details className="ml-1">
+              <summary className="list-none text-xs text-slate-300 border border-slate-700/50 rounded px-1.5 py-0.5 hover:bg-slate-800/50 cursor-pointer">
+                {typeof asset.progress?.overall === 'number' ? `${asset.progress.overall}%` : '0%'} complete
+              </summary>
+              <div className="absolute mt-2 w-[min(560px,90vw)] p-3 bg-slate-900/95 text-slate-200 border border-slate-700/50 rounded shadow-xl backdrop-blur-xl z-50">
+                <div className="text-sm font-medium mb-2">Completion breakdown</div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {(() => {
+                    const b = (asset.progress?.breakdown || {}) as Record<string, number>;
+                    const entries = Object.entries(b).filter(([, v]) => (v || 0) > 0);
+                    if (entries.length === 0) return <span className="col-span-2 text-slate-500">No metadata contributions yet.</span>;
+                    return entries.map(([k, v]) => (
+                      <div key={k} className="flex items-center justify-between border border-slate-800 rounded px-2 py-1 bg-slate-800/40">
+                        <span className="truncate mr-2">{k}</span>
+                        <span className="text-slate-400">{v}%</span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+                <div className="mt-3 text-xs text-slate-400 flex items-center justify-between">
+                  <span>Last edited by</span>
+                  <span className="truncate max-w-[60%] text-right" title={asset.lastEditedBy?.email || asset.lastEditedBy?.name}>
+                    {asset.lastEditedBy?.name || asset.lastEditedBy?.email || '—'}
+                  </span>
+                </div>
+              </div>
+            </details>
             {asset.creatorCredits?.text && (
               <details className="ml-2 cursor-pointer">
                 <summary className="list-none text-xs text-slate-300 border border-slate-700/50 rounded px-1.5 py-0.5 hover:bg-slate-800/50">Credits</summary>

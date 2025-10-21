@@ -26,16 +26,16 @@ export type AssetFilters = {
   year?: number;
   assetSource?: 'sketchfab' | 'turbosquid' | 'internal' | 'other';
   tag?: string;
-  curatedBy?: string; // adminId
+  lastEditedBy?: string; // adminId
 };
 
-type Curator = { id: string; fullname: string; email: string; count: number };
+type Editor = { id: string; fullname: string; email: string; count: number };
 
 export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; onChange: (v: AssetFilters) => void; onApply: () => void }) {
   const makes = useMemo(() => listMakes(), []);
   const [local, setLocal] = useState<AssetFilters>(value);
   const models = useMemo(() => local.make ? listModels(local.make) : listModels(), [local.make]);
-  const [curators, setCurators] = useState<Curator[]>([]);
+  const [editors, setEditors] = useState<Editor[]>([]);
   const [totalAssets, setTotalAssets] = useState<number>(0);
   const [meId, setMeId] = useState<string | null>(null);
 
@@ -45,14 +45,14 @@ export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; o
     onChange(next);
   };
 
-  // Load curators with counts and current admin id
+  // Load editors with counts and current admin id
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const [meRes, listRes] = await Promise.all([
           fetch('/api/auth/me', { cache: 'no-store' }),
-          fetch('/api/assets/curators', { cache: 'no-store' }),
+          fetch('/api/assets/editors', { cache: 'no-store' }),
         ]);
         if (mounted && meRes.ok) {
           const me = await meRes.json();
@@ -60,7 +60,7 @@ export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; o
         }
         if (mounted && listRes.ok) {
           const data = await listRes.json();
-          setCurators(Array.isArray(data.curators) ? data.curators : []);
+          setEditors(Array.isArray(data.editors) ? data.editors : []);
           if (typeof data.total === 'number') setTotalAssets(data.total);
         }
       } catch {
@@ -137,27 +137,27 @@ export function FilterBar({ value, onChange, onApply }: { value: AssetFilters; o
           </Select>
         </div>
 
-        {/* Curated by */}
+        {/* Last edited by */}
         <div className="min-w-[180px]">
-          <Label className="text-xs text-slate-400 mb-1 block">Curated by</Label>
+          <Label className="text-xs text-slate-400 mb-1 block">Last edited by</Label>
           <Select
-            value={local.curatedBy ?? 'all'}
-            onValueChange={(val) => set({ curatedBy: val === 'all' ? undefined : val })}
+            value={local.lastEditedBy ?? 'all'}
+            onValueChange={(val) => set({ lastEditedBy: val === 'all' ? undefined : val })}
           >
             <SelectTrigger className="h-8 bg-slate-800/60 border-slate-700 text-white text-sm">
-              <SelectValue placeholder="All curators" />
+              <SelectValue placeholder="All editors" />
             </SelectTrigger>
             <SelectContent className="bg-slate-900 text-slate-200 border-slate-700">
-              <SelectItem value="all">{`All curators${totalAssets ? ` (${totalAssets})` : ''}`}</SelectItem>
+              <SelectItem value="all">{`All editors${totalAssets ? ` (${totalAssets})` : ''}`}</SelectItem>
               {meId && (
                 <SelectItem value={meId}>
                   Me{(() => {
-                    const me = curators.find(c => c.id === meId);
+                    const me = editors.find(c => c.id === meId);
                     return me ? ` (${me.count})` : '';
                   })()}
                 </SelectItem>
               )}
-              {curators
+              {editors
                 .filter(c => !meId || c.id !== meId)
                 .map(c => (
                   <SelectItem key={c.id} value={c.id}>
