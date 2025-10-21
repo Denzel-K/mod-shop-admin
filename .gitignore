@@ -43,9 +43,9 @@ next-env.d.ts
 
 prompts.txt
 
-/ground-textures
-/HDRI-backgrounds
-/HDRI-thumbnails
-/scenes
+/public/ground-textures
+/public/HDRI-backgrounds
+/public/HDRI-thumbnails
+/public/scenes
 
-ground-textures HDRI-backgrounds HDRI-thumbnails scenes
+# public/ground-textures public/HDRI-backgrounds public/HDRI-thumbnails public/scenes
