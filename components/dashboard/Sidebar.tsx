@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutGrid, FileBox, Mail, Users, User, ChevronLeft, ChevronRight, type LucideIcon } from "lucide-react";
+import { LayoutGrid, FileBox, Mail, Users, User, ChevronLeft, ChevronRight, LogOut, type LucideIcon } from "lucide-react";
 
 export type SidebarProps = {
   collapsed?: boolean;
@@ -72,9 +72,10 @@ export function Sidebar({ collapsed = false, onToggleCollapse, onNavigate, onLog
       <div className="mt-auto pt-2">
         <button
           onClick={onLogout}
-          className={`w-full ${collapsed ? 'px-2 py-2' : 'px-3 py-2'} text-left rounded-lg border border-slate-700 text-slate-300 hover:bg-slate-800`}
+          className={`flex items-center gap-3 w-full px-3 py-2 rounded-lg border transition-colors border-red-700 text-red-200 hover:bg-red-900/20`}
         >
-          {!collapsed ? 'Logout' : <span className="sr-only">Logout</span>}
+          <LogOut className="w-4 h-4" />
+          {!collapsed && <span className="text-sm">Logout</span>}
         </button>
       </div>
     </aside>
