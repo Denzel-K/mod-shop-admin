@@ -185,7 +185,7 @@
     "country": "Japan"
   },
   "Nissan": {
-    "models": ["Micra", "Sentra", "Altima", "Maxima", "370Z", "GT-R", "Juke", "Qashqai", "X-Trail", "Murano", "Pathfinder", "Armada", "Titan", "Leaf", "Ariya", "Skyline", "Silvia", "200SX", "Primera", "Sunny"],
+    "models": ["Cefiro", "Micra", "Sentra", "Altima", "Maxima", "370Z", "GT-R", "Juke", "Qashqai", "X-Trail", "Murano", "Pathfinder", "Armada", "Titan", "Leaf", "Ariya", "Skyline", "Silvia", "200SX", "Primera", "Sunny"],
     "icon": "car",
     "country": "Japan"
   },
@@ -255,7 +255,7 @@
     "country": "USA"
   },
   "Toyota": {
-    "models": ["Yaris", "Corolla", "Camry", "Avalon", "Prius", "C-HR", "RAV4", "Harrier", "Highlander", "Hilux", "4Runner", "Sequoia", "Land Cruiser", "Tacoma", "Tundra", "Sienna", "Supra", "86", "MR2", "Celica", "Tercel", "Echo", "Matrix", "Venza"],
+    "models": ["Altezza", "Yaris", "Corolla", "Camry", "Avalon", "Prius", "C-HR", "RAV4", "Harrier", "Highlander", "Hilux", "4Runner", "Sequoia", "Land Cruiser", "Tacoma", "Tundra", "Sienna", "Supra", "86", "MR2", "Celica", "Tercel", "Echo", "Matrix", "Venza"],
     "icon": "car",
     "country": "Japan"
   },
