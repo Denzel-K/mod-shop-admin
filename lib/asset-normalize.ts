@@ -1,12 +1,12 @@
 export type MetadataMap = Partial<{
-  wrappableSurfaces: string[];
-  rims: string[];
-  windows: string[];
-  doors: string[];
-  tyres: string[];
-  interior: string[];
-  lights: string[];
-  other: Record<string, string[]>;
+  wrappableSurfaces: Record<string, string>;
+  rims: Record<string, string>;
+  windows: Record<string, string>;
+  doors: Record<string, string>;
+  tyres: Record<string, string>;
+  interior: Record<string, string>;
+  lights: Record<string, string>;
+  other: Record<string, Record<string, string>>;
 }>;
 
 function uniqClean(values: (string | undefined | null)[]): string[] {
@@ -41,25 +41,37 @@ export function normalizeMetadata(input: unknown): MetadataMap | undefined {
   }
   if (typeof obj !== 'object' || obj === null) return undefined;
   const out: MetadataMap = {};
-  const copyList = (key: keyof MetadataMap) => {
+  const copyMap = (key: keyof MetadataMap) => {
     const val = (obj as Record<string, unknown>)[key];
-    if (!val) return;
-    if (Array.isArray(val)) {
-      (out as Record<string, unknown>)[key] = uniqClean(val.map((v) => String(v)));
+    if (!val || typeof val !== 'object' || Array.isArray(val)) return;
+    const rec: Record<string, string> = {};
+    for (const [k, v] of Object.entries(val as Record<string, unknown>)) {
+      const kk = String(k).trim();
+      const vv = typeof v === 'string' ? v.trim() : String(v ?? '').trim();
+      if (kk && vv) rec[kk] = vv;
     }
+    if (Object.keys(rec).length) (out as Record<string, unknown>)[key] = rec;
   };
-  copyList('wrappableSurfaces');
-  copyList('rims');
-  copyList('windows');
-  copyList('doors');
-  copyList('tyres');
-  copyList('interior');
-  copyList('lights');
+  copyMap('wrappableSurfaces');
+  copyMap('rims');
+  copyMap('windows');
+  copyMap('doors');
+  copyMap('tyres');
+  copyMap('interior');
+  copyMap('lights');
   const otherRaw = (obj as Record<string, unknown>).other;
-  if (otherRaw && typeof otherRaw === 'object' && otherRaw !== null) {
-    const other: Record<string, string[]> = {};
-    for (const [k, v] of Object.entries(otherRaw as Record<string, unknown>)) {
-      if (Array.isArray(v)) other[k] = uniqClean(v.map((x) => String(x)));
+  if (otherRaw && typeof otherRaw === 'object' && otherRaw !== null && !Array.isArray(otherRaw)) {
+    const other: Record<string, Record<string, string>> = {};
+    for (const [group, v] of Object.entries(otherRaw as Record<string, unknown>)) {
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        const inner: Record<string, string> = {};
+        for (const [k, vv] of Object.entries(v as Record<string, unknown>)) {
+          const kk = String(k).trim();
+          const vvs = typeof vv === 'string' ? vv.trim() : String(vv ?? '').trim();
+          if (kk && vvs) inner[kk] = vvs;
+        }
+        if (Object.keys(inner).length) other[group] = inner;
+      }
     }
     if (Object.keys(other).length) out.other = other;
   }
