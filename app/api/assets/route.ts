@@ -1,6 +1,29 @@
+// Progress helpers: equal per-category share of remaining 50%
+function hasPrimaryInfoLike(a: { make?: string; model?: string; year?: number }): boolean {
+  return Boolean(a.make || a.model || a.year);
+}
+function nonEmpty(obj: unknown): boolean {
+  return !!(obj && typeof obj === 'object' && Object.keys(obj as Record<string, unknown>).length > 0);
+}
+const META_CATEGORIES: Array<keyof IAssetMetadata> = [
+  'wrappableSurfaces','rims','windows','doors','tyres','interior','lights','other'
+];
+const PER_CATEGORY = 50 / META_CATEGORIES.length;
+function computeCreationBreakdown(md?: IAssetMetadata | null) {
+  const breakdown: Partial<Record<keyof IAssetMetadata, number>> = {};
+  if (!md) return { breakdown, sum: 0, completed: {} as Partial<Record<keyof IAssetMetadata, boolean>> };
+  let sum = 0;
+  const completed: Partial<Record<keyof IAssetMetadata, boolean>> = {};
+  META_CATEGORIES.forEach((k) => {
+    if (nonEmpty((md as IAssetMetadata)[k])) { breakdown[k] = PER_CATEGORY; sum += PER_CATEGORY; completed[k] = true; }
+  });
+  (Object.keys(breakdown) as Array<keyof IAssetMetadata>).forEach((k) => { breakdown[k] = Math.round((breakdown[k] as number) * 100) / 100; });
+  sum = Math.round(sum * 100) / 100;
+  return { breakdown, sum, completed };
+}
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Asset, { type IAsset } from '@/models/Asset';
+import Asset, { type IAsset, type IAssetMetadata } from '@/models/Asset';
 import Admin from '@/models/Admin';
 import type { Types } from 'mongoose';
 import { verifyAdmin } from '@/lib/auth';
@@ -338,6 +361,10 @@ export async function POST(req: NextRequest) {
 
     // Create asset record
     const now = new Date();
+    // Compute initial progress based on provided primary info and metadata
+    const primaryInfo = hasPrimaryInfoLike({ make: normalized.make, model: normalized.model, year: normalized.year }) ? 50 : 0;
+    const { breakdown, sum, completed } = computeCreationBreakdown(normalized.metadata as IAssetMetadata | undefined);
+    const overall = Math.min(100, primaryInfo + sum);
     const asset = await Asset.create({
       name: normalized.name || name,
       description: normalized.description || undefined,
@@ -370,10 +397,10 @@ export async function POST(req: NextRequest) {
         at: now,
       },
       progress: {
-        primaryInfo: 50,
-        overall: 50,
-        breakdown: {},
-        metadataCompleted: {},
+        primaryInfo,
+        overall,
+        breakdown: breakdown as IAsset['progress']['breakdown'],
+        metadataCompleted: completed as IAsset['progress']['metadataCompleted'],
       },
       contributions: [
         {
@@ -381,8 +408,8 @@ export async function POST(req: NextRequest) {
           name: adminDoc?.fullname,
           email: adminDoc?.email,
           at: now,
-          delta: 50,
-          categories: [],
+          delta: Math.round((primaryInfo + sum) * 100) / 100,
+          categories: (Object.keys(breakdown || {}) as Array<keyof IAssetMetadata>).filter(k => (breakdown as Record<string, number>)[k as string] > 0) as unknown as string[],
         }
       ],
     });

@@ -92,16 +92,18 @@ export async function PATCH(
     // Compute progress deltas based on metadata categories completed
     const adminId = auth.adminId;
 
-    const weightMap: Record<MetadataCategory, number> = {
-      wrappableSurfaces: 20,
-      rims: 5,
-      windows: 5,
-      doors: 5,
-      tyres: 5,
-      interior: 5,
-      lights: 3,
-      other: 2,
-    };
+    // Equal weighting across metadata categories (remaining 50%)
+    const META_CATEGORIES: MetadataCategory[] = [
+      'wrappableSurfaces',
+      'rims',
+      'windows',
+      'doors',
+      'tyres',
+      'interior',
+      'lights',
+      'other',
+    ];
+    const PER_CATEGORY = 50 / META_CATEGORIES.length;
 
     // Fetch editor profile
     let editorMeta: { name?: string; email?: string } = {};
@@ -120,16 +122,15 @@ export async function PATCH(
 
     // If metadata updated, mark categories completed and award weights once
     if (updates.metadata && typeof updates.metadata === 'object') {
-      const categories = Object.keys(weightMap) as MetadataCategory[];
       const newMeta = updates.metadata as IAssetMetadata;
-      for (const cat of categories) {
+      for (const cat of META_CATEGORIES) {
         const metaVal = newMeta[cat];
         const isNonEmpty = !!(metaVal && typeof metaVal === 'object' && Object.keys(metaVal).length > 0);
         const already = metadataCompleted[cat] === true;
         if (isNonEmpty && !already) {
           metadataCompleted[cat] = true;
-          breakdown[cat] = (breakdown[cat] || 0) + weightMap[cat];
-          awarded += weightMap[cat];
+          breakdown[cat] = (breakdown[cat] || 0) + PER_CATEGORY;
+          awarded += PER_CATEGORY;
         }
       }
     }

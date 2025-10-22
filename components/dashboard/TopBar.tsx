@@ -79,10 +79,10 @@ export function TopBar({ onLogout, onMenuClick, title, subtitle = "3D Models" }:
 
   return (
     <header className="sticky top-0 z-100 border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-xl">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+      <div className="px-4 sm:px-4 py-[8px] sm:py-[12px] flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <ModShopLogo size="md" />
-          <h1 className="text-white text-lg sm:text-xl font-semibold tracking-wide truncate">{computedTitle}</h1>
+          <h1 className="text-white text-base sm:text-lg font-semibold tracking-wide truncate">{computedTitle}</h1>
         </div>
 
         {/* Right actions: profile/logout */}

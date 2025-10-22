@@ -190,7 +190,7 @@ export default function DashboardClient() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 px-4 sm:px-6 lg:px-8">
             {assets.map((asset) => (
               <AssetCard key={asset._id} asset={asset} currentAdminId={currentAdminId ?? undefined} onEdit={(a) => { setEditingAsset(a); setShowUpload(true); }} onDelete={(id) => setDeletingId(id)} />
             ))}

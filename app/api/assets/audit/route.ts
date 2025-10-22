@@ -15,22 +15,17 @@ function nonEmpty(obj: unknown): boolean {
 }
 
 function computeSuggestedProgress(asset: IAsset) {
-  const weights: Record<keyof IAssetMetadata, number> = {
-    wrappableSurfaces: 20,
-    rims: 5,
-    windows: 5,
-    doors: 5,
-    tyres: 5,
-    interior: 5,
-    lights: 3,
-    other: 2,
-  };
+  const META_CATEGORIES: Array<keyof IAssetMetadata> = [
+    'wrappableSurfaces', 'rims', 'windows', 'doors', 'tyres', 'interior', 'lights', 'other'
+  ];
+  const PER_CATEGORY = 50 / META_CATEGORIES.length;
   const primary = hasPrimaryInfo(asset) ? 50 : 0;
   let sum = 0;
   const md = asset.metadata || {} as IAssetMetadata;
-  (Object.keys(weights) as Array<keyof IAssetMetadata>).forEach((k) => {
-    if (nonEmpty((md as IAssetMetadata)[k])) sum += weights[k];
+  (META_CATEGORIES).forEach((k) => {
+    if (nonEmpty((md as IAssetMetadata)[k])) sum += PER_CATEGORY;
   });
+  sum = Math.round(sum * 100) / 100;
   const overall = Math.min(100, primary + sum);
   return { primary, overall, sumBreakdown: sum };
 }

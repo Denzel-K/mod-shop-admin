@@ -15,27 +15,31 @@ function nonEmpty(obj: unknown): boolean {
   return !!(obj && typeof obj === 'object' && Object.keys(obj as Record<string, unknown>).length > 0);
 }
 
-const weights: Record<keyof IAssetMetadata, number> = {
-  wrappableSurfaces: 20,
-  rims: 5,
-  windows: 5,
-  doors: 5,
-  tyres: 5,
-  interior: 5,
-  lights: 3,
-  other: 2,
-};
+const META_CATEGORIES: Array<keyof IAssetMetadata> = [
+  'wrappableSurfaces',
+  'rims',
+  'windows',
+  'doors',
+  'tyres',
+  'interior',
+  'lights',
+  'other',
+];
+const PER_CATEGORY = 50 / META_CATEGORIES.length;
 
 function computeBreakdown(md?: IAssetMetadata | null) {
   const breakdown: Partial<Record<keyof IAssetMetadata, number>> = {};
   if (!md) return { breakdown, sum: 0 };
   let sum = 0;
-  (Object.keys(weights) as Array<keyof IAssetMetadata>).forEach((k) => {
-    if (nonEmpty(md[k])) {
-      breakdown[k] = (breakdown[k] || 0) + weights[k];
-      sum += weights[k];
+  (META_CATEGORIES).forEach((k) => {
+    if (nonEmpty((md as IAssetMetadata)[k])) {
+      breakdown[k] = (breakdown[k] || 0) + PER_CATEGORY;
+      sum += PER_CATEGORY;
     }
   });
+  // round to 2 decimals to reduce float noise
+  (Object.keys(breakdown) as Array<keyof IAssetMetadata>).forEach((k) => { if (breakdown[k] !== undefined) breakdown[k] = Math.round((breakdown[k] as number) * 100) / 100; });
+  sum = Math.round(sum * 100) / 100;
   return { breakdown, sum };
 }
 
