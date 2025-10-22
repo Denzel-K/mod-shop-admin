@@ -23,7 +23,7 @@ function computeCreationBreakdown(md?: IAssetMetadata | null) {
 }
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Asset, { type IAsset, type IAssetMetadata } from '@/models/Asset';
+import Asset, { type IAsset, type IAssetMetadata, type IAssetProgress } from '@/models/Asset';
 import Admin from '@/models/Admin';
 import type { Types } from 'mongoose';
 import { verifyAdmin } from '@/lib/auth';
@@ -399,8 +399,8 @@ export async function POST(req: NextRequest) {
       progress: {
         primaryInfo,
         overall,
-        breakdown: breakdown as IAsset['progress']['breakdown'],
-        metadataCompleted: completed as IAsset['progress']['metadataCompleted'],
+        breakdown: breakdown as IAssetProgress['breakdown'],
+        metadataCompleted: completed as IAssetProgress['metadataCompleted'],
       },
       contributions: [
         {

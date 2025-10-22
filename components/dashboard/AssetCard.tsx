@@ -236,8 +236,8 @@ export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: 
                       {/* Asset Source */}
                       {asset.assetSource && (
                         <div className="space-y-1">
-                          <span className="text-xs font-medium text-slate-400">Source</span>
-                          <div className="inline-flex items-center px-2.5 py-1.5 rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-sm font-medium">
+                          <span className="text-sm font-medium text-slate-400">Source</span>
+                          <div className="ml-2 inline-flex items-center px-[6px] py-[2px] rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-medium">
                             {asset.assetSource}
                           </div>
                         </div>

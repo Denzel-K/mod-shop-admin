@@ -48,7 +48,7 @@ prompts.txt
 /public/HDRI-thumbnails
 /public/scenes
 
-scripts/audit-assets.js
-scripts/update-assets-progress.js   
+# scripts/audit-assets.js
+# scripts/update-assets-progress.js   
 
 
