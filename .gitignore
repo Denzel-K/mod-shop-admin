@@ -50,3 +50,6 @@ prompts.txt
 
 scripts/audit-assets.js
 scripts/update-assets-progress.js   
+app/api/assets/audit/route.ts
+app/api/assets/route.ts
+

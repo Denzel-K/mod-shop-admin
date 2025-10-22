@@ -120,35 +120,73 @@ export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: 
                   <TooltipContent className="bg-slate-900 border-slate-700 text-slate-200">
                     View completion progress
                   </TooltipContent>
-                  <PopoverContent className="bg-slate-900 border-slate-700 text-slate-200 w-80 shadow-xl">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold">Completion Progress</span>
-                        <span className="text-sm font-mono text-cyan-300">{asset.progress?.overall ?? 0}%</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        {(() => {
-                          const breakdown = asset.progress?.breakdown || {} as Record<string, number>;
-                          const entries = Object.entries(breakdown).filter(([_, v]) => (v || 0) > 0);
-                          if (entries.length === 0) {
-                            return <span className="col-span-2 text-slate-400 italic">No metadata contributions yet.</span>;
-                          }
-                          return entries.map(([key, value]) => (
-                            <div key={key} className="flex items-center justify-between p-2 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                              <span className="truncate font-medium">{key}</span>
-                              <span className="text-slate-300 font-mono">{value}%</span>
+                  <PopoverContent className="bg-slate-900 border-slate-700 text-slate-200 w-96 shadow-xl">
+                    <div className="space-y-4">
+                      {(() => {
+                        const overall = Math.round((asset.progress?.overall ?? 0) * 100) / 100;
+                        const primary = asset.progress?.primaryInfo ?? ((asset.make || asset.model || asset.year) ? 50 : 0);
+                        const breakdown = (asset.progress?.breakdown || {}) as Record<string, number>;
+                        const completed = (asset.progress?.metadataCompleted || {}) as Record<string, boolean>;
+                        const categories = ['wrappableSurfaces','rims','windows','doors','tyres','interior','lights','other'];
+                        const labels: Record<string,string> = {
+                          wrappableSurfaces: 'Body Panels',
+                          rims: 'Rims',
+                          windows: 'Windows',
+                          doors: 'Doors',
+                          tyres: 'Tyres',
+                          interior: 'Interior',
+                          lights: 'Lights',
+                          other: 'Other'
+                        };
+                        return (
+                          <>
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold">Completion</span>
+                                <span className="text-sm font-mono text-cyan-300">{overall}%</span>
+                              </div>
+                              <div className="h-2 w-full rounded bg-slate-800/70 overflow-hidden border border-slate-700/60">
+                                <div className="h-full bg-cyan-500" style={{ width: `${Math.min(100, Math.max(0, overall))}%` }} />
+                              </div>
+                              <div className="flex items-center justify-between text-[11px] text-slate-400">
+                                <span>Primary info</span>
+                                <span className="font-mono text-slate-300">{primary}%</span>
+                              </div>
                             </div>
-                          ));
-                        })()}
-                      </div>
-                      <div className="pt-2 border-t border-slate-700">
-                        <div className="flex items-center justify-between text-xs text-slate-400">
-                          <span>Last edited by</span>
-                          <span className="truncate max-w-[60%] text-right font-medium" title={asset.lastEditedBy?.email || asset.lastEditedBy?.name}>
-                            {asset.lastEditedBy?.name || asset.lastEditedBy?.email || '—'}
-                          </span>
-                        </div>
-                      </div>
+                            <div className="space-y-2">
+                              <div className="text-xs font-medium text-slate-400">Metadata breakdown</div>
+                              <div className="space-y-2">
+                                {categories.map((key) => {
+                                  const val = Math.round(((breakdown[key] || 0)) * 100) / 100;
+                                  const isDone = completed[key] || val > 0;
+                                  return (
+                                    <div key={key} className="grid grid-cols-12 gap-2 items-center">
+                                      <div className="col-span-5 flex items-center gap-2 truncate">
+                                        <span className={`inline-block h-2 w-2 rounded-full ${isDone ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                                        <span className="truncate text-xs">{labels[key] || key}</span>
+                                      </div>
+                                      <div className="col-span-5">
+                                        <div className="h-1.5 w-full rounded bg-slate-800/70 overflow-hidden border border-slate-700/60">
+                                          <div className={`h-full ${isDone ? 'bg-emerald-500' : 'bg-slate-600'}`} style={{ width: `${Math.min(100, Math.max(0, val * 2))}%` }} />
+                                        </div>
+                                      </div>
+                                      <div className="col-span-2 text-right text-xs font-mono text-slate-300">{val > 0 ? `${val}%` : '—'}</div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                            <div className="pt-2 border-t border-slate-700">
+                              <div className="flex items-center justify-between text-xs text-slate-400">
+                                <span>Last edited by</span>
+                                <span className="truncate max-w-[60%] text-right font-medium" title={asset.lastEditedBy?.email || asset.lastEditedBy?.name}>
+                                  {asset.lastEditedBy?.name || asset.lastEditedBy?.email || '—'}
+                                </span>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </PopoverContent>
                 </Popover>
