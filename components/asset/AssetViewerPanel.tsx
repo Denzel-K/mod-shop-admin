@@ -49,7 +49,7 @@ export default function AssetViewerPanel({
   const [envPreset, setEnvPreset] = useState<EnvPreset>("city");
   const [hdriBackground, setHdriBackground] = useState<boolean>(false);
   const [envIntensity, setEnvIntensity] = useState<number>(1.25);
-  const [envBlur, setEnvBlur] = useState<number>(ENVIRONMENT_PRESETS[envPreset]?.defaultBlur ?? 0.2);
+  const [envBlur, setEnvBlur] = useState<number>(ENVIRONMENT_PRESETS[envPreset]?.defaultBlur ?? 0.0);
   const [autoRotateEnabled, setAutoRotateEnabled] = useState<boolean>(true);
   const [autoRotateSpeed, setAutoRotateSpeed] = useState<number>(0.52);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(true);
@@ -85,7 +85,7 @@ export default function AssetViewerPanel({
 
   // Update blur default when preset changes
   useEffect(() => {
-    setEnvBlur(ENVIRONMENT_PRESETS[envPreset]?.defaultBlur ?? 0.2);
+    setEnvBlur(ENVIRONMENT_PRESETS[envPreset]?.defaultBlur ?? 0.0);
   }, [envPreset]);
   
   // Responsive breakpoints with dynamic updates

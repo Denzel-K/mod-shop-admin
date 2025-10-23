@@ -2,6 +2,7 @@
   {
     "origin": [
       "https://mod-shop-admin.vercel.app",
+      "https://mod-shop-mocha.vercel.app",
       "http://localhost:4000",
       "http://localhost:3000"
     ],
