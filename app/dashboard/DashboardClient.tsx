@@ -12,6 +12,7 @@ import { DeleteConfirm } from '@/components/dashboard/DeleteConfirm';
 import { FilterBar, type AssetFilters } from '@/components/dashboard/FilterBar';
 import { Input } from '@/components/ui/input';
 import { X, Search as SearchIcon } from 'lucide-react';
+import { AssetPagination, type PaginationInfo } from '@/components/dashboard/AssetPagination';
 
 export default function DashboardClient() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -24,6 +25,14 @@ export default function DashboardClient() {
   const [filters, setFilters] = useState<AssetFilters>({});
   const [searchQ, setSearchQ] = useState<string>('');
   const [currentAdminId, setCurrentAdminId] = useState<string | null>(null);
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    page: 1,
+    pageSize: 15,
+    totalCount: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+  });
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -38,21 +47,26 @@ export default function DashboardClient() {
       if (filters.year) params.set('year', String(filters.year));
       if (filters.assetSource) params.set('assetSource', filters.assetSource);
       if (filters.lastEditedBy) params.set('lastEditedBy', filters.lastEditedBy);
+      params.set('page', String(pagination.page));
+      params.set('pageSize', String(pagination.pageSize));
       const qs = params.toString();
-      const url = qs ? `/api/assets?${qs}` : '/api/assets';
+      const url = `/api/assets?${qs}`;
       const res = await fetch(url, { cache: 'no-store' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to fetch assets');
       setAssets(data.assets || []);
+      if (data.pagination) {
+        setPagination(data.pagination);
+      }
       // Persist filters in URL (without full reload)
-      router.replace(qs ? `${pathname}?${qs}` : pathname);
+      router.replace(`${pathname}?${qs}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to fetch assets');
       console.log('Error: ', error)
     } finally {
       setLoading(false);
     }
-  }, [filters, searchQ, router, pathname, error]);
+  }, [filters, searchQ, pagination.page, pagination.pageSize, router, pathname, error]);
 
   useEffect(() => {
     // Initialize filters from current URL on first mount
@@ -62,6 +76,8 @@ export default function DashboardClient() {
     const yearStr = searchParams.get('year') || undefined;
     const assetSource = searchParams.get('assetSource') || undefined;
     const lastEditedBy = searchParams.get('lastEditedBy') || undefined;
+    const pageStr = searchParams.get('page') || '1';
+    const pageSizeStr = searchParams.get('pageSize') || '15';
     const tag = undefined;
     const initial: AssetFilters = {
       q, // kept in filters for compatibility, but search uses searchQ state
@@ -77,10 +93,24 @@ export default function DashboardClient() {
       setFilters(initial);
     }
     if (q) setSearchQ(q);
+    
+    setPagination(prev => ({
+      ...prev,
+      page: parseInt(pageStr, 10) || 1,
+      pageSize: parseInt(pageSizeStr, 10) || 15,
+    }));
+    
     // Always fetch on mount
     fetchAssets();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Fetch assets when pagination changes
+  useEffect(() => {
+    if (pagination.page > 0) { // Only fetch if pagination is initialized
+      fetchAssets();
+    }
+  }, [pagination.page, pagination.pageSize, fetchAssets]);
 
   // Fetch current admin id once for UI authorization
   useEffect(() => {
@@ -106,6 +136,14 @@ export default function DashboardClient() {
     }
   }, []);
 
+  const handlePageChange = (newPage: number) => {
+    setPagination(prev => ({ ...prev, page: newPage }));
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPagination(prev => ({ ...prev, page: 1, pageSize: newPageSize }));
+  };
+
   return (
     <div className="min-h-screen bg-slate-950">
       {/* Content (TopBar provided by /dashboard/layout.tsx) */}
@@ -120,7 +158,7 @@ export default function DashboardClient() {
                 <Input
                   value={searchQ}
                   onChange={(e) => setSearchQ(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') fetchAssets(); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { setPagination(prev => ({ ...prev, page: 1 })); fetchAssets(); } }}
                   placeholder="Search by name, make, model, tags"
                   className="pl-9 h-9 bg-slate-800/60 border-slate-700 text-white placeholder-slate-500"
                   aria-label="Search query"
@@ -130,7 +168,7 @@ export default function DashboardClient() {
                     type="button"
                     aria-label="Clear search"
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-                    onClick={() => { setSearchQ(''); fetchAssets(); }}
+                    onClick={() => { setSearchQ(''); setPagination(prev => ({ ...prev, page: 1 })); fetchAssets(); }}
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -140,11 +178,11 @@ export default function DashboardClient() {
                 <Button
                   variant="outline"
                   className="h-9 bg-slate-800/70 border-slate-700 text-slate-300 hover:bg-slate-700"
-                  onClick={() => { setSearchQ(''); fetchAssets(); }}
+                  onClick={() => { setSearchQ(''); setPagination(prev => ({ ...prev, page: 1 })); fetchAssets(); }}
                 >
                   Clear
                 </Button>
-                <Button className="h-9 bg-cyan-600 hover:bg-cyan-500" onClick={fetchAssets}>
+                <Button className="h-9 bg-cyan-600 hover:bg-cyan-500" onClick={() => { setPagination(prev => ({ ...prev, page: 1 })); fetchAssets(); }}>
                   <SearchIcon className="w-4 h-4 mr-2" /> Search
                 </Button>
                 <Button
@@ -157,7 +195,7 @@ export default function DashboardClient() {
             </div>
             
             {/* Bottom row: Compact Filters */}
-            <FilterBar value={filters} onChange={(f) => { setFilters(f); }} onApply={fetchAssets} />
+            <FilterBar value={filters} onChange={(f) => { setFilters(f); }} onApply={() => { setPagination(prev => ({ ...prev, page: 1 })); fetchAssets(); }} />
           </div>
         </section>
         {/* Empty/Loading States */}
@@ -190,11 +228,23 @@ export default function DashboardClient() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 px-4 sm:px-6 lg:px-8">
-            {assets.map((asset) => (
-              <AssetCard key={asset._id} asset={asset} currentAdminId={currentAdminId ?? undefined} onEdit={(a) => { setEditingAsset(a); setShowUpload(true); }} onDelete={(id) => setDeletingId(id)} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 px-4 sm:px-6 lg:px-8">
+              {assets.map((asset) => (
+                <AssetCard key={asset._id} asset={asset} currentAdminId={currentAdminId ?? undefined} onEdit={(a) => { setEditingAsset(a); setShowUpload(true); }} onDelete={(id) => setDeletingId(id)} />
+              ))}
+            </div>
+            
+            {pagination.totalPages > 1 && (
+              <div className="mt-8 border-t border-slate-800 px-4 sm:px-6 lg:px-8">
+                <AssetPagination
+                  pagination={pagination}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                />
+              </div>
+            )}
+          </>
         )}
       </main>
 

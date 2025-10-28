@@ -58,6 +58,8 @@ export async function GET(req: NextRequest) {
     const curatedBy = sp.get('curatedBy')?.trim();
     const lastEditedBy = sp.get('lastEditedBy')?.trim();
     const limitStr = sp.get('limit')?.trim();
+    const pageStr = sp.get('page')?.trim();
+    const pageSizeStr = sp.get('pageSize')?.trim();
 
     // Build a typed Mongo query
     const query: import('mongoose').FilterQuery<IAsset> = {};
@@ -81,17 +83,56 @@ export async function GET(req: NextRequest) {
     if (curatedBy) query['curatedBy.adminId'] = curatedBy;
     if (lastEditedBy) query['lastEditedBy.adminId'] = lastEditedBy;
 
-    // Parse limit parameter
-    let limit = 50; // default limit
+    // Pagination parameters
+    let pageSize = 15; // default page size
+    let page = 1; // default page
+    
+    // Handle legacy limit parameter for backward compatibility
     if (limitStr) {
       const parsedLimit = parseInt(limitStr, 10);
       if (Number.isInteger(parsedLimit) && parsedLimit > 0 && parsedLimit <= 100) {
-        limit = parsedLimit;
+        pageSize = parsedLimit;
       }
     }
-
-    const assets = await Asset.find(query).sort({ createdAt: -1 }).limit(limit).lean();
-    return NextResponse.json({ assets }, { status: 200 });
+    
+    // Handle new pagination parameters
+    if (pageSizeStr) {
+      const parsedPageSize = parseInt(pageSizeStr, 10);
+      if (Number.isInteger(parsedPageSize) && [10, 15, 20].includes(parsedPageSize)) {
+        pageSize = parsedPageSize;
+      }
+    }
+    
+    if (pageStr) {
+      const parsedPage = parseInt(pageStr, 10);
+      if (Number.isInteger(parsedPage) && parsedPage > 0) {
+        page = parsedPage;
+      }
+    }
+    
+    const skip = (page - 1) * pageSize;
+    
+    // Get total count for pagination info
+    const totalCount = await Asset.countDocuments(query);
+    const totalPages = Math.ceil(totalCount / pageSize);
+    
+    const assets = await Asset.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(pageSize)
+      .lean();
+      
+    return NextResponse.json({ 
+      assets,
+      pagination: {
+        page,
+        pageSize,
+        totalCount,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      }
+    }, { status: 200 });
   } catch (error) {
     console.error('List assets error:', error);
     return NextResponse.json({ error: 'Failed to list assets' }, { status: 500 });
