@@ -56,6 +56,7 @@ export interface IAssetProgress {
   primaryInfo?: number; // e.g., 50 when created
   breakdown?: IAssetProgressBreakdown; // per-category percentages summing to 50
   metadataCompleted?: IAssetProgressMetaCompleted; // which metadata categories already counted
+  metadataValidated?: boolean; // curator confirmation that all metadata works correctly
 }
 
 export interface IEditorRef {
@@ -170,6 +171,7 @@ const ProgressSchema = new Schema<IAssetProgress>(
       lights: { type: Boolean, default: false },
       other: { type: Boolean, default: false },
     },
+    metadataValidated: { type: Boolean, default: false },
   },
   { _id: false }
 );

@@ -11,7 +11,7 @@ import { WrapColor, WrapFinish, WrapConfiguration } from "@/types/wrap";
 import { IAssetMetadata } from "@/models/Asset";
 import wrapColorsData from "@/lib/data/wrap_colors.json";
 import wrapFinishesData from "@/lib/data/wrap_finishes.json";
-import { ChevronLeft, ChevronRight, Palette, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, Palette, Settings, CheckCircle2 } from "lucide-react";
 import { ENVIRONMENT_PRESETS } from "@/lib/viewer/environment";
 import type { EnvPreset } from "@/lib/viewer/environment";
 
@@ -36,6 +36,7 @@ export default function AssetViewerPanel({
   assetMetadata,
   assetDescription,
   assetTags,
+  initialMetadataValidated = false,
 }: {
   url: string;
   assetId: string;
@@ -45,6 +46,7 @@ export default function AssetViewerPanel({
   assetMetadata?: IAssetMetadata;
   assetDescription?: string;
   assetTags?: string[];
+  initialMetadataValidated?: boolean;
 }) {
   const [envPreset, setEnvPreset] = useState<EnvPreset>("city");
   const [hdriBackground, setHdriBackground] = useState<boolean>(false);
@@ -66,6 +68,8 @@ export default function AssetViewerPanel({
   });
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedFinish, setSelectedFinish] = useState<string>("gloss_series");
+  const [metadataValidated, setMetadataValidated] = useState<boolean>(initialMetadataValidated);
+  const [isUpdatingValidation, setIsUpdatingValidation] = useState<boolean>(false);
 
   // Reset viewer state when asset changes to prevent cross-contamination
   useEffect(() => {
@@ -177,6 +181,33 @@ export default function AssetViewerPanel({
     }
   };
 
+  const handleMetadataValidationChange = async (validated: boolean) => {
+    setIsUpdatingValidation(true);
+    try {
+      const response = await fetch(`/api/assets/${assetId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          progress: {
+            metadataValidated: validated,
+          },
+        }),
+      });
+
+      if (response.ok) {
+        setMetadataValidated(validated);
+      } else {
+        console.error('Failed to update metadata validation status');
+      }
+    } catch (error) {
+      console.error('Error updating metadata validation:', error);
+    } finally {
+      setIsUpdatingValidation(false);
+    }
+  };
+
   // Calculate responsive sidebar width
   const sidebarWidth = useMemo(() => {
     if (isMobile) return "85%"; // Mobile
@@ -276,6 +307,40 @@ export default function AssetViewerPanel({
                   hasSelection={selectedSurfaces.length > 0}
                 />
               ) : null}
+              
+              {/* Metadata Validation Checkbox */}
+              <div className="pt-6 border-t border-slate-700/50">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative">
+                    <input
+                      type="checkbox"
+                      checked={metadataValidated}
+                      onChange={(e) => handleMetadataValidationChange(e.target.checked)}
+                      disabled={isUpdatingValidation}
+                      className="sr-only"
+                    />
+                    <div className={cn(
+                      "w-5 h-5 rounded border-2 transition-all duration-200",
+                      metadataValidated 
+                        ? "bg-emerald-500 border-emerald-500" 
+                        : "bg-transparent border-slate-600 group-hover:border-slate-500",
+                      isUpdatingValidation && "opacity-50"
+                    )}>
+                      {metadataValidated && (
+                        <CheckCircle2 className="w-3 h-3 text-white absolute top-0.5 left-0.5" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
+                      Metadata Validated
+                    </div>
+                    <div className="text-xs text-slate-400 leading-relaxed">
+                      Confirm that all metadata works correctly in the 3D viewer
+                    </div>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -323,6 +388,40 @@ export default function AssetViewerPanel({
                       hasSelection={selectedSurfaces.length > 0}
                     />
                   ) : null}
+                  
+                  {/* Metadata Validation Checkbox */}
+                  <div className="pt-6 border-t border-slate-700/50">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div className="relative">
+                        <input
+                          type="checkbox"
+                          checked={metadataValidated}
+                          onChange={(e) => handleMetadataValidationChange(e.target.checked)}
+                          disabled={isUpdatingValidation}
+                          className="sr-only"
+                        />
+                        <div className={cn(
+                          "w-5 h-5 rounded border-2 transition-all duration-200",
+                          metadataValidated 
+                            ? "bg-emerald-500 border-emerald-500" 
+                            : "bg-transparent border-slate-600 group-hover:border-slate-500",
+                          isUpdatingValidation && "opacity-50"
+                        )}>
+                          {metadataValidated && (
+                            <CheckCircle2 className="w-3 h-3 text-white absolute top-0.5 left-0.5" />
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
+                          Metadata Validated
+                        </div>
+                        <div className="text-xs text-slate-400 leading-relaxed">
+                          Confirm that all metadata works correctly in the 3D viewer
+                        </div>
+                      </div>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>

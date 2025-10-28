@@ -51,6 +51,7 @@ export type Asset = {
       interior?: boolean;
       lights?: boolean;
       other?: boolean;
-    }
+    };
+    metadataValidated?: boolean;
   };
 }

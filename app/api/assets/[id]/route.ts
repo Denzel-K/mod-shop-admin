@@ -78,6 +78,15 @@ export async function PATCH(
     if (body.metadata && typeof body.metadata === 'object') {
       updates.metadata = body.metadata; // trust client; server schema enforces shape loosely
     }
+    
+    // Handle progress updates (specifically for metadataValidated)
+    let progressUpdate: Partial<IAssetProgress> | undefined;
+    if (body.progress && typeof body.progress === 'object') {
+      const progressBody = body.progress as Partial<IAssetProgress>;
+      if (typeof progressBody.metadataValidated === 'boolean') {
+        progressUpdate = { metadataValidated: progressBody.metadataValidated };
+      }
+    }
 
     // Do NOT change curator on edit; keep original curator metadata intact
 
@@ -149,6 +158,12 @@ export async function PATCH(
 
     progress.breakdown = breakdown;
     progress.metadataCompleted = metadataCompleted;
+    
+    // Apply progress updates (like metadataValidated)
+    if (progressUpdate) {
+      Object.assign(progress, progressUpdate);
+    }
+    
     const breakdownSum = Object.values(breakdown).reduce((a, b) => a + (b || 0), 0);
     const newOverall = Math.min(100, Math.max(progress.overall || 0, (progress.primaryInfo || 0) + breakdownSum));
     progress.overall = newOverall;
@@ -201,15 +216,13 @@ export async function DELETE(
     const asset = await Asset.findById(id).lean<IAsset | null>();
     if (!asset) return NextResponse.json({ error: 'Asset not found' }, { status: 404 });
 
-    // Require authenticated admin and enforce curator-only deletion
+    // Require authenticated admin
     const auth = await verifyAdmin();
     if (!auth) {
       return NextResponse.json({ error: 'Unauthorized: admin session required' }, { status: 401 });
     }
-    const curatorId = asset.curatedBy?.adminId ? String(asset.curatedBy.adminId) : null;
-    if (!curatorId || curatorId !== String(auth.adminId)) {
-      return NextResponse.json({ error: 'Forbidden: only the asset curator can delete this asset' }, { status: 403 });
-    }
+    
+    // Any authenticated admin can delete assets
 
     const storageService = getStorageService();
     const deletionResults: { model: boolean; thumbnail: boolean } = {

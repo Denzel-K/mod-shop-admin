@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Eye, Pencil, Trash2, Quote, Gauge, Tag, Car } from "lucide-react";
+import { Eye, Pencil, Trash2, Quote, Gauge, Tag } from "lucide-react";
 import type { Asset } from "@/types/asset";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Toggle } from "@/components/ui/toggle";
@@ -176,7 +176,23 @@ export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: 
                                 })}
                               </div>
                             </div>
-                            <div className="pt-2 border-t border-slate-700">
+                            <div className="pt-2 border-t border-slate-700 space-y-2">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-400">Metadata Validated</span>
+                                <div className="flex items-center gap-1.5">
+                                  {asset.progress?.metadataValidated ? (
+                                    <>
+                                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                                      <span className="text-emerald-400 font-medium">Yes</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <div className="w-2 h-2 rounded-full bg-slate-600" />
+                                      <span className="text-slate-400">No</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
                               <div className="flex items-center justify-between text-xs text-slate-400">
                                 <span>Last edited by</span>
                                 <span className="truncate max-w-[60%] text-right font-medium" title={asset.lastEditedBy?.email || asset.lastEditedBy?.name}>
@@ -282,14 +298,16 @@ export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: 
               </button>
             )}
             
-            <button
-              type="button"
-              onClick={() => onDelete(asset._id)}
-              className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-red-400 hover:text-white hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all"
-              title="Delete asset"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {currentAdminId && (
+              <button
+                type="button"
+                onClick={() => onDelete(asset._id)}
+                className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-red-400 hover:text-white hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 transition-all"
+                title="Delete asset"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </div>

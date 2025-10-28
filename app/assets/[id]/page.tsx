@@ -27,7 +27,7 @@ async function getAssetAbsolute(baseUrl: string, id: string) {
     variant?: string;
     tags?: string[];
     metadata?: IAssetMetadata;
-    progress?: { overall?: number; breakdown?: Record<string, number> };
+    progress?: { overall?: number; breakdown?: Record<string, number>; metadataValidated?: boolean };
     lastEditedBy?: { name?: string; email?: string; at?: string | Date };
   } | null;
 }
@@ -129,6 +129,7 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             assetMetadata={asset.metadata}
             assetDescription={asset.description}
             assetTags={asset.tags}
+            initialMetadataValidated={asset.progress?.metadataValidated || false}
           />
         </Suspense>
       </main>
