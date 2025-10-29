@@ -129,7 +129,6 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
             assetMetadata={asset.metadata}
             assetDescription={asset.description}
             assetTags={asset.tags}
-            initialMetadataValidated={asset.progress?.metadataValidated || false}
           />
         </Suspense>
       </main>

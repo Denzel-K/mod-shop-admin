@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Menu } from "lucide-react";
+import { User, Menu } from "lucide-react";
 import { ModShopLogo } from "@/components/mod-shop-logo";
 
 type TopBarProps = {
@@ -14,11 +14,13 @@ type TopBarProps = {
   subtitle?: string;
 };
 
-export function TopBar({ onLogout, onMenuClick, title, subtitle = "3D Models" }: TopBarProps) {
+export function TopBar({ onLogout, onMenuClick, title }: TopBarProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [role, setRole] = useState<"super-admin" | "manager" | "curator" | null>(null);
 
   const handleLogout = useCallback(async () => {

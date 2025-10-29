@@ -52,7 +52,7 @@ export default function AssetViewerPanel({
 }) {
   const [envPreset, setEnvPreset] = useState<EnvPreset>("city");
   const [hdriBackground, setHdriBackground] = useState<boolean>(false);
-  const [envIntensity, setEnvIntensity] = useState<number>(1.25);
+  const envIntensity = 1.25; // Constant value, no setter needed
   const [envBlur, setEnvBlur] = useState<number>(ENVIRONMENT_PRESETS[envPreset]?.defaultBlur ?? 0.0);
   const [autoRotateEnabled, setAutoRotateEnabled] = useState<boolean>(true);
   const [autoRotateSpeed, setAutoRotateSpeed] = useState<number>(0.52);
