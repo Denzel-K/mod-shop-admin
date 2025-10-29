@@ -100,7 +100,7 @@
     "country": "Japan"
   },
   "Hyundai": {
-    "models": ["i10", "i20", "i30", "Elantra", "Sonata", "Azera", "Genesis", "Kona", "Tucson", "Santa Fe", "Palisade", "Veloster", "Ioniq", "Nexo", "Accent", "Tiburon"],
+    "models": ["i10", "i20", "i30", "Creta", "Elantra", "Sonata", "Azera", "Genesis", "Kona", "Tucson", "Santa Fe", "Palisade", "Veloster", "Ioniq", "Nexo", "Accent", "Tiburon"],
     "icon": "car",
     "country": "South Korea"
   },
