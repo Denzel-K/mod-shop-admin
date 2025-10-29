@@ -91,6 +91,7 @@ const brandLogoMap: Record<string, string> = {
   'honda': 'honda.svg',
   'hyundai': 'hyundai.svg',
   'infiniti': 'infiniti.svg',
+  'isuzu': 'isuzu.svg',
   'jaguar': 'jaguar-stroked.svg',
   'jeep': 'jeep.svg',
   'kia': 'kia.svg',

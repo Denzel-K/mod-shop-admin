@@ -109,6 +109,11 @@
     "icon": "car",
     "country": "Japan"
   },
+  "Isuzu": {
+    "models": ["D-Max", "MU-X", "Trooper", "Rodeo", "Amigo", "Axiom", "Ascender", "VehiCross", "Impulse", "Stylus", "Piazza", "Gemini", "Aska", "Bellett", "117 Coupé", "Faster", "KB", "TF", "Wizard", "Bighorn"],
+    "icon": "truck",
+    "country": "Japan"
+  },
   "Jaguar": {
     "models": ["XE", "XF", "XJ", "F-Type", "E-Pace", "F-Pace", "I-Pace", "XK", "XKR", "S-Type", "X-Type", "XJS", "E-Type", "Mark II"],
     "icon": "crown",
