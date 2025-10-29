@@ -5,10 +5,13 @@ import EnhancedModelViewer from "@/components/viewer/EnhancedModelViewer";
 import ScaleEditor from "@/components/asset/ScaleEditor";
 import WrapCustomizer from "@/components/configurator/WrapCustomizer";
 import SurfaceSelector from "@/components/configurator/SurfaceSelector";
+import CategorySelector from "@/components/configurator/CategorySelector";
+import WorkInProgress from "@/components/configurator/WorkInProgress";
 import EnvironmentControls from "@/components/configurator/EnvironmentControls";
 import { cn } from "@/lib/utils";
 import { WrapColor, WrapFinish, WrapConfiguration } from "@/types/wrap";
 import { IAssetMetadata } from "@/models/Asset";
+import type { MetadataCategory } from "@/components/configurator/CategorySelector";
 import wrapColorsData from "@/lib/data/wrap_colors.json";
 import wrapFinishesData from "@/lib/data/wrap_finishes.json";
 import { ChevronLeft, ChevronRight, Palette, Settings, CheckCircle2 } from "lucide-react";
@@ -56,6 +59,7 @@ export default function AssetViewerPanel({
   const [autoRotateSpeed, setAutoRotateSpeed] = useState<number>(0.52);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState<boolean>(true);
+  const [selectedCategory, setSelectedCategory] = useState<MetadataCategory | null>(null);
   const [selectedSurfaces, setSelectedSurfaces] = useState<string[]>([]);
   const [highlightMode, setHighlightMode] = useState<boolean>(false);
   const [wrapConfig, setWrapConfig] = useState<WrapConfiguration>({
@@ -73,6 +77,7 @@ export default function AssetViewerPanel({
 
   // Reset viewer state when asset changes to prevent cross-contamination
   useEffect(() => {
+    setSelectedCategory(null);
     setSelectedSurfaces([]);
     setHighlightMode(false);
     setWrapConfig({
@@ -282,21 +287,36 @@ export default function AssetViewerPanel({
         >
           <div style={{ width: sidebarWidth }} className="h-full overflow-y-auto overscroll-y-contain scroll-smooth scrollbar-subtle">
             <div className="p-6 space-y-6">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <Palette className="w-4 h-4 text-cyan-400" />
-                  <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Customization</h2>
-                </div>
+              <div className="flex items-center gap-2 mb-6">
+                <Palette className="w-4 h-4 text-cyan-400" />
+                <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Customization</h2>
+              </div>
+                
+              {/* Step 1: Category Selection (hidden when category is selected) */}
+              {!selectedCategory && (
+                <CategorySelector
+                  metadata={assetMetadata}
+                  selectedCategory={selectedCategory}
+                  onCategorySelect={setSelectedCategory}
+                />
+              )}
+
+              {/* Step 2: Surface Selection (shown when category is selected) */}
+              {selectedCategory && (
                 <SurfaceSelector
                   metadata={assetMetadata}
+                  selectedCategory={selectedCategory}
                   selectedSurfaces={selectedSurfaces}
                   onSurfaceToggle={handleSurfaceToggle}
                   onSurfaceSelect={handleSurfaceSelect}
                   highlightMode={highlightMode}
                   onHighlightModeToggle={setHighlightMode}
+                  onBackToCategories={() => setSelectedCategory(null)}
                 />
-              </div>
-              {assetMetadata?.wrappableSurfaces && Object.keys(assetMetadata.wrappableSurfaces).length > 0 ? (
+              )}
+
+              {/* Step 3: Customization options (shown when category is selected) */}
+              {selectedCategory === 'wrappableSurfaces' && assetMetadata?.wrappableSurfaces && Object.keys(assetMetadata.wrappableSurfaces).length > 0 ? (
                 <WrapCustomizer
                   colors={wrapColors}
                   finishes={wrapFinishes}
@@ -305,6 +325,10 @@ export default function AssetViewerPanel({
                   onColorSelect={handleColorSelect}
                   onFinishSelect={handleFinishSelect}
                   hasSelection={selectedSurfaces.length > 0}
+                />
+              ) : selectedCategory && selectedCategory !== 'wrappableSurfaces' ? (
+                <WorkInProgress
+                  categoryName={selectedCategory === 'rims' ? 'Wheels & Rims' : selectedCategory === 'windows' ? 'Windows' : selectedCategory === 'doors' ? 'Doors' : selectedCategory === 'tyres' ? 'Tyres' : selectedCategory === 'interior' ? 'Interior' : 'Lights'}
                 />
               ) : null}
               
@@ -365,19 +389,36 @@ export default function AssetViewerPanel({
               />
               <div className="absolute left-2 top-2 bottom-2 w-[85%] max-w-sm rounded-2xl bg-slate-900/50 border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
                 <div className="p-6 space-y-6">
-                  <div className="flex items-center gap-2 mb-4">
+                  <div className="flex items-center gap-2 mb-6">
                     <Palette className="w-4 h-4 text-cyan-400" />
                     <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Customization</h2>
                   </div>
-                  <SurfaceSelector
-                    metadata={assetMetadata}
-                    selectedSurfaces={selectedSurfaces}
-                    onSurfaceToggle={handleSurfaceToggle}
-                    onSurfaceSelect={handleSurfaceSelect}
-                    highlightMode={highlightMode}
-                    onHighlightModeToggle={setHighlightMode}
-                  />
-                  {assetMetadata?.wrappableSurfaces && Object.keys(assetMetadata.wrappableSurfaces).length > 0 ? (
+                  
+                  {/* Step 1: Category Selection (hidden when category is selected) */}
+                  {!selectedCategory && (
+                    <CategorySelector
+                      metadata={assetMetadata}
+                      selectedCategory={selectedCategory}
+                      onCategorySelect={setSelectedCategory}
+                    />
+                  )}
+
+                  {/* Step 2: Surface Selection (shown when category is selected) */}
+                  {selectedCategory && (
+                    <SurfaceSelector
+                      metadata={assetMetadata}
+                      selectedCategory={selectedCategory}
+                      selectedSurfaces={selectedSurfaces}
+                      onSurfaceToggle={handleSurfaceToggle}
+                      onSurfaceSelect={handleSurfaceSelect}
+                      highlightMode={highlightMode}
+                      onHighlightModeToggle={setHighlightMode}
+                      onBackToCategories={() => setSelectedCategory(null)}
+                    />
+                  )}
+
+                  {/* Step 3: Customization options (shown when category is selected) */}
+                  {selectedCategory === 'wrappableSurfaces' && assetMetadata?.wrappableSurfaces && Object.keys(assetMetadata.wrappableSurfaces).length > 0 ? (
                     <WrapCustomizer
                       colors={wrapColors}
                       finishes={wrapFinishes}
@@ -386,6 +427,10 @@ export default function AssetViewerPanel({
                       onColorSelect={handleColorSelect}
                       onFinishSelect={handleFinishSelect}
                       hasSelection={selectedSurfaces.length > 0}
+                    />
+                  ) : selectedCategory && selectedCategory !== 'wrappableSurfaces' ? (
+                    <WorkInProgress
+                      categoryName={selectedCategory === 'rims' ? 'Wheels & Rims' : selectedCategory === 'windows' ? 'Windows' : selectedCategory === 'doors' ? 'Doors' : selectedCategory === 'tyres' ? 'Tyres' : selectedCategory === 'interior' ? 'Interior' : 'Lights'}
                     />
                   ) : null}
                   
