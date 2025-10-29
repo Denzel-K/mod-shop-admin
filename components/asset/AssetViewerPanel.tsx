@@ -6,15 +6,16 @@ import ScaleEditor from "@/components/asset/ScaleEditor";
 import WrapCustomizer from "@/components/configurator/WrapCustomizer";
 import SurfaceSelector from "@/components/configurator/SurfaceSelector";
 import CategorySelector from "@/components/configurator/CategorySelector";
+import CategoryValidation from "@/components/configurator/CategoryValidation";
 import WorkInProgress from "@/components/configurator/WorkInProgress";
 import EnvironmentControls from "@/components/configurator/EnvironmentControls";
 import { cn } from "@/lib/utils";
 import { WrapColor, WrapFinish, WrapConfiguration } from "@/types/wrap";
-import { IAssetMetadata } from "@/models/Asset";
+import { IAssetMetadata, IMetadataValidation } from "@/models/Asset";
 import type { MetadataCategory } from "@/components/configurator/CategorySelector";
 import wrapColorsData from "@/lib/data/wrap_colors.json";
 import wrapFinishesData from "@/lib/data/wrap_finishes.json";
-import { ChevronLeft, ChevronRight, Palette, Settings, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Palette, Settings } from "lucide-react";
 import { ENVIRONMENT_PRESETS } from "@/lib/viewer/environment";
 import type { EnvPreset } from "@/lib/viewer/environment";
 
@@ -39,7 +40,6 @@ export default function AssetViewerPanel({
   assetMetadata,
   assetDescription,
   assetTags,
-  initialMetadataValidated = false,
 }: {
   url: string;
   assetId: string;
@@ -49,7 +49,6 @@ export default function AssetViewerPanel({
   assetMetadata?: IAssetMetadata;
   assetDescription?: string;
   assetTags?: string[];
-  initialMetadataValidated?: boolean;
 }) {
   const [envPreset, setEnvPreset] = useState<EnvPreset>("city");
   const [hdriBackground, setHdriBackground] = useState<boolean>(false);
@@ -72,8 +71,23 @@ export default function AssetViewerPanel({
   });
   const [selectedColor, setSelectedColor] = useState<string>("");
   const [selectedFinish, setSelectedFinish] = useState<string>("gloss_series");
-  const [metadataValidated, setMetadataValidated] = useState<boolean>(initialMetadataValidated);
+  const [metadataValidation, setMetadataValidation] = useState<IMetadataValidation>({});
   const [isUpdatingValidation, setIsUpdatingValidation] = useState<boolean>(false);
+
+  // Load initial validation state
+  useEffect(() => {
+    if (assetId) {
+      // Fetch current validation state from API
+      fetch(`/api/assets/${assetId}/metadata-validation`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.metadataValidation) {
+            setMetadataValidation(data.metadataValidation);
+          }
+        })
+        .catch(err => console.error('Failed to load validation state:', err));
+    }
+  }, [assetId]);
 
   // Reset viewer state when asset changes to prevent cross-contamination
   useEffect(() => {
@@ -186,28 +200,27 @@ export default function AssetViewerPanel({
     }
   };
 
-  const handleMetadataValidationChange = async (validated: boolean) => {
+  const handleCategoryValidationToggle = async (category: MetadataCategory, validated: boolean) => {
     setIsUpdatingValidation(true);
     try {
-      const response = await fetch(`/api/assets/${assetId}`, {
+      const response = await fetch(`/api/assets/${assetId}/validate-metadata`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          progress: {
-            metadataValidated: validated,
-          },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          category,
+          validated,
         }),
       });
-
-      if (response.ok) {
-        setMetadataValidated(validated);
-      } else {
-        console.error('Failed to update metadata validation status');
-      }
+      if (!response.ok) throw new Error('Failed to update validation status');
+      
+      // Update local state
+      setMetadataValidation(prev => ({
+        ...prev,
+        [category]: validated,
+      }));
     } catch (error) {
-      console.error('Error updating metadata validation:', error);
+      console.error('Error updating category validation:', error);
+      alert('Failed to update validation status');
     } finally {
       setIsUpdatingValidation(false);
     }
@@ -332,39 +345,13 @@ export default function AssetViewerPanel({
                 />
               ) : null}
               
-              {/* Metadata Validation Checkbox */}
-              <div className="pt-6 border-t border-slate-700/50">
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <div className="relative">
-                    <input
-                      type="checkbox"
-                      checked={metadataValidated}
-                      onChange={(e) => handleMetadataValidationChange(e.target.checked)}
-                      disabled={isUpdatingValidation}
-                      className="sr-only"
-                    />
-                    <div className={cn(
-                      "w-5 h-5 rounded border-2 transition-all duration-200",
-                      metadataValidated 
-                        ? "bg-emerald-500 border-emerald-500" 
-                        : "bg-transparent border-slate-600 group-hover:border-slate-500",
-                      isUpdatingValidation && "opacity-50"
-                    )}>
-                      {metadataValidated && (
-                        <CheckCircle2 className="w-3 h-3 text-white absolute top-0.5 left-0.5" />
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
-                      Metadata Validated
-                    </div>
-                    <div className="text-xs text-slate-400 leading-relaxed">
-                      Confirm that all metadata works correctly in the 3D viewer
-                    </div>
-                  </div>
-                </label>
-              </div>
+              {/* Category-specific Metadata Validation */}
+              <CategoryValidation
+                selectedCategory={selectedCategory}
+                metadataValidation={metadataValidation}
+                onValidationToggle={handleCategoryValidationToggle}
+                isUpdating={isUpdatingValidation}
+              />
             </div>
           </div>
         </div>
@@ -434,39 +421,13 @@ export default function AssetViewerPanel({
                     />
                   ) : null}
                   
-                  {/* Metadata Validation Checkbox */}
-                  <div className="pt-6 border-t border-slate-700/50">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={metadataValidated}
-                          onChange={(e) => handleMetadataValidationChange(e.target.checked)}
-                          disabled={isUpdatingValidation}
-                          className="sr-only"
-                        />
-                        <div className={cn(
-                          "w-5 h-5 rounded border-2 transition-all duration-200",
-                          metadataValidated 
-                            ? "bg-emerald-500 border-emerald-500" 
-                            : "bg-transparent border-slate-600 group-hover:border-slate-500",
-                          isUpdatingValidation && "opacity-50"
-                        )}>
-                          {metadataValidated && (
-                            <CheckCircle2 className="w-3 h-3 text-white absolute top-0.5 left-0.5" />
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-slate-200 group-hover:text-white transition-colors">
-                          Metadata Validated
-                        </div>
-                        <div className="text-xs text-slate-400 leading-relaxed">
-                          Confirm that all metadata works correctly in the 3D viewer
-                        </div>
-                      </div>
-                    </label>
-                  </div>
+                  {/* Category-specific Metadata Validation */}
+                  <CategoryValidation
+                    selectedCategory={selectedCategory}
+                    metadataValidation={metadataValidation}
+                    onValidationToggle={handleCategoryValidationToggle}
+                    isUpdating={isUpdatingValidation}
+                  />
                 </div>
               </div>
             </div>

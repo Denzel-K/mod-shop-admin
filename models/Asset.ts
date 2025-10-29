@@ -51,12 +51,23 @@ export interface IAssetProgressMetaCompleted {
   other?: boolean;
 }
 
+export interface IMetadataValidation {
+  wrappableSurfaces?: boolean;
+  rims?: boolean;
+  windows?: boolean;
+  doors?: boolean;
+  tyres?: boolean;
+  interior?: boolean;
+  lights?: boolean;
+}
+
 export interface IAssetProgress {
   overall?: number; // 0-100
   primaryInfo?: number; // e.g., 50 when created
   breakdown?: IAssetProgressBreakdown; // per-category percentages summing to 50
   metadataCompleted?: IAssetProgressMetaCompleted; // which metadata categories already counted
-  metadataValidated?: boolean; // curator confirmation that all metadata works correctly
+  metadataValidated?: boolean; // DEPRECATED: use metadataValidation instead
+  metadataValidation?: IMetadataValidation; // per-category validation flags
 }
 
 export interface IEditorRef {
@@ -171,7 +182,16 @@ const ProgressSchema = new Schema<IAssetProgress>(
       lights: { type: Boolean, default: false },
       other: { type: Boolean, default: false },
     },
-    metadataValidated: { type: Boolean, default: false },
+    metadataValidated: { type: Boolean, default: false }, // DEPRECATED
+    metadataValidation: {
+      wrappableSurfaces: { type: Boolean, default: false },
+      rims: { type: Boolean, default: false },
+      windows: { type: Boolean, default: false },
+      doors: { type: Boolean, default: false },
+      tyres: { type: Boolean, default: false },
+      interior: { type: Boolean, default: false },
+      lights: { type: Boolean, default: false },
+    },
   },
   { _id: false }
 );

@@ -147,28 +147,23 @@ export default function SurfaceSelector({
         </Button>
       </div>
 
-      {/* Surface list for selected category */}
-      <div className={cn(
-        "space-y-1",
-        selectedCategory === "wrappableSurfaces" && "p-2 border border-slate-700/60 rounded-lg max-h-64 overflow-y-auto bg-slate-900/30"
-      )}>
+      {/* Surface list for selected category - Consistent collapsible design */}
+      <div className="p-2 border border-slate-700/60 rounded-lg max-h-64 overflow-y-auto bg-slate-900/30 space-y-1">
         {categorySurfaces.map((surface) => {
           const isSelected = selectedSurfaces.includes(surface.id);
           const rowClasses = cn(
-            "flex items-center justify-between p-2 rounded border",
-            isSelected ? "bg-cyan-600/10 border-cyan-700/50" : "bg-slate-800/20 border-slate-700/50"
+            "flex items-center gap-3 p-2 rounded border transition-colors",
+            isSelected ? "bg-cyan-600/10 border-cyan-700/50" : "bg-slate-800/20 border-slate-700/50 hover:bg-slate-800/40"
           );
           return (
-            <div key={surface.id} className={rowClasses}>
-              {selectedCategory === "wrappableSurfaces" ? (
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 accent-cyan-600 mr-3 flex-shrink-0"
-                  checked={isSelected}
-                  onChange={() => onSurfaceToggle(surface.id)}
-                  aria-label={`Select ${surface.name}`}
-                />
-              ) : null}
+            <div key={`${selectedCategory}-${surface.id}`} className={rowClasses}>
+              <input
+                type="checkbox"
+                className="w-4 h-4 accent-cyan-600 flex-shrink-0"
+                checked={isSelected}
+                onChange={() => onSurfaceToggle(surface.id)}
+                aria-label={`Select ${surface.name}`}
+              />
               <div className="flex-1 min-w-0">
                 <button
                   onClick={() => {
@@ -183,9 +178,6 @@ export default function SurfaceSelector({
                   </div>
                 </button>
               </div>
-              {selectedCategory !== "wrappableSurfaces" ? (
-                <Switch checked={isSelected} onCheckedChange={() => onSurfaceToggle(surface.id)} />
-              ) : null}
             </div>
           );
         })}
