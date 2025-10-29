@@ -27,7 +27,7 @@ async function getAssetAbsolute(baseUrl: string, id: string) {
     variant?: string;
     tags?: string[];
     metadata?: IAssetMetadata;
-    progress?: { overall?: number; breakdown?: Record<string, number>; metadataValidated?: boolean };
+    progress?: { overall?: number; breakdown?: Record<string, number>; metadataValidation?: Record<string, boolean> };
     lastEditedBy?: { name?: string; email?: string; at?: string | Date };
   } | null;
 }
@@ -79,14 +79,20 @@ export default async function AssetPage({ params }: { params: Promise<{ id: stri
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {(() => {
                     const b = (asset.progress?.breakdown || {}) as Record<string, number>;
+                    const metadataValidation = (asset.progress?.metadataValidation || {}) as Record<string, boolean>;
                     const entries = Object.entries(b).filter(([, v]) => (v || 0) > 0);
                     if (entries.length === 0) return <span className="col-span-2 text-slate-500">No metadata contributions yet.</span>;
-                    return entries.map(([k, v]) => (
-                      <div key={k} className="flex items-center justify-between border border-slate-800 rounded px-2 py-1 bg-slate-800/40">
-                        <span className="truncate mr-2">{k}</span>
-                        <span className="text-slate-400">{v}%</span>
-                      </div>
-                    ));
+                    return entries.map(([k, baseVal]) => {
+                      const isValidated = metadataValidation[k] || false;
+                      // If metadata exists but not validated, deduct 0.25%
+                      const val = !isValidated ? Math.round((baseVal - 0.25) * 100) / 100 : Math.round(baseVal * 100) / 100;
+                      return (
+                        <div key={k} className={`flex items-center justify-between border rounded px-2 py-1 ${isValidated ? 'border-slate-800 bg-slate-800/40' : 'border-amber-700/50 bg-amber-900/20'}`}>
+                          <span className="truncate mr-2">{k}</span>
+                          <span className={isValidated ? 'text-slate-400' : 'text-amber-400'}>{val}%</span>
+                        </div>
+                      );
+                    });
                   })()}
                 </div>
                 <div className="mt-3 text-xs text-slate-400 flex items-center justify-between">

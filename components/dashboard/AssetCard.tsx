@@ -127,6 +127,7 @@ export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: 
                         const primary = asset.progress?.primaryInfo ?? ((asset.make || asset.model || asset.year) ? 50 : 0);
                         const breakdown = (asset.progress?.breakdown || {}) as Record<string, number>;
                         const completed = (asset.progress?.metadataCompleted || {}) as Record<string, boolean>;
+                        const metadataValidation = (asset.progress?.metadataValidation || {}) as Record<string, boolean>;
                         const categories = ['wrappableSurfaces','rims','windows','doors','tyres','interior','lights','other'];
                         const labels: Record<string,string> = {
                           wrappableSurfaces: 'Body Panels',
@@ -157,42 +158,56 @@ export function AssetCard({ asset, onEdit, onDelete, currentAdminId }: { asset: 
                               <div className="text-xs font-medium text-slate-400">Metadata breakdown</div>
                               <div className="space-y-2">
                                 {categories.map((key) => {
-                                  const val = Math.round(((breakdown[key] || 0)) * 100) / 100;
-                                  const isDone = completed[key] || val > 0;
+                                  const baseVal = breakdown[key] || 0;
+                                  const hasMetadata = baseVal > 0;
+                                  const isValidated = metadataValidation[key] || false;
+                                  // If metadata exists but not validated, deduct 0.25%
+                                  const val = hasMetadata && !isValidated ? Math.round((baseVal - 0.25) * 100) / 100 : Math.round(baseVal * 100) / 100;
+                                  const isDone = completed[key] || hasMetadata;
+                                  
+                                  // Calculate percentages for two-tone bar
+                                  const validatedPortion = hasMetadata && !isValidated ? 96 : 100; // 6% of 6.25% = 96%
+                                  const unvalidatedPortion = hasMetadata && !isValidated ? 4 : 0; // 0.25% of 6.25% = 4%
+                                  
                                   return (
                                     <div key={key} className="grid grid-cols-12 gap-2 items-center">
                                       <div className="col-span-5 flex items-center gap-2 truncate">
-                                        <span className={`inline-block h-2 w-2 rounded-full ${isDone ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                                        <span className={`inline-block h-2 w-2 rounded-full ${isDone ? (isValidated || !hasMetadata ? 'bg-emerald-400' : 'bg-amber-400') : 'bg-slate-600'}`} />
                                         <span className="truncate text-xs">{labels[key] || key}</span>
                                       </div>
                                       <div className="col-span-5">
-                                        <div className="h-1.5 w-full rounded bg-slate-800/70 overflow-hidden border border-slate-700/60">
-                                          <div className={`h-full ${isDone ? 'bg-emerald-500' : 'bg-slate-600'}`} style={{ width: `${Math.min(100, Math.max(0, val * 2))}%` }} />
+                                        <div className="h-1.5 w-full rounded bg-slate-800/70 overflow-hidden border border-slate-700/60 relative">
+                                          {hasMetadata ? (
+                                            <>
+                                              {/* Main validated portion */}
+                                              <div 
+                                                className={`h-full absolute left-0 ${isValidated ? 'bg-emerald-500' : 'bg-emerald-500/80'}`} 
+                                                style={{ width: `${validatedPortion}%` }} 
+                                              />
+                                              {/* Unvalidated portion (if not validated) */}
+                                              {!isValidated && (
+                                                <div 
+                                                  className="h-full absolute right-0 bg-amber-500" 
+                                                  style={{ width: `${unvalidatedPortion}%` }} 
+                                                />
+                                              )}
+                                            </>
+                                          ) : (
+                                            <div className="h-full bg-slate-600" style={{ width: '0%' }} />
+                                          )}
                                         </div>
                                       </div>
-                                      <div className="col-span-2 text-right text-xs font-mono text-slate-300">{val > 0 ? `${val}%` : '—'}</div>
+                                      <div className="col-span-2 text-right text-xs font-mono">
+                                        <span className={hasMetadata && !isValidated ? 'text-amber-400' : 'text-slate-300'}>
+                                          {val > 0 ? `${val}%` : '—'}
+                                        </span>
+                                      </div>
                                     </div>
                                   );
                                 })}
                               </div>
                             </div>
-                            <div className="pt-2 border-t border-slate-700 space-y-2">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-slate-400">Metadata Validated</span>
-                                <div className="flex items-center gap-1.5">
-                                  {asset.progress?.metadataValidated ? (
-                                    <>
-                                      <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                                      <span className="text-emerald-400 font-medium">Yes</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <div className="w-2 h-2 rounded-full bg-slate-600" />
-                                      <span className="text-slate-400">No</span>
-                                    </>
-                                  )}
-                                </div>
-                              </div>
+                            <div className="pt-2 border-t border-slate-700">
                               <div className="flex items-center justify-between text-xs text-slate-400">
                                 <span>Last edited by</span>
                                 <span className="truncate max-w-[60%] text-right font-medium" title={asset.lastEditedBy?.email || asset.lastEditedBy?.name}>

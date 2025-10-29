@@ -52,6 +52,16 @@ export type Asset = {
       lights?: boolean;
       other?: boolean;
     };
-    metadataValidated?: boolean;
+    metadataValidated?: boolean; // DEPRECATED: Use metadataValidation instead
+    metadataValidation?: {
+      wrappableSurfaces?: boolean;
+      rims?: boolean;
+      windows?: boolean;
+      doors?: boolean;
+      tyres?: boolean;
+      interior?: boolean;
+      lights?: boolean;
+      other?: boolean;
+    };
   };
 }
