@@ -116,16 +116,16 @@ export default function EnvironmentControls({
             aria-pressed={environmentMode === 'indoors'}
           >
             <div className="flex items-center gap-2">
-              <div className={`rounded-lg p-2 ${environmentMode === 'indoors' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-800 text-slate-300'}`}>
-                <Building2 className="w-4 h-4" />
+              <div className={`rounded-lg p-[6px] ${environmentMode === 'indoors' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-800 text-slate-300'}`}>
+                <Building2 className="w-[0.95rem] h-[0.95rem]" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-slate-100">Indoors</div>
+                <div className="font-semibold text-slate-100 text-xs">Indoors</div>
               </div>
             </div>
             {environmentMode === 'indoors' && (
-              <div className="absolute top-2 right-2 text-cyan-400">
-                <CheckCircle2 className="w-4 h-4" />
+              <div className="absolute top-[6px] right-[6px] text-cyan-400">
+                <CheckCircle2 className="w-[0.95rem] h-[0.95rem]" />
               </div>
             )}
           </button>
@@ -141,29 +141,25 @@ export default function EnvironmentControls({
             aria-pressed={environmentMode === 'outdoors'}
           >
             <div className="flex items-center gap-2">
-              <div className={`rounded-lg p-2 ${environmentMode === 'outdoors' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-800 text-slate-300'}`}>
-                <Mountain className="w-4 h-4" />
+              <div className={`rounded-lg p-[4px] ${environmentMode === 'outdoors' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-800 text-slate-300'}`}>
+                <Mountain className="w-[0.95rem] h-[0.95rem]" />
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-slate-100">Outdoors</div>
+                <div className="font-semibold text-slate-100 text-xs">Outdoors</div>
               </div>
             </div>
             {environmentMode === 'outdoors' && (
-              <div className="absolute top-2 right-2 text-cyan-400">
-                <CheckCircle2 className="w-4 h-4" />
+              <div className="absolute top-[6px] right-[6px] text-cyan-400">
+                <CheckCircle2 className="w-[0.95rem] h-[0.95rem]" />
               </div>
             )}
           </button>
         </div>
       </div>
-      {/* Header */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <Settings className="w-4 h-4" />
-          Environment
-        </div>
-        <div className="text-lg font-semibold text-slate-100">Scene Settings</div>
-      </div>
+
+
+      <div className="text-lg font-semibold text-slate-100">Scene Settings</div>
+
 
       {/* Scene controls - visible only for Outdoors */}
       {environmentMode === 'outdoors' && (

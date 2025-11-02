@@ -121,6 +121,32 @@
   }
 }
 
+/* Glassmorphic utilities for admin viewer panels */
+@layer components {
+  /* Main side panels: maintain base opacity, increase ~10% on hover */
+  .glass-panel {
+    @apply bg-slate-900/50 border border-white/10 backdrop-blur-xl transition-colors duration-300 ease-in-out;
+  }
+  .glass-panel:hover {
+    @apply bg-slate-900/60;
+  }
+
+  /* Section cards inside panels: higher opacity for readability */
+  .glass-section {
+    @apply bg-slate-800/60 border border-white/10 rounded-xl p-3;
+  }
+
+  /* Subsections (inputs, lists): slightly higher for labels and light text */
+  .glass-subsection {
+    @apply bg-slate-800/70 border border-white/10 rounded-lg p-2;
+  }
+
+  /* Floating header shell */
+  .glass-header {
+    @apply bg-slate-900/55 hover:bg-slate-900/65 border border-white/10 backdrop-blur-xl shadow-xl transition-colors duration-300 ease-in-out;
+  }
+}
+
 /* Subtle custom scrollbars (cross-browser) */
 /* Usage: add class "scrollbar-subtle" to any scrollable container */
 .scrollbar-subtle {

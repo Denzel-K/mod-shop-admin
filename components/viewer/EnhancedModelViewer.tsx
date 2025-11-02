@@ -11,7 +11,7 @@ import { SMAAPass } from 'three/examples/jsm/postprocessing/SMAAPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { WrapConfiguration, WrapColor, WrapFinish } from '@/types/wrap';
-import type { GLTF } from 'three-stdlib';
+import type { GLTF, OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { ENVIRONMENT_PRESETS } from '@/lib/viewer/environment';
 import type { EnvPreset } from '@/lib/viewer/environment';
 import { useEnvPresets } from '@/lib/viewer/useEnvPresets';
@@ -363,6 +363,8 @@ function Scene({
   environmentMode,
 }: SceneProps) {
   const platformRef = useRef<THREE.Group>(null);
+  // OrbitControls ref to reliably sync autorotate settings at runtime
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const { presets: presetMap } = useEnvPresets();
   const groundTexturePath = useMemo(() => (presetMap[envPreset]?.groundTexture ?? ENVIRONMENT_PRESETS[envPreset]?.groundTexture) || '/ground-textures/gravel/gravel_albedo.png', [presetMap, envPreset]);
 
@@ -400,6 +402,15 @@ function Scene({
   useEffect(() => {
     RectAreaLightUniformsLib.init();
   }, []);
+
+  // Ensure autorotate settings apply even if drei memoizes internal state
+  useEffect(() => {
+    const ctrls = controlsRef.current;
+    if (!ctrls) return;
+    ctrls.autoRotate = !!autoRotateEnabled;
+    if (typeof autoRotateSpeed === 'number') ctrls.autoRotateSpeed = autoRotateSpeed;
+    if (typeof ctrls.update === 'function') ctrls.update();
+  }, [autoRotateEnabled, autoRotateSpeed]);
 
   // Recessed rectangular panel light with optional visible diffuser and frame
   const RectPanelLight: React.FC<{
@@ -642,6 +653,7 @@ function Scene({
         </>
       )}
       <OrbitControls
+        ref={controlsRef}
         enableDamping
         dampingFactor={0.1}
         minDistance={1}

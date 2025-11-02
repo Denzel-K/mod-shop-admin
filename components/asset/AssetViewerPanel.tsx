@@ -15,7 +15,7 @@ import { IAssetMetadata, IMetadataValidation } from "@/models/Asset";
 import type { MetadataCategory } from "@/components/configurator/CategorySelector";
 import wrapColorsData from "@/lib/data/wrap_colors.json";
 import wrapFinishesData from "@/lib/data/wrap_finishes.json";
-import { ChevronLeft, ChevronRight, Palette, Settings } from "lucide-react";
+import { ChevronsLeft, ChevronsRight, Palette, Settings } from "lucide-react";
 import { ENVIRONMENT_PRESETS } from "@/lib/viewer/environment";
 import type { EnvPreset } from "@/lib/viewer/environment";
 
@@ -236,16 +236,11 @@ export default function AssetViewerPanel({
 
   // Calculate responsive sidebar width
   const sidebarWidth = useMemo(() => {
-    if (isMobile) return "85%"; // Mobile
-    if (isTablet) return "280px"; // Tablet
-    return "320px"; // Desktop
+    if (isMobile) return "76.5%"; // Mobile (85% -> -10%)
+    if (isTablet) return "252px"; // Tablet (280 -> -10%)
+    return "288px"; // Desktop (320 -> -10%)
   }, [isMobile, isTablet]);
   
-  const sidebarWidthPx = useMemo(() => {
-    if (isMobile) return 0; // Not used for mobile
-    if (isTablet) return 280;
-    return 320;
-  }, [isMobile, isTablet]);
 
   return (
     <div className="absolute inset-0">
@@ -297,9 +292,9 @@ export default function AssetViewerPanel({
       {!isMobile && (
         <div 
           className={cn(
-            "absolute left-4 top-4 bottom-4 z-10",
+            "absolute left-4 top-4 bottom-4 z-40",
             "rounded-2xl border border-white/10",
-            "bg-slate-900/50",
+            "glass-panel",
             "overflow-hidden",
             "shadow-2xl shadow-black/40",
             "transition-all duration-300 ease-in-out",
@@ -308,59 +303,79 @@ export default function AssetViewerPanel({
           style={{ width: sidebarWidth }}
         >
           <div style={{ width: sidebarWidth }} className="h-full overflow-y-auto overscroll-y-contain scroll-smooth scrollbar-subtle">
-            <div className="p-6 space-y-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Palette className="w-4 h-4 text-cyan-400" />
-                <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Customization</h2>
+            <div className="py-3 px-2 space-y-6">
+              <div className="flex items-center justify-between gap-2 mb-6">
+                <div className="flex items-center gap-2">
+                  <Palette className="w-4 h-4 text-cyan-400" />
+                  <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Customization</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setLeftSidebarOpen(false)}
+                  className="p-1.5 rounded-lg border border-white/10 bg-slate-800/60 hover:bg-slate-800/80 text-slate-200"
+                  aria-label="Collapse customization panel"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </button>
               </div>
                 
               {/* Step 1: Category Selection (hidden when category is selected) */}
               {!selectedCategory && (
-                <CategorySelector
-                  metadata={assetMetadata}
-                  selectedCategory={selectedCategory}
-                  onCategorySelect={setSelectedCategory}
-                />
+                <div className="glass-section">
+                  <CategorySelector
+                    metadata={assetMetadata}
+                    selectedCategory={selectedCategory}
+                    onCategorySelect={setSelectedCategory}
+                  />
+                </div>
               )}
 
               {/* Step 2: Surface Selection (shown when category is selected) */}
               {selectedCategory && (
-                <SurfaceSelector
-                  metadata={assetMetadata}
-                  selectedCategory={selectedCategory}
-                  selectedSurfaces={selectedSurfaces}
-                  onSurfaceToggle={handleSurfaceToggle}
-                  onSurfaceSelect={handleSurfaceSelect}
-                  highlightMode={highlightMode}
-                  onHighlightModeToggle={setHighlightMode}
-                  onBackToCategories={() => setSelectedCategory(null)}
-                />
+                <div className="glass-section">
+                  <SurfaceSelector
+                    metadata={assetMetadata}
+                    selectedCategory={selectedCategory}
+                    selectedSurfaces={selectedSurfaces}
+                    onSurfaceToggle={handleSurfaceToggle}
+                    onSurfaceSelect={handleSurfaceSelect}
+                    highlightMode={highlightMode}
+                    onHighlightModeToggle={setHighlightMode}
+                    onBackToCategories={() => setSelectedCategory(null)}
+                  />
+                </div>
               )}
 
               {/* Step 3: Customization options (shown when category is selected) */}
               {selectedCategory === 'wrappableSurfaces' && assetMetadata?.wrappableSurfaces && Object.keys(assetMetadata.wrappableSurfaces).length > 0 ? (
-                <WrapCustomizer
-                  colors={wrapColors}
-                  finishes={wrapFinishes}
-                  selectedColor={selectedColor}
-                  selectedFinish={selectedFinish}
-                  onColorSelect={handleColorSelect}
-                  onFinishSelect={handleFinishSelect}
-                  hasSelection={selectedSurfaces.length > 0}
-                />
+                <div className="glass-section">
+                  <WrapCustomizer
+                    colors={wrapColors}
+                    finishes={wrapFinishes}
+                    selectedColor={selectedColor}
+                    selectedFinish={selectedFinish}
+                    onColorSelect={handleColorSelect}
+                    onFinishSelect={handleFinishSelect}
+                    hasSelection={selectedSurfaces.length > 0}
+                  />
+                </div>
               ) : selectedCategory && selectedCategory !== 'wrappableSurfaces' ? (
-                <WorkInProgress
-                  categoryName={selectedCategory === 'rims' ? 'Wheels & Rims' : selectedCategory === 'windows' ? 'Windows' : selectedCategory === 'doors' ? 'Doors' : selectedCategory === 'tyres' ? 'Tyres' : selectedCategory === 'interior' ? 'Interior' : 'Lights'}
-                />
+                <div className="glass-section">
+                  <WorkInProgress
+                    categoryName={selectedCategory === 'rims' ? 'Wheels & Rims' : selectedCategory === 'windows' ? 'Windows' : selectedCategory === 'doors' ? 'Doors' : selectedCategory === 'tyres' ? 'Tyres' : selectedCategory === 'interior' ? 'Interior' : 'Lights'}
+                  />
+                </div>
               ) : null}
               
               {/* Category-specific Metadata Validation */}
-              <CategoryValidation
-                selectedCategory={selectedCategory}
-                metadataValidation={metadataValidation}
-                onValidationToggle={handleCategoryValidationToggle}
-                isUpdating={isUpdatingValidation}
-              />
+              <div className="glass-section">
+                <CategoryValidation
+                  selectedCategory={selectedCategory}
+                  metadataValidation={metadataValidation}
+                  onValidationToggle={handleCategoryValidationToggle}
+                  isUpdating={isUpdatingValidation}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -383,8 +398,8 @@ export default function AssetViewerPanel({
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
                 onClick={() => setLeftSidebarOpen(false)}
               />
-              <div className="absolute left-2 top-2 bottom-2 w-[85%] max-w-sm rounded-2xl bg-slate-900/50 border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
-                <div className="p-6 space-y-6">
+              <div className="absolute left-2 top-2 bottom-2 w-[76.5%] max-w-sm rounded-2xl glass-panel border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
+                <div className="p-2 space-y-6">
                   <div className="flex items-center gap-2 mb-6">
                     <Palette className="w-4 h-4 text-cyan-400" />
                     <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Customization</h2>
@@ -392,51 +407,61 @@ export default function AssetViewerPanel({
                   
                   {/* Step 1: Category Selection (hidden when category is selected) */}
                   {!selectedCategory && (
-                    <CategorySelector
-                      metadata={assetMetadata}
-                      selectedCategory={selectedCategory}
-                      onCategorySelect={setSelectedCategory}
-                    />
+                    <div className="glass-section">
+                      <CategorySelector
+                        metadata={assetMetadata}
+                        selectedCategory={selectedCategory}
+                        onCategorySelect={setSelectedCategory}
+                      />
+                    </div>
                   )}
 
                   {/* Step 2: Surface Selection (shown when category is selected) */}
                   {selectedCategory && (
-                    <SurfaceSelector
-                      metadata={assetMetadata}
-                      selectedCategory={selectedCategory}
-                      selectedSurfaces={selectedSurfaces}
-                      onSurfaceToggle={handleSurfaceToggle}
-                      onSurfaceSelect={handleSurfaceSelect}
-                      highlightMode={highlightMode}
-                      onHighlightModeToggle={setHighlightMode}
-                      onBackToCategories={() => setSelectedCategory(null)}
-                    />
+                    <div className="glass-section">
+                      <SurfaceSelector
+                        metadata={assetMetadata}
+                        selectedCategory={selectedCategory}
+                        selectedSurfaces={selectedSurfaces}
+                        onSurfaceToggle={handleSurfaceToggle}
+                        onSurfaceSelect={handleSurfaceSelect}
+                        highlightMode={highlightMode}
+                        onHighlightModeToggle={setHighlightMode}
+                        onBackToCategories={() => setSelectedCategory(null)}
+                      />
+                    </div>
                   )}
 
                   {/* Step 3: Customization options (shown when category is selected) */}
                   {selectedCategory === 'wrappableSurfaces' && assetMetadata?.wrappableSurfaces && Object.keys(assetMetadata.wrappableSurfaces).length > 0 ? (
-                    <WrapCustomizer
-                      colors={wrapColors}
-                      finishes={wrapFinishes}
-                      selectedColor={selectedColor}
-                      selectedFinish={selectedFinish}
-                      onColorSelect={handleColorSelect}
-                      onFinishSelect={handleFinishSelect}
-                      hasSelection={selectedSurfaces.length > 0}
-                    />
+                    <div className="glass-section">
+                      <WrapCustomizer
+                        colors={wrapColors}
+                        finishes={wrapFinishes}
+                        selectedColor={selectedColor}
+                        selectedFinish={selectedFinish}
+                        onColorSelect={handleColorSelect}
+                        onFinishSelect={handleFinishSelect}
+                        hasSelection={selectedSurfaces.length > 0}
+                      />
+                    </div>
                   ) : selectedCategory && selectedCategory !== 'wrappableSurfaces' ? (
-                    <WorkInProgress
-                      categoryName={selectedCategory === 'rims' ? 'Wheels & Rims' : selectedCategory === 'windows' ? 'Windows' : selectedCategory === 'doors' ? 'Doors' : selectedCategory === 'tyres' ? 'Tyres' : selectedCategory === 'interior' ? 'Interior' : 'Lights'}
-                    />
+                    <div className="glass-section">
+                      <WorkInProgress
+                        categoryName={selectedCategory === 'rims' ? 'Wheels & Rims' : selectedCategory === 'windows' ? 'Windows' : selectedCategory === 'doors' ? 'Doors' : selectedCategory === 'tyres' ? 'Tyres' : selectedCategory === 'interior' ? 'Interior' : 'Lights'}
+                      />
+                    </div>
                   ) : null}
                   
                   {/* Category-specific Metadata Validation */}
-                  <CategoryValidation
-                    selectedCategory={selectedCategory}
-                    metadataValidation={metadataValidation}
-                    onValidationToggle={handleCategoryValidationToggle}
-                    isUpdating={isUpdatingValidation}
-                  />
+                  <div className="glass-section">
+                    <CategoryValidation
+                      selectedCategory={selectedCategory}
+                      metadataValidation={metadataValidation}
+                      onValidationToggle={handleCategoryValidationToggle}
+                      isUpdating={isUpdatingValidation}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -449,41 +474,45 @@ export default function AssetViewerPanel({
                 className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity opacity-100"
                 onClick={() => setRightSidebarOpen(false)}
               />
-              <div className="absolute right-2 top-2 bottom-2 w-[85%] max-w-sm rounded-2xl bg-slate-900/50 border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
-                <div className="p-6">
+              <div className="absolute right-2 top-2 bottom-2 w-[76.5%] max-w-sm rounded-2xl glass-panel border border-white/10 shadow-2xl overflow-y-auto overscroll-y-contain scroll-smooth translate-x-0 transition-transform duration-300 scrollbar-subtle">
+                <div className="p-2">
                   <div className="flex items-center gap-2 mb-4">
                     <Settings className="w-4 h-4 text-cyan-400" />
                     <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Environment</h2>
                   </div>
-                  <EnvironmentControls
-                    envPreset={envPreset}
-                    setEnvPreset={setEnvPreset}
-                    hdriBackground={hdriBackground}
-                    setHdriBackground={setHdriBackground}
-                    envBlur={envBlur}
-                    setEnvBlur={setEnvBlur}
-                    autoRotateEnabled={autoRotateEnabled}
-                    setAutoRotateEnabled={setAutoRotateEnabled}
-                    autoRotateSpeed={autoRotateSpeed}
-                    setAutoRotateSpeed={setAutoRotateSpeed}
-                    environmentMode={environmentMode}
-                    setEnvironmentMode={setEnvironmentMode}
-                  />
+                  <div className="glass-section">
+                    <EnvironmentControls
+                      envPreset={envPreset}
+                      setEnvPreset={setEnvPreset}
+                      hdriBackground={hdriBackground}
+                      setHdriBackground={setHdriBackground}
+                      envBlur={envBlur}
+                      setEnvBlur={setEnvBlur}
+                      autoRotateEnabled={autoRotateEnabled}
+                      setAutoRotateEnabled={setAutoRotateEnabled}
+                      autoRotateSpeed={autoRotateSpeed}
+                      setAutoRotateSpeed={setAutoRotateSpeed}
+                      environmentMode={environmentMode}
+                      setEnvironmentMode={setEnvironmentMode}
+                    />
+                  </div>
                   <div className="mt-6">
-                    <ScaleEditor id={assetId} initialScale={initialScale} inlineReadOnlyInitially />
+                    <div className="glass-section">
+                      <ScaleEditor id={assetId} initialScale={initialScale} inlineReadOnlyInitially />
+                    </div>
                   </div>
                   
                   {/* Asset metadata in right sidebar */}
                   {(assetDescription || assetTags) && (
                     <div className="mt-6 pt-6 border-t border-slate-700/50 space-y-4">
                       {assetDescription && (
-                        <div>
+                        <div className="glass-section">
                           <div className="text-xs text-slate-400 mb-2 uppercase tracking-wide">Description</div>
                           <div className="text-sm text-slate-300 leading-relaxed">{assetDescription}</div>
                         </div>
                       )}
                       {assetTags && assetTags.length > 0 && (
-                        <div>
+                        <div className="glass-section">
                           <div className="text-xs text-slate-400 mb-2 uppercase tracking-wide">Tags</div>
                           <div className="flex flex-wrap gap-2">
                             {assetTags.map((t) => (
@@ -501,70 +530,47 @@ export default function AssetViewerPanel({
         </>
       )}
 
-      {/* Toggle buttons (z-20) - Icon-based with smooth positioning */}
-      <div className="absolute top-4 z-20 flex justify-between pointer-events-none" style={{ left: '1rem', right: '1rem' }}>
-        {/* Left sidebar toggle */}
-        <button
-          onClick={() => setLeftSidebarOpen((v) => !v)}
-          className={cn(
-            "group flex items-center gap-2 pointer-events-auto",
-            "px-3 py-2 rounded-full border",
-            "bg-slate-900/80 border-white/10 text-slate-200",
-            "hover:bg-slate-800/90 hover:border-cyan-400/30",
-            "backdrop-blur-xl transition-all duration-300",
-            "shadow-lg hover:shadow-xl hover:shadow-cyan-500/20",
-            "hover:scale-105 active:scale-95"
-          )}
-          style={{
-            transform: leftSidebarOpen && !isMobile ? `translateX(${sidebarWidthPx + 8}px)` : 'translateX(0)',
-            transition: 'transform 300ms ease-in-out, all 200ms ease-in-out'
-          }}
-          aria-label="Toggle customization panel"
-          aria-expanded={leftSidebarOpen}
-        >
-          <ChevronRight className={cn(
-            "w-4 h-4 transition-transform duration-300",
-            leftSidebarOpen ? "rotate-180" : "rotate-0"
-          )} />
-          <span className="text-xs font-medium hidden sm:inline">Customize</span>
-          <Palette className="w-3.5 h-3.5 text-cyan-400 hidden sm:inline" />
-        </button>
-        
-        {/* Right sidebar toggle */}
-        <button
-          onClick={() => setRightSidebarOpen((v) => !v)}
-          className={cn(
-            "group flex items-center gap-2 pointer-events-auto",
-            "px-3 py-2 rounded-full border",
-            "bg-slate-900/80 border-white/10 text-slate-200",
-            "hover:bg-slate-800/90 hover:border-cyan-400/30",
-            "backdrop-blur-xl transition-all duration-300",
-            "shadow-lg hover:shadow-xl hover:shadow-cyan-500/20",
-            "hover:scale-105 active:scale-95"
-          )}
-          style={{
-            transform: rightSidebarOpen && !isMobile ? `translateX(-${sidebarWidthPx + 8}px)` : 'translateX(0)',
-            transition: 'transform 300ms ease-in-out, all 200ms ease-in-out'
-          }}
-          aria-label="Toggle environment panel"
-          aria-expanded={rightSidebarOpen}
-        >
-          <Settings className="w-3.5 h-3.5 text-cyan-400 hidden sm:inline" />
-          <span className="text-xs font-medium hidden sm:inline">Environment</span>
-          <ChevronLeft className={cn(
-            "w-4 h-4 transition-transform duration-300",
-            rightSidebarOpen ? "rotate-180" : "rotate-0"
-          )} />
-        </button>
-      </div>
+      {/* Collapsed title-only bars when sidebars are closed (desktop) */}
+      {!isMobile && !leftSidebarOpen && (
+        <div className="absolute left-4 top-4 z-40">
+          <div className="glass-panel rounded-2xl border border-white/10 px-3 py-2 flex items-center gap-2 shadow-2xl">
+            <Palette className="w-4 h-4 text-cyan-400" />
+            <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide">Customization</span>
+            <button
+              type="button"
+              onClick={() => setLeftSidebarOpen(true)}
+              className="ml-2 p-1.5 rounded-lg border border-white/10 bg-slate-800/60 hover:bg-slate-800/80 text-slate-200"
+              aria-label="Expand customization panel"
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isMobile && !rightSidebarOpen && (
+        <div className="absolute right-4 top-4 z-40">
+          <div className="glass-panel rounded-2xl border border-white/10 px-3 py-2 flex items-center gap-2 shadow-2xl">
+            <span className="text-xs font-semibold text-slate-200 uppercase tracking-wide">Environment</span>
+            <button
+              type="button"
+              onClick={() => setRightSidebarOpen(true)}
+              className="ml-2 p-1.5 rounded-lg border border-white/10 bg-slate-800/60 hover:bg-slate-800/80 text-slate-200"
+              aria-label="Expand environment panel"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Right Sidebar: Environment Controls (Desktop/Tablet - overlay with glassmorphism) */}
       {!isMobile && (
         <div 
           className={cn(
-            "absolute right-4 top-4 bottom-4 z-10",
+            "absolute right-4 top-4 bottom-4 z-40",
             "rounded-2xl border border-white/10",
-            "bg-slate-900/50",
+            "glass-panel",
             "overflow-hidden",
             "shadow-2xl shadow-black/40",
             "transition-all duration-300 ease-in-out",
@@ -573,51 +579,43 @@ export default function AssetViewerPanel({
           style={{ width: sidebarWidth }}
         >
           <div style={{ width: sidebarWidth }} className="h-full overflow-y-auto overscroll-y-contain scroll-smooth scrollbar-subtle">
-            <div className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Settings className="w-4 h-4 text-cyan-400" />
-                <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Environment</h2>
-              </div>
-              <EnvironmentControls
-                envPreset={envPreset}
-                setEnvPreset={setEnvPreset}
-                hdriBackground={hdriBackground}
-                setHdriBackground={setHdriBackground}
-                envBlur={envBlur}
-                setEnvBlur={setEnvBlur}
-                autoRotateEnabled={autoRotateEnabled}
-                setAutoRotateEnabled={setAutoRotateEnabled}
-                autoRotateSpeed={autoRotateSpeed}
-                setAutoRotateSpeed={setAutoRotateSpeed}
-                environmentMode={environmentMode}
-                setEnvironmentMode={setEnvironmentMode}
-              />
-              <div className="mt-6 pt-6 border-t border-white/10 space-y-2">
-                <label className="text-xs text-slate-400 uppercase tracking-wide">Scale</label>
-                <ScaleEditor id={assetId} initialScale={initialScale} inlineReadOnlyInitially />
-              </div>
-              
-              {/* Asset metadata in right sidebar */}
-              {(assetDescription || assetTags) && (
-                <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
-                  {assetDescription && (
-                    <div>
-                      <div className="text-xs text-slate-400 mb-2 uppercase tracking-wide">Description</div>
-                      <div className="text-sm text-slate-300 leading-relaxed">{assetDescription}</div>
-                    </div>
-                  )}
-                  {assetTags && assetTags.length > 0 && (
-                    <div>
-                      <div className="text-xs text-slate-400 mb-2 uppercase tracking-wide">Tags</div>
-                      <div className="flex flex-wrap gap-2">
-                        {assetTags.map((t) => (
-                          <span key={t} className="text-xs text-slate-300 bg-slate-800/50 border border-white/10 rounded-full px-3 py-1 hover:bg-slate-700/50 hover:border-cyan-400/30 transition-colors cursor-default">{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+            <div className="py-3 px-2">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <div className="flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-cyan-400" />
+                  <h2 className="text-sm font-semibold text-slate-200 uppercase tracking-wide">Environment</h2>
                 </div>
-              )}
+                <button
+                  type="button"
+                  onClick={() => setRightSidebarOpen(false)}
+                  className="p-1.5 rounded-lg border border-white/10 bg-slate-800/60 hover:bg-slate-800/80 text-slate-200"
+                  aria-label="Collapse environment panel"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="glass-section">
+                <EnvironmentControls
+                  envPreset={envPreset}
+                  setEnvPreset={setEnvPreset}
+                  hdriBackground={hdriBackground}
+                  setHdriBackground={setHdriBackground}
+                  envBlur={envBlur}
+                  setEnvBlur={setEnvBlur}
+                  autoRotateEnabled={autoRotateEnabled}
+                  setAutoRotateEnabled={setAutoRotateEnabled}
+                  autoRotateSpeed={autoRotateSpeed}
+                  setAutoRotateSpeed={setAutoRotateSpeed}
+                  environmentMode={environmentMode}
+                  setEnvironmentMode={setEnvironmentMode}
+                />
+              </div>
+              <div className="mt-4 pt-2 border-t border-white/10 space-y-2 glass-section">
+                <label className="text-xs text-slate-400 uppercase tracking-wide">Scale</label>
+                <div className="">
+                  <ScaleEditor id={assetId} initialScale={initialScale} inlineReadOnlyInitially />
+                </div>
+              </div>
             </div>
           </div>
         </div>
