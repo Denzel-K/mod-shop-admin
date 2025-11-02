@@ -109,27 +109,7 @@ function CarModelWithTexture({
   highlightMode: boolean;
   onSurfaceClick?: (surfaceId: string) => void;
 }) {
-  // Load vinyl texture via TextureLoader to avoid Suspense-triggered updates during render
-  const [vinylTexture, setVinylTexture] = useState<THREE.Texture | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    const loader = new THREE.TextureLoader();
-    loader.load(
-      '/textures/vinyl-tablecloth_albedo.png',
-      (tex) => {
-        if (cancelled) return;
-        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-        tex.repeat.set(4, 4);
-        tex.needsUpdate = true;
-        setVinylTexture(tex);
-      },
-      undefined,
-      () => {
-        if (!cancelled) setVinylTexture(null);
-      }
-    );
-    return () => { cancelled = true; };
-  }, [finishTextureCache]);
+  // No default albedo texture; use per-finish albedoGray when provided
   
   // Helper to load textures with sane defaults
   const loadTexture = (url: string, isColor: boolean) => new Promise<THREE.Texture>((resolve, reject) => {
@@ -154,7 +134,7 @@ function CarModelWithTexture({
     const textures: { albedoGray?: THREE.Texture | null; normal?: THREE.Texture | null; roughness?: THREE.Texture | null; metalness?: THREE.Texture | null; ao?: THREE.Texture | null; orm?: THREE.Texture | null; } = {};
     const urls = finish.textures || {};
     try {
-      if (urls.albedoGray) textures.albedoGray = await loadTexture(urls.albedoGray, true);
+      // Skip albedoGray to avoid introducing patterning; rely on solid base color
       if (urls.normal) textures.normal = await loadTexture(urls.normal, false);
       if (urls.roughness) textures.roughness = await loadTexture(urls.roughness, false);
       if (urls.metalness) textures.metalness = await loadTexture(urls.metalness, false);
@@ -200,8 +180,8 @@ function CarModelWithTexture({
                   clearcoat: finish.materialProperties.clearcoat ?? 0,
                   clearcoatRoughness: finish.materialProperties.clearcoatRoughness ?? 0.1,
                   ior: finish.materialProperties.ior ?? 1.5,
-                  map: maps?.albedoGray ?? (vinylTexture ?? undefined),
-                  normalMap: maps?.normal ?? undefined,
+                  map: maps?.albedoGray ?? undefined,
+                  normalMap: undefined,
                   roughnessMap: maps?.roughness ?? maps?.orm ?? undefined,
                   metalnessMap: maps?.metalness ?? maps?.orm ?? undefined,
                   aoMap: maps?.ao ?? maps?.orm ?? undefined,
@@ -292,7 +272,7 @@ function CarModelWithTexture({
         }
       }
     });
-  }, [gltf.scene, envMapIntensity, wrapConfig, wrapColors, wrapFinishes, selectedSurfaces, highlightMode, vinylTexture, materialCache, getFinishTextures]);
+  }, [gltf.scene, envMapIntensity, wrapConfig, wrapColors, wrapFinishes, selectedSurfaces, highlightMode, materialCache, getFinishTextures]);
 
   // Compute vertical offset so the model sits on the floor (y = 0)
   // Include URL in dependencies to recalculate positioning for each model
