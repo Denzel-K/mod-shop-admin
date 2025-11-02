@@ -2,7 +2,7 @@
 
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Bounds, useGLTF, Html, ContactShadows, useProgress, Sky, Lightformer, Environment } from '@react-three/drei';
-import { Suspense, useMemo, useLayoutEffect, useRef, useState, useEffect } from 'react';
+import { Suspense, useMemo, useLayoutEffect, useRef, useState, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
 import { EffectComposer as ThreeEffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -46,6 +46,14 @@ function CarModel({
   const gltf = useGLTF(url, true, true);
   const computedScale = useMemo(() => scale || 0.01, [scale]);
   const materialCache = useRef<Map<string, THREE.Material>>(new Map());
+  const finishTextureCache = useRef<Map<string, {
+    albedoGray?: THREE.Texture | null;
+    normal?: THREE.Texture | null;
+    roughness?: THREE.Texture | null;
+    metalness?: THREE.Texture | null;
+    ao?: THREE.Texture | null;
+    orm?: THREE.Texture | null;
+  }>>(new Map());
 
   // Clear material cache when URL changes to prevent cross-model contamination
   useLayoutEffect(() => {
@@ -54,9 +62,10 @@ function CarModel({
 
   return (
     <CarModelWithTexture
-      gltf={gltf}
+      gltf={gltf as GLTF}
       computedScale={computedScale}
       materialCache={materialCache}
+      finishTextureCache={finishTextureCache}
       envMapIntensity={envMapIntensity}
       wrapConfig={wrapConfig}
       wrapColors={wrapColors}
@@ -72,6 +81,7 @@ function CarModelWithTexture({
   gltf,
   computedScale,
   materialCache,
+  finishTextureCache,
   envMapIntensity,
   wrapConfig,
   wrapColors,
@@ -83,6 +93,14 @@ function CarModelWithTexture({
   gltf: GLTF;
   computedScale: number;
   materialCache: React.RefObject<Map<string, THREE.Material>>;
+  finishTextureCache: React.RefObject<Map<string, {
+    albedoGray?: THREE.Texture | null;
+    normal?: THREE.Texture | null;
+    roughness?: THREE.Texture | null;
+    metalness?: THREE.Texture | null;
+    ao?: THREE.Texture | null;
+    orm?: THREE.Texture | null;
+  }>>;
   envMapIntensity: number;
   wrapConfig: WrapConfiguration;
   wrapColors: WrapColor[];
@@ -111,7 +129,42 @@ function CarModelWithTexture({
       }
     );
     return () => { cancelled = true; };
-  }, []);
+  }, [finishTextureCache]);
+  
+  // Helper to load textures with sane defaults
+  const loadTexture = (url: string, isColor: boolean) => new Promise<THREE.Texture>((resolve, reject) => {
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      url,
+      (tex) => {
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.anisotropy = 8;
+        if (isColor) tex.colorSpace = THREE.SRGBColorSpace;
+        tex.needsUpdate = true;
+        resolve(tex);
+      },
+      undefined,
+      (err) => reject(err)
+    );
+  });
+
+  const getFinishTextures = useCallback(async (finish: WrapFinish) => {
+    const cached = finishTextureCache.current.get(finish.id);
+    if (cached) return cached;
+    const textures: { albedoGray?: THREE.Texture | null; normal?: THREE.Texture | null; roughness?: THREE.Texture | null; metalness?: THREE.Texture | null; ao?: THREE.Texture | null; orm?: THREE.Texture | null; } = {};
+    const urls = finish.textures || {};
+    try {
+      if (urls.albedoGray) textures.albedoGray = await loadTexture(urls.albedoGray, true);
+      if (urls.normal) textures.normal = await loadTexture(urls.normal, false);
+      if (urls.roughness) textures.roughness = await loadTexture(urls.roughness, false);
+      if (urls.metalness) textures.metalness = await loadTexture(urls.metalness, false);
+      if (urls.ao) textures.ao = await loadTexture(urls.ao, false);
+      if (urls.orm) textures.orm = await loadTexture(urls.orm, false);
+    } catch {}
+    finishTextureCache.current.set(finish.id, textures);
+    return textures;
+  }, [finishTextureCache]);
+
   // No separate highlight material; use emissive overlay on existing materials
   // Apply wrap materials to surfaces
   useLayoutEffect(() => {
@@ -138,31 +191,35 @@ function CarModelWithTexture({
             let material = materialCache.current.get(materialKey);
             
             if (!material) {
-              material = new THREE.MeshStandardMaterial({
-                color: new THREE.Color(color.hex),
-                roughness: finish.materialProperties.roughness,
-                metalness: finish.materialProperties.metalness,
-                envMapIntensity: envMapIntensity,
-                map: vinylTexture ? vinylTexture.clone() : undefined,
-              });
-              
-              // Apply clearcoat if specified
-              if (finish.materialProperties.clearcoat !== undefined) {
-                (material as THREE.MeshPhysicalMaterial).clearcoat = finish.materialProperties.clearcoat;
-                (material as THREE.MeshPhysicalMaterial).clearcoatRoughness = finish.materialProperties.clearcoatRoughness || 0.1;
-              }
-              
-              // Apply normal map if texture is specified
-              if (finish.textureUrl) {
-                // Load normal map texture (would need to be implemented)
-                // material.normalMap = normalTexture;
-                // material.normalScale = new THREE.Vector2(finish.materialProperties.normalScale || 1, finish.materialProperties.normalScale || 1);
-              }
-              
-              materialCache.current.set(materialKey, material);
+              // Construct lazily; allow finish-specific map set
+              const buildWithMaps = (maps?: { albedoGray?: THREE.Texture | null; normal?: THREE.Texture | null; roughness?: THREE.Texture | null; metalness?: THREE.Texture | null; ao?: THREE.Texture | null; orm?: THREE.Texture | null; }) => {
+                const m = new THREE.MeshPhysicalMaterial({
+                  color: new THREE.Color(color.hex),
+                  roughness: finish.materialProperties.roughness,
+                  metalness: finish.materialProperties.metalness,
+                  clearcoat: finish.materialProperties.clearcoat ?? 0,
+                  clearcoatRoughness: finish.materialProperties.clearcoatRoughness ?? 0.1,
+                  ior: finish.materialProperties.ior ?? 1.5,
+                  map: maps?.albedoGray ?? (vinylTexture ?? undefined),
+                  normalMap: maps?.normal ?? undefined,
+                  roughnessMap: maps?.roughness ?? maps?.orm ?? undefined,
+                  metalnessMap: maps?.metalness ?? maps?.orm ?? undefined,
+                  aoMap: maps?.ao ?? maps?.orm ?? undefined,
+                });
+                if (m.map) m.map.colorSpace = THREE.SRGBColorSpace;
+                if (finish.materialProperties && finish.materialProperties.normalScale && m.normalScale) {
+                  m.normalScale.set(finish.materialProperties.normalScale, finish.materialProperties.normalScale);
+                }
+                (m as EnvMapMat).envMapIntensity = envMapIntensity;
+                materialCache.current.set(materialKey, m);
+                material = m;
+                mesh.material = m;
+              };
+              const urls = finish.textures;
+              if (urls) getFinishTextures(finish).then(buildWithMaps); else buildWithMaps();
+            } else {
+              mesh.material = material;
             }
-            
-            mesh.material = material;
           }
         } else {
           // Apply default material properties for non-wrapped surfaces
@@ -235,7 +292,7 @@ function CarModelWithTexture({
         }
       }
     });
-  }, [gltf.scene, envMapIntensity, wrapConfig, wrapColors, wrapFinishes, selectedSurfaces, highlightMode, vinylTexture, materialCache]);
+  }, [gltf.scene, envMapIntensity, wrapConfig, wrapColors, wrapFinishes, selectedSurfaces, highlightMode, vinylTexture, materialCache, getFinishTextures]);
 
   // Compute vertical offset so the model sits on the floor (y = 0)
   // Include URL in dependencies to recalculate positioning for each model
@@ -357,8 +414,8 @@ function Scene({
 
   return (
     <>
-      <color attach="background" args={[hdriBackground ? '#05070d' : '#05070d']} />
-      <fog attach="fog" args={[ '#0b1220', 30, 90 ]} />
+      <color attach="background" args={[hdriBackground ? '#ffffff' : '#ffffff']} />
+      <fog attach="fog" args={[ '#e5e7eb', 30, 90 ]} />
 
       <ambientLight intensity={ambientIntensity} />
       <hemisphereLight intensity={0.25} groundColor={0x222222} color={0xffffff} />

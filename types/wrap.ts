@@ -1,17 +1,27 @@
 export interface WrapFinish {
   id: string;
   name: string;
-  category: 'gloss' | 'satin' | 'matte' | 'metallic' | 'chrome' | 'textured' | 'pearlescent';
+  category: 'gloss' | 'satin' | 'matte' | 'metallic' | 'chrome' | 'textured' | 'pearlescent' | 'metallic_satin' | 'metallic_gloss' | 'special' | 'pastel';
   description: string;
   materialProperties: {
     roughness: number;
     metalness: number;
     clearcoat?: number;
     clearcoatRoughness?: number;
+    ior?: number;
     normalScale?: number;
   };
   characteristics: string[];
   textureUrl?: string;
+  // Optional per-finish PBR texture set (all optional and nullable)
+  textures?: {
+    albedoGray?: string | null; // neutral/tintable albedo; sRGB
+    normal?: string | null;     // linear
+    roughness?: string | null;  // linear (or use orm)
+    metalness?: string | null;  // linear (or use orm)
+    ao?: string | null;         // linear (or use orm)
+    orm?: string | null;        // packed AO/R/G/B
+  };
 }
 
 export interface WrapColor {

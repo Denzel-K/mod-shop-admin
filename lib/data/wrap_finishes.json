@@ -11,7 +11,12 @@
             "clearcoat": 1.0,
             "clearcoatRoughness": 0.03
         },
-            "characteristics": ["easy_clean", "high_shine", "classic"]
+            "characteristics": ["easy_clean", "high_shine", "classic"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_gloss.png"
+            }
         },
         {
             "id": "matte_series",
@@ -24,7 +29,12 @@
             "clearcoat": 0.0,
             "clearcoatRoughness": 0.0
         },
-            "characteristics": ["stealth_look", "scratch_resistant", "modern"]
+            "characteristics": ["stealth_look", "scratch_resistant", "modern"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_matte.png"
+            }
         },
         {
             "id": "deluster_series",
@@ -37,7 +47,12 @@
                 "clearcoat": 0.7,
                 "clearcoatRoughness": 0.15
             },
-            "characteristics": ["moderate_shine", "refined", "subtle"]
+            "characteristics": ["moderate_shine", "refined", "subtle"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_satin.png"
+            }
         },
         {
             "id": "white_iridescent_series",
@@ -50,7 +65,12 @@
                 "clearcoat": 1.0,
                 "clearcoatRoughness": 0.08
             },
-            "characteristics": ["color_shift", "luxury_glow", "angle_dependent"]
+            "characteristics": ["color_shift", "luxury_glow", "angle_dependent"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_pearlescent.png"
+            }
         },
         {
             "id": "satin_metallic_series",
@@ -63,7 +83,12 @@
                 "clearcoat": 0.6,
                 "clearcoatRoughness": 0.2
             },
-            "characteristics": ["subtle_metallic", "sophisticated", "moderate_shine"]
+            "characteristics": ["subtle_metallic", "sophisticated", "moderate_shine"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_metallic_satin.png"
+            }
         },
         {
             "id": "ultra_bright_metallic_series",
@@ -76,7 +101,12 @@
                 "clearcoat": 1.0,
                 "clearcoatRoughness": 0.05
             },
-            "characteristics": ["high_shine", "premium_look", "metallic_flake"]
+            "characteristics": ["high_shine", "premium_look", "metallic_flake"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_metallic_gloss.png"
+            }
         },
         {
             "id": "liquid_metal_series",
@@ -89,7 +119,12 @@
                 "clearcoat": 1.0,
                 "clearcoatRoughness": 0.01
             },
-            "characteristics": ["mirror_finish", "ultra_reflective", "statement_piece"]
+            "characteristics": ["mirror_finish", "ultra_reflective", "statement_piece"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_chrome.png"
+            }
         },
         {
             "id": "diamond_series",
@@ -102,7 +137,12 @@
                 "clearcoat": 1.0,
                 "clearcoatRoughness": 0.08
             },
-            "characteristics": ["sparkling", "luxury_glow", "angle_dependent"]
+            "characteristics": ["sparkling", "luxury_glow", "angle_dependent"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_diamond.png"
+            }
         },
         {
             "id": "chameleon_series",
@@ -116,9 +156,10 @@
                 "clearcoatRoughness": 0.08
             },
             "characteristics": ["color_shift", "unique", "angle_dependent"],
-            "   ": {
-                "primary": "#ffffff",
-                "secondary": "#ffffff"
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_chameleon.png"
             }
         },
         {
@@ -132,7 +173,12 @@
                 "clearcoat": 0.0,
                 "clearcoatRoughness": 0.0
             },
-            "characteristics": ["stealth_look", "scratch_resistant", "bold"]
+            "characteristics": ["stealth_look", "scratch_resistant", "bold"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_matte.png"
+            }
         },
         {
             "id": "ghost_metal_series",
@@ -145,7 +191,12 @@
                 "clearcoat": 0.0,
                 "clearcoatRoughness": 0.0
             },
-            "characteristics": ["subtle_metallic", "stealth", "unique_texture"]
+            "characteristics": ["subtle_metallic", "stealth", "unique_texture"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_ghost_metal.png"
+            }
         },
         {
             "id": "phantom_series",
@@ -158,7 +209,12 @@
                 "clearcoat": 1.0,
                 "clearcoatRoughness": 0.08
             },
-            "characteristics": ["color_shift", "mysterious", "angle_dependent"]
+            "characteristics": ["color_shift", "mysterious", "angle_dependent"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_phantom.png"
+            }
         },
         {
             "id": "macaron_series",
@@ -171,7 +227,12 @@
                 "clearcoat": 0.7,
                 "clearcoatRoughness": 0.15
             },
-            "characteristics": ["pastel", "soft", "elegant"]
+            "characteristics": ["pastel", "soft", "elegant"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_pastel.png"
+            }
         },
         {
             "id": "plated_metallic_series",
@@ -184,7 +245,12 @@
                 "clearcoat": 1.0,
                 "clearcoatRoughness": 0.01
             },
-            "characteristics": ["high_shine", "premium", "reflective"]
+            "characteristics": ["high_shine", "premium", "reflective"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_chrome.png"
+            }
         },
         {
             "id": "oem_car_paint_metallic_series",
@@ -197,7 +263,12 @@
                 "clearcoat": 1.0,
                 "clearcoatRoughness": 0.05
             },
-            "characteristics": ["premium_look", "durable", "authentic"]
+            "characteristics": ["premium_look", "durable", "authentic"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_oem_metallic.png"
+            }
         },
         {
             "id": "laser_series",
@@ -210,7 +281,12 @@
                 "clearcoat": 1.0,
                 "clearcoatRoughness": 0.08
             },
-            "characteristics": ["sparkling", "high_tech", "angle_dependent"]
+            "characteristics": ["sparkling", "high_tech", "angle_dependent"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_laser.png"
+            }
         },
         {
             "id": "yuanfeng_series",
@@ -227,6 +303,11 @@
             "colorShift": {
                 "primary": "#0000ff",
                 "secondary": "#ffd700"
+            },
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_yuanfeng.png"
             }
         },
         {
@@ -240,8 +321,12 @@
                 "clearcoat": 1.0,
                 "clearcoatRoughness": 0.08
             },
-            "characteristics": ["unique", "custom", "special_effects"]
+            "characteristics": ["unique", "custom", "special_effects"],
+            "textures": {
+                "albedoGray": "/textures/vinyl-tablecloth-unity/albedo-gray.png",
+                "normal": "/textures/vinyl-tablecloth-unity/vinyl-tablecloth_normal-ogl.png",
+                "roughness": "/textures/vinyl-tablecloth-unity/roughness_specific.png"
+            }
         }
     ]
 }
- 
