@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
-import { Settings, Sun, Camera, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react";
+import { Settings, Sun, Camera, RotateCcw, ChevronLeft, ChevronRight, Building2, Mountain, CheckCircle2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { ENVIRONMENT_PRESETS } from "@/lib/viewer/environment";
@@ -20,12 +20,13 @@ interface EnvironmentControlsProps {
   setAutoRotateEnabled: (v: boolean) => void;
   autoRotateSpeed: number;
   setAutoRotateSpeed: (v: number) => void;
+  environmentMode: 'indoors' | 'outdoors';
+  setEnvironmentMode: (v: 'indoors' | 'outdoors') => void;
 }
 
 export default function EnvironmentControls({
   envPreset,
   setEnvPreset,
-  hdriBackground,
   setHdriBackground,
   envBlur,
   setEnvBlur,
@@ -33,6 +34,8 @@ export default function EnvironmentControls({
   setAutoRotateEnabled,
   autoRotateSpeed,
   setAutoRotateSpeed,
+  environmentMode,
+  setEnvironmentMode,
 }: EnvironmentControlsProps) {
   const { presets: presetMap } = useEnvPresets();
   const presets = useMemo(() => Object.keys(presetMap) as EnvPreset[], [presetMap]);
@@ -95,6 +98,64 @@ export default function EnvironmentControls({
 
   return (
     <div className="space-y-6">
+      {/* Mode Selector - Card based */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-sm text-slate-300">
+          <Sun className="w-4 h-4" />
+          Environment Mode
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setEnvironmentMode('indoors')}
+            className={`relative p-2 rounded-xl border transition-colors text-left ${
+              environmentMode === 'indoors'
+                ? 'border-cyan-500/80 ring-2 ring-cyan-500/30 bg-slate-800/60'
+                : 'border-slate-700 hover:border-slate-500 bg-slate-900/30'
+            }`}
+            aria-pressed={environmentMode === 'indoors'}
+          >
+            <div className="flex items-center gap-2">
+              <div className={`rounded-lg p-2 ${environmentMode === 'indoors' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-800 text-slate-300'}`}>
+                <Building2 className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-slate-100">Indoors</div>
+              </div>
+            </div>
+            {environmentMode === 'indoors' && (
+              <div className="absolute top-2 right-2 text-cyan-400">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setEnvironmentMode('outdoors')}
+            className={`relative p-2 rounded-xl border transition-colors text-left ${
+              environmentMode === 'outdoors'
+                ? 'border-cyan-500/80 ring-2 ring-cyan-500/30 bg-slate-800/60'
+                : 'border-slate-700 hover:border-slate-500 bg-slate-900/30'
+            }`}
+            aria-pressed={environmentMode === 'outdoors'}
+          >
+            <div className="flex items-center gap-2">
+              <div className={`rounded-lg p-2 ${environmentMode === 'outdoors' ? 'bg-cyan-500/15 text-cyan-400' : 'bg-slate-800 text-slate-300'}`}>
+                <Mountain className="w-4 h-4" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-slate-100">Outdoors</div>
+              </div>
+            </div>
+            {environmentMode === 'outdoors' && (
+              <div className="absolute top-2 right-2 text-cyan-400">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+            )}
+          </button>
+        </div>
+      </div>
       {/* Header */}
       <div className="space-y-1">
         <div className="flex items-center gap-2 text-sm text-slate-400">
@@ -104,126 +165,135 @@ export default function EnvironmentControls({
         <div className="text-lg font-semibold text-slate-100">Scene Settings</div>
       </div>
 
-      {/* Environment Preset */}
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm text-slate-300">
-          <Sun className="w-4 h-4" />
-          Lighting Environment
-        </div>
-        <div className="grid gap-3">
-          <div className="grid gap-1">
-            <label className="text-xs text-slate-400">HDRI preset</label>
-            <div
-              className="relative w-full overflow-hidden -mx-2"
-              onKeyDown={(e) => {
-                if (e.key === "ArrowLeft") {
-                  e.preventDefault();
-                  handlePrev();
-                }
-                if (e.key === "ArrowRight") {
-                  e.preventDefault();
-                  handleNext();
-                }
-              }}
-            >
-              <button
-                type="button"
-                aria-label="Previous HDRI"
-                onClick={handlePrev}
-                className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded bg-slate-800/80 border border-slate-700 text-slate-200 hover:bg-slate-700 focus:outline-none"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
+      {/* Scene controls - visible only for Outdoors */}
+      {environmentMode === 'outdoors' && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-sm text-slate-300">
+            <Sun className="w-4 h-4" />
+            Lighting Environment
+          </div>
+          <div className="grid gap-3">
+            <div className="grid gap-1">
+              <label className="text-xs text-slate-400">HDRI preset</label>
               <div
-                ref={listRef}
-                tabIndex={0}
-                className="w-full flex gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent py-1 px-8"
-                role="listbox"
-                aria-label="HDRI presets"
+                className="relative w-full overflow-hidden -mx-2"
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    handlePrev();
+                  }
+                  if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    handleNext();
+                  }
+                }}
               >
-                {presets.map((p) => {
-                  const cfg = presetMap[p] ?? ENVIRONMENT_PRESETS[p];
-                  const active = envPreset === p;
-                  return (
-                    <div key={p} className="shrink-0 flex flex-col items-center gap-1 w-24">
-                      <button
-                        ref={(el) => { itemRefs.current[p] = el }}
-                        type="button"
-                        onClick={() => setEnvPreset(p)}
-                        role="option"
-                        aria-selected={active}
-                        className={`relative w-24 h-16 rounded-md border transition-colors focus:outline-none ${
-                          active
-                            ? "border-cyan-500 ring-2 ring-cyan-500/40"
-                            : "border-slate-700 hover:border-slate-500"
-                        }`}
-                        title={p}
-                      >
-                        <Image
-                          src={cfg?.thumbnail ?? `/HDRI-thumbnails/${p}.svg`}
-                          alt={`${cfg?.label ?? p} HDRI`}
-                          fill
-                          sizes="80px"
-                          className="object-cover rounded-md"
-                          priority={active}
-                        />
-                        {active && (
-                          <span className="pointer-events-none absolute inset-0 rounded-md ring-1 ring-cyan-500/60" />
-                        )}
-                      </button>
-                      <div className="text-[12px] font-semibold leading-3 capitalize text-center text-slate-300 w-full">
-                        {cfg?.label ?? p}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                <button
+                  type="button"
+                  aria-label="Previous HDRI"
+                  onClick={handlePrev}
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded bg-slate-800/80 border border-slate-700 text-slate-200 hover:bg-slate-700 focus:outline-none"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
 
-              <button
-                type="button"
-                aria-label="Next HDRI"
-                onClick={handleNext}
-                className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded bg-slate-800/80 border border-slate-700 text-slate-200 hover:bg-slate-700 focus:outline-none"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+                <div
+                  ref={listRef}
+                  tabIndex={0}
+                  className="w-full flex gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent py-1 px-8"
+                  role="listbox"
+                  aria-label="HDRI presets"
+                >
+                  {presets.map((p) => {
+                    const cfg = presetMap[p] ?? ENVIRONMENT_PRESETS[p];
+                    const active = envPreset === p;
+                    return (
+                      <div key={p} className="shrink-0 flex flex-col items-center gap-1 w-24">
+                        <button
+                          ref={(el) => { itemRefs.current[p] = el }}
+                          type="button"
+                          onClick={() => setEnvPreset(p)}
+                          role="option"
+                          aria-selected={active}
+                          className={`relative w-24 h-16 rounded-md border transition-colors focus:outline-none ${
+                            active
+                              ? "border-cyan-500 ring-2 ring-cyan-500/40"
+                              : "border-slate-700 hover:border-slate-500"
+                          }`}
+                          title={p}
+                        >
+                          <Image
+                            src={cfg?.thumbnail ?? `/HDRI-thumbnails/${p}.svg`}
+                            alt={`${cfg?.label ?? p} HDRI`}
+                            fill
+                            sizes="80px"
+                            className="object-cover rounded-md"
+                            priority={active}
+                          />
+                          {active && (
+                            <span className="pointer-events-none absolute inset-0 rounded-md ring-1 ring-cyan-500/60" />
+                          )}
+                        </button>
+                        <div className="text-[12px] font-semibold leading-3 capitalize text-center text-slate-300 w-full">
+                          {cfg?.label ?? p}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  aria-label="Next HDRI"
+                  onClick={handleNext}
+                  className="absolute -right-2 top-1/2 -translate-y-1/2 z-10 p-1.5 rounded bg-slate-800/80 border border-slate-700 text-slate-200 hover:bg-slate-700 focus:outline-none"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">Use as background</span>
-            <Switch checked={hdriBackground} onCheckedChange={setHdriBackground} />
-          </div>
-          {/* Blur slider */}
-          <div className="grid gap-1">
-            <label className="text-xs text-slate-400">HDRI blur</label>
-            <Slider
-              value={[envBlur]}
-              onValueChange={(v) => setEnvBlur(v[0] ?? envBlur)}
-              min={0}
-              max={0.6}
-              step={0.01}
-              className="w-full"
-            />
-            <div className="text-xs text-slate-400">{envBlur.toFixed(2)} (0–0.60)</div>
-          </div>
-          {/* Ground texture preview tied to HDRI preset */}
-          <div className="grid gap-2">
-            <label className="text-xs text-slate-400">{`Ground texture for ${prettyPreset}`}</label>
-            <div className="relative w-full h-24 rounded-md overflow-hidden border border-slate-700 bg-slate-800">
-              <Image
-                src={(presetMap[envPreset]?.groundTexture ?? ENVIRONMENT_PRESETS[envPreset]?.groundTexture) || '/ground-textures/gravel/gravel_albedo.png'}
-                alt={`${envPreset} ground preview`}
-                fill
-                sizes="320px"
-                className="object-cover"
-                priority
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-slate-400">Use as background</span>
+              <div className="inline-flex items-center gap-2">
+                <Switch
+                  checked={true}
+                  onCheckedChange={(v) => setHdriBackground(v)}
+                  disabled
+                />
+                <span className="text-[10px] text-cyan-400">Forced ON for outdoors</span>
+              </div>
+            </div>
+            {/* Blur slider */}
+            <div className="grid gap-1">
+              <label className="text-xs text-slate-400">HDRI blur</label>
+              <Slider
+                value={[envBlur]}
+                onValueChange={(v) => setEnvBlur(v[0] ?? envBlur)}
+                min={0}
+                max={0.6}
+                step={0.01}
+                className="w-full"
               />
-              <div className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[14px] bg-black/40 font-semibold text-slate-200">{(presetMap[envPreset]?.groundName ?? ENVIRONMENT_PRESETS[envPreset]?.groundName) || groundName}</div>
+              <div className="text-xs text-slate-400">{envBlur.toFixed(2)} (0–0.60)</div>
+            </div>
+            {/* Ground texture preview tied to HDRI preset */}
+            <div className="grid gap-2">
+              <label className="text-xs text-slate-400">{`Ground texture for ${prettyPreset}`}</label>
+              <div className="relative w-full h-24 rounded-md overflow-hidden border border-slate-700 bg-slate-800">
+                <Image
+                  src={(presetMap[envPreset]?.groundTexture ?? ENVIRONMENT_PRESETS[envPreset]?.groundTexture) || '/ground-textures/gravel/gravel_albedo.png'}
+                  alt={`${envPreset} ground preview`}
+                  fill
+                  sizes="320px"
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute bottom-0 left-0 right-0 px-2 py-1 text-[14px] bg-black/40 font-semibold text-slate-200">{(presetMap[envPreset]?.groundName ?? ENVIRONMENT_PRESETS[envPreset]?.groundName) || groundName}</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Camera Controls */}
       <div className="space-y-3">

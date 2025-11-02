@@ -1,7 +1,7 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Bounds, useGLTF, Html, ContactShadows, useProgress, Sky, Lightformer, Environment } from '@react-three/drei';
+import { OrbitControls, Bounds, useGLTF, ContactShadows, useProgress, Sky, Environment, Text, useTexture, Html, Lightformer } from '@react-three/drei';
 import { Suspense, useMemo, useLayoutEffect, useRef, useState, useEffect, useCallback } from 'react';
 import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -15,6 +15,7 @@ import type { GLTF } from 'three-stdlib';
 import { ENVIRONMENT_PRESETS } from '@/lib/viewer/environment';
 import type { EnvPreset } from '@/lib/viewer/environment';
 import { useEnvPresets } from '@/lib/viewer/useEnvPresets';
+import { RectAreaLightUniformsLib } from 'three/examples/jsm/lights/RectAreaLightUniformsLib.js';
 
 type EnvMapMat = THREE.Material & { envMapIntensity?: number };
 
@@ -340,6 +341,7 @@ interface SceneProps {
   selectedSurfaces: string[];
   highlightMode: boolean;
   onSurfaceClick?: (surfaceId: string) => void;
+  environmentMode: 'indoors' | 'outdoors';
 }
 
 function Scene({
@@ -347,7 +349,7 @@ function Scene({
   scale,
   envMapIntensity,
   envPreset,
-  hdriBackground,
+  hdriBackground: _hdriBackground,
   envIntensity,
   envBlur,
   autoRotateEnabled,
@@ -358,6 +360,7 @@ function Scene({
   selectedSurfaces,
   highlightMode,
   onSurfaceClick,
+  environmentMode,
 }: SceneProps) {
   const platformRef = useRef<THREE.Group>(null);
   const { presets: presetMap } = useEnvPresets();
@@ -390,46 +393,254 @@ function Scene({
     return Math.min(0.2 + 0.4 * envIntensity, 1.0);
   }, [envIntensity]);
 
-  
+  // reference to avoid unused warning; value is intentionally ignored in favor of mode logic
+  void _hdriBackground;
+
+  // Initialize RectAreaLight shader uniforms once
+  useEffect(() => {
+    RectAreaLightUniformsLib.init();
+  }, []);
+
+  // Recessed rectangular panel light with optional visible diffuser and frame
+  const RectPanelLight: React.FC<{
+    position: [number, number, number];
+    rotation?: [number, number, number];
+    size: [number, number]; // [width, height]
+    intensity?: number;
+    color?: string | number;
+    showDiffuser?: boolean;
+  }> = ({ position, rotation = [0, 0, 0], size, intensity = 20, color = '#ffffff', showDiffuser = true }) => {
+    const [w, h] = size;
+    return (
+      <group position={position} rotation={rotation}>
+        {/* Frame (slight border around light) */}
+        <mesh position={[0, 0, -0.02]}>
+          <planeGeometry args={[w + 0.3, h + 0.3]} />
+          <meshStandardMaterial color={'#cbd5e1'} roughness={0.6} metalness={0.05} />
+        </mesh>
+        {/* Diffuser panel */}
+        {showDiffuser && (
+          <mesh>
+            <planeGeometry args={[w, h]} />
+            <meshStandardMaterial color={'#ffffff'} emissive={new THREE.Color('#ffffff')} emissiveIntensity={0.15} roughness={0.2} />
+          </mesh>
+        )}
+        {/* Invisible area light providing actual illumination */}
+        <rectAreaLight args={[color, intensity, w, h]} position={[0, 0, 0.06]} />
+      </group>
+    );
+  };
+
+  // Branding panel component loads texture within Suspense boundary
+  const BrandingPanel = () => {
+    const logoTexture = useTexture('/mod-shop-logo3.png');
+    if (logoTexture) logoTexture.colorSpace = THREE.SRGBColorSpace;
+    return (
+      <group position={[0, 3.8, -13.7]}>
+        {/* Panel */}
+        <mesh>
+          <planeGeometry args={[22, 7.2]} />
+          <meshPhysicalMaterial color={'#f8fafc'} roughness={0.55} metalness={0.06} clearcoat={0.2} clearcoatRoughness={0.3} />
+        </mesh>
+        {/* Large centered logo (prominent) */}
+        <mesh position={[0, 2.0, 0.028]} scale={[1.2, 1.2, 1]}> 
+          <planeGeometry args={[2.4, 2.4]} />
+          <meshStandardMaterial map={logoTexture ?? undefined} transparent={true} toneMapped={true} />
+        </mesh>
+
+        {/* Title: mod-shop */}
+        <Text position={[0, 0.25, 0.03]} fontSize={0.74} color="#0f172a" anchorX="center" anchorY="middle" maxWidth={16}>
+          Mod Shop
+        </Text>
+        {/* Tagline */}
+        <Text position={[0, -0.45, 0.03]} fontSize={0.34} color="#334155" anchorX="center" anchorY="middle" maxWidth={18} lineHeight={1.05}>
+          The ultimate dynamic 3D car configurator.
+        </Text>
+        {/* Services */}
+        <Text position={[0, -1.05, 0.03]} fontSize={0.36} color="#0b1220" anchorX="center" anchorY="middle" maxWidth={18} letterSpacing={0.02}>
+          Wraps | Tints | Rims | Tyres | Lights
+        </Text>
+        {/* Decorative shapes as emissive pucks (subtle, not overlapping center) */}
+        <mesh position={[-8.5, -0.2, 0.015]}>
+          <circleGeometry args={[0.55, 48]} />
+          <meshStandardMaterial color={'#e2e8f0'} emissive={'#e2e8f0'} emissiveIntensity={0.15} />
+        </mesh>
+        <mesh position={[9.2, -0.4, 0.015]}>
+          <circleGeometry args={[0.42, 48]} />
+          <meshStandardMaterial color={'#cbd5e1'} emissive={'#cbd5e1'} emissiveIntensity={0.12} />
+        </mesh>
+        <mesh position={[10.8, -0.9, 0.015]}>
+          <circleGeometry args={[0.36, 48]} />
+          <meshStandardMaterial color={'#94a3b8'} emissive={'#94a3b8'} emissiveIntensity={0.1} />
+        </mesh>
+      </group>
+    );
+  };
 
   return (
     <>
-      <color attach="background" args={[hdriBackground ? '#ffffff' : '#ffffff']} />
-      <fog attach="fog" args={[ '#e5e7eb', 30, 90 ]} />
+      {environmentMode === 'indoors' ? (
+        <>
+          <color attach="background" args={[ '#f3f4f6' ]} />
+          <fog attach="fog" args={[ '#e5e7eb', 120, 260 ]} />
 
-      <ambientLight intensity={ambientIntensity} />
-      <hemisphereLight intensity={0.25} groundColor={0x222222} color={0xffffff} />
-      <pointLight position={[6, 6, 6]} intensity={0.9} castShadow distance={30} decay={2} />
-      <pointLight position={[-6, 3, -4]} intensity={0.6} distance={25} decay={2} />
-      <directionalLight position={[-5, 8, 2]} intensity={0.7} castShadow />
+          <ambientLight intensity={Math.min(0.6 + 0.4 * envIntensity, 0.95)} />
+          <hemisphereLight intensity={0.6} groundColor={0x9aa6b2} color={0xffffff} />
 
-      <Suspense fallback={<Loader />}>
-        <Bounds fit clip observe margin={1.2}>
-          <CarModel 
-            url={url} 
-            scale={scale} 
-            envMapIntensity={envMapIntensity}
-            wrapConfig={wrapConfig}
-            wrapColors={wrapColors}
-            wrapFinishes={wrapFinishes}
-            selectedSurfaces={selectedSurfaces}
-            highlightMode={highlightMode}
-            onSurfaceClick={onSurfaceClick}
-          />
-        </Bounds>
-        <SafeEnvironment preset={envPreset} background={hdriBackground} intensity={envIntensity} rotate blur={envBlur} />
-        <group ref={platformRef} position={[0, 0, 0]}>
-          <mesh rotation-x={-Math.PI / 2} position={[0, -0.002, 0]} receiveShadow>
-            <circleGeometry args={[10, 96]} />
-            <meshStandardMaterial map={groundTex ?? undefined} roughness={0.92} metalness={0.08} color={'#9aa0a6'} />
-          </mesh>
-          <mesh rotation-x={-Math.PI / 2} position={[0, -0.001, 0]} receiveShadow>
-            <ringGeometry args={[10.2, 10.7, 96]} />
-            <meshStandardMaterial color={'#111827'} roughness={0.6} metalness={0.2} />
-          </mesh>
-        </group>
-        <ContactShadows position={[0, 0.001, 0]} opacity={0.65} scale={22} blur={2.8} far={22} resolution={1024} frames={1} />
-      </Suspense>
+          <Suspense fallback={<Loader />}>
+            <Bounds fit clip observe margin={1.2}>
+              <CarModel 
+                url={url}
+                scale={scale}
+                envMapIntensity={envMapIntensity}
+                wrapConfig={wrapConfig}
+                wrapColors={wrapColors}
+                wrapFinishes={wrapFinishes}
+                selectedSurfaces={selectedSurfaces}
+                highlightMode={highlightMode}
+                onSurfaceClick={onSurfaceClick}
+              />
+            </Bounds>
+
+            {/* Garage room */}
+            <group position={[0, 0, 0]}>
+              {/* Floor - smooth, uninterrupted (slightly grayer than walls) */}
+              <mesh rotation-x={-Math.PI / 2} position={[0, -0.001, 0]} receiveShadow>
+                <circleGeometry args={[11, 128]} />
+                <meshStandardMaterial color={'#d1d5db'} roughness={0.88} metalness={0.06} />
+              </mesh>
+              {/* Walls (simple large box with inward normals) */}
+              <mesh position={[0, 4.5, 0]} castShadow receiveShadow>
+                <boxGeometry args={[28, 9, 28]} />
+                <meshStandardMaterial color={'#ffffff'} side={THREE.BackSide} roughness={0.65} metalness={0.05} />
+              </mesh>
+              {/* Branded feature wall panel (branding wall, no lights on this wall) */}
+              <BrandingPanel />
+              {/* Wall detailing: vertical paneling and baseboard */}
+              <group>
+                {/* Baseboard around room */}
+                <mesh position={[0, 0.25, -13.95]}>
+                  <boxGeometry args={[28, 0.5, 0.1]} />
+                  <meshStandardMaterial color={'#cfd4dc'} roughness={0.6} />
+                </mesh>
+                <mesh position={[0, 0.25, 13.95]}>
+                  <boxGeometry args={[28, 0.5, 0.1]} />
+                  <meshStandardMaterial color={'#cfd4dc'} roughness={0.6} />
+                </mesh>
+                <mesh position={[13.95, 0.25, 0]} rotation={[0, Math.PI / 2, 0]}>
+                  <boxGeometry args={[28, 0.5, 0.1]} />
+                  <meshStandardMaterial color={'#cfd4dc'} roughness={0.6} />
+                </mesh>
+                <mesh position={[-13.95, 0.25, 0]} rotation={[0, Math.PI / 2, 0]}>
+                  <boxGeometry args={[28, 0.5, 0.1]} />
+                  <meshStandardMaterial color={'#cfd4dc'} roughness={0.6} />
+                </mesh>
+                {/* Vertical paneling on side walls */}
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <mesh key={`panel-left-${i}`} position={[-13.6, 4.0, -10 + i * 4]} rotation={[0, Math.PI / 2, 0]}>
+                    <boxGeometry args={[8.4, 0.12, 0.12]} />
+                    <meshStandardMaterial color={'#e5e7eb'} roughness={0.7} />
+                  </mesh>
+                ))}
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <mesh key={`panel-right-${i}`} position={[13.6, 4.0, -10 + i * 4]} rotation={[0, Math.PI / 2, 0]}>
+                    <boxGeometry args={[8.4, 0.12, 0.12]} />
+                    <meshStandardMaterial color={'#e5e7eb'} roughness={0.7} />
+                  </mesh>
+                ))}
+              </group>
+              {/* Ceiling recessed panel lights (3x3 grid) */}
+              <group position={[0, 8.7, 0]} rotation={[Math.PI, 0, 0]}>
+                {[-6, 0, 6].map((x, xi) => (
+                  <group key={`ceil-col-${xi}`} position={[x, 0, 0]}>
+                    {[-6, 0, 6].map((z, zi) => (
+                      <RectPanelLight key={`ceil-${xi}-${zi}`} position={[0, 0, z]} rotation={[Math.PI / 2, 0, 0]} size={[3.5, 1.4]} intensity={18 * envIntensity} />
+                    ))}
+                  </group>
+                ))}
+              </group>
+              {/* Side-wall lighting: two opposite walls (x = ±13.6), two rows, three rects per row */}
+              <group position={[-13.6, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
+                {[7.8, 6.2].map((yRow, rIdx) => (
+                  <group key={`left-row-${rIdx}`} position={[0, yRow, 0]}>
+                    {[-7, 0, 7].map((z, i) => (
+                      <RectPanelLight key={`left-${rIdx}-${i}`} position={[0, 0, z]} size={[3.0, 0.9]} intensity={8 * envIntensity} />
+                    ))}
+                  </group>
+                ))}
+              </group>
+              <group position={[13.6, 0, 0]} rotation={[0, -Math.PI / 2, 0]}>
+                {[7.8, 6.2].map((yRow, rIdx) => (
+                  <group key={`right-row-${rIdx}`} position={[0, yRow, 0]}>
+                    {[-7, 0, 7].map((z, i) => (
+                      <RectPanelLight key={`right-${rIdx}-${i}`} position={[0, 0, z]} size={[3.0, 0.9]} intensity={8 * envIntensity} />
+                    ))}
+                  </group>
+                ))}
+              </group>
+
+              {/* Window/Garage door on wall opposite branding (z = +13.7) */}
+              <group position={[0, 3.6, 13.7]} rotation={[0, Math.PI, 0]}>
+                {/* Glass panel */}
+                <mesh>
+                  <planeGeometry args={[18, 6]} />
+                  <meshPhysicalMaterial color={'#ffffff'} transparent transmission={0.7} thickness={0.4} roughness={0.1} metalness={0} reflectivity={0.2} ior={1.2} />
+                </mesh>
+                {/* Frame grid */}
+                {[-8, 0, 8].map((x) => (
+                  <mesh key={`vframe-${x}`} position={[x, 0, 0.02]}>
+                    <boxGeometry args={[0.18, 6.2, 0.08]} />
+                    <meshStandardMaterial color={'#cbd5e1'} />
+                  </mesh>
+                ))}
+                {[-2, 2].map((y) => (
+                  <mesh key={`hframe-${y}`} position={[0, y, 0.02]}>
+                    <boxGeometry args={[18.2, 0.18, 0.08]} />
+                    <meshStandardMaterial color={'#cbd5e1'} />
+                  </mesh>
+                ))}
+              </group>
+            </group>
+            <ContactShadows position={[0, -0.001, 0]} opacity={0.25} scale={24} blur={2.8} far={26} resolution={1024} frames={1} />
+          </Suspense>
+        </>
+      ) : (
+        <>
+          <color attach="background" args={[ '#ffffff' ]} />
+          <fog attach="fog" args={[ '#e5e7eb', 30, 90 ]} />
+
+          <ambientLight intensity={ambientIntensity} />
+          <hemisphereLight intensity={0.25} groundColor={0x222222} color={0xffffff} />
+          <pointLight position={[6, 6, 6]} intensity={0.9} castShadow distance={30} decay={2} />
+          <pointLight position={[-6, 3, -4]} intensity={0.6} distance={25} decay={2} />
+          <directionalLight position={[-5, 8, 2]} intensity={0.7} castShadow />
+
+          <Suspense fallback={<Loader />}>
+            <Bounds fit clip observe margin={1.2}>
+              <CarModel 
+                url={url} 
+                scale={scale} 
+                envMapIntensity={envMapIntensity}
+                wrapConfig={wrapConfig}
+                wrapColors={wrapColors}
+                wrapFinishes={wrapFinishes}
+                selectedSurfaces={selectedSurfaces}
+                highlightMode={highlightMode}
+                onSurfaceClick={onSurfaceClick}
+              />
+            </Bounds>
+            {/* Outdoors always uses HDRI with background on */}
+            <SafeEnvironment preset={envPreset} background={true} intensity={envIntensity} rotate blur={envBlur} />
+            <group ref={platformRef} position={[0, 0, 0]}>
+              <mesh rotation-x={-Math.PI / 2} position={[0, -0.002, 0]} receiveShadow>
+                <circleGeometry args={[10, 128]} />
+                <meshStandardMaterial map={groundTex ?? undefined} roughness={0.92} metalness={0.06} color={'#cfd4dc'} />
+              </mesh>
+            </group>
+            <ContactShadows position={[0, 0.001, 0]} opacity={0.65} scale={22} blur={2.8} far={22} resolution={1024} frames={1} />
+          </Suspense>
+        </>
+      )}
       <OrbitControls
         enableDamping
         dampingFactor={0.1}
@@ -460,6 +671,7 @@ interface EnhancedModelViewerProps {
   selectedSurfaces: string[];
   highlightMode: boolean;
   onSurfaceClick?: (surfaceId: string) => void;
+  environmentMode?: 'indoors' | 'outdoors';
 }
 
 export default function EnhancedModelViewer({
@@ -478,6 +690,7 @@ export default function EnhancedModelViewer({
   selectedSurfaces,
   highlightMode,
   onSurfaceClick,
+  environmentMode = 'indoors',
 }: EnhancedModelViewerProps) {
   return (
     <div className="relative w-full h-full">
@@ -510,6 +723,7 @@ export default function EnhancedModelViewer({
           selectedSurfaces={selectedSurfaces}
           highlightMode={highlightMode}
           onSurfaceClick={onSurfaceClick}
+          environmentMode={environmentMode}
         />
         {/* Post-processing antialiasing: prefer SMAA, fallback to FXAA */}
         <PostAA />

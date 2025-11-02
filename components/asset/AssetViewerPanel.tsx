@@ -35,8 +35,6 @@ export default function AssetViewerPanel({
   url,
   assetId,
   initialScale = 1,
-  assetName,
-  assetFormat,
   assetMetadata,
   assetDescription,
   assetTags,
@@ -56,6 +54,9 @@ export default function AssetViewerPanel({
   const [envBlur, setEnvBlur] = useState<number>(ENVIRONMENT_PRESETS[envPreset]?.defaultBlur ?? 0.0);
   const [autoRotateEnabled, setAutoRotateEnabled] = useState<boolean>(true);
   const [autoRotateSpeed, setAutoRotateSpeed] = useState<number>(0.52);
+  const [environmentMode, setEnvironmentMode] = useState<'indoors' | 'outdoors'>(
+    'indoors'
+  );
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(true);
   const [rightSidebarOpen, setRightSidebarOpen] = useState<boolean>(true);
   const [selectedCategory, setSelectedCategory] = useState<MetadataCategory | null>(null);
@@ -110,6 +111,13 @@ export default function AssetViewerPanel({
   useEffect(() => {
     setEnvBlur(ENVIRONMENT_PRESETS[envPreset]?.defaultBlur ?? 0.0);
   }, [envPreset]);
+
+  // Enforce background ON when outdoors mode is active
+  useEffect(() => {
+    if (environmentMode === 'outdoors' && !hdriBackground) {
+      setHdriBackground(true);
+    }
+  }, [environmentMode, hdriBackground]);
   
   // Responsive breakpoints with dynamic updates
   const [isMobile, setIsMobile] = useState(false);
@@ -282,6 +290,7 @@ export default function AssetViewerPanel({
           selectedSurfaces={selectedSurfaces}
           highlightMode={highlightMode}
           onSurfaceClick={handleSurfaceSelect}
+          environmentMode={environmentMode}
         />
       </div>
       {/* Left Sidebar: Car Controls (Desktop/Tablet - overlay with glassmorphism) */}
@@ -457,6 +466,8 @@ export default function AssetViewerPanel({
                     setAutoRotateEnabled={setAutoRotateEnabled}
                     autoRotateSpeed={autoRotateSpeed}
                     setAutoRotateSpeed={setAutoRotateSpeed}
+                    environmentMode={environmentMode}
+                    setEnvironmentMode={setEnvironmentMode}
                   />
                   <div className="mt-6">
                     <ScaleEditor id={assetId} initialScale={initialScale} inlineReadOnlyInitially />
@@ -578,19 +589,12 @@ export default function AssetViewerPanel({
                 setAutoRotateEnabled={setAutoRotateEnabled}
                 autoRotateSpeed={autoRotateSpeed}
                 setAutoRotateSpeed={setAutoRotateSpeed}
+                environmentMode={environmentMode}
+                setEnvironmentMode={setEnvironmentMode}
               />
               <div className="mt-6 pt-6 border-t border-white/10 space-y-2">
                 <label className="text-xs text-slate-400 uppercase tracking-wide">Scale</label>
                 <ScaleEditor id={assetId} initialScale={initialScale} inlineReadOnlyInitially />
-              </div>
-              
-              {/* Asset Info */}
-              <div className="mt-6 pt-6 border-t border-white/10">
-                <div className="text-xs text-slate-400 mb-2 uppercase tracking-wide">Asset Info</div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {assetName && <span className="text-sm text-slate-300 truncate">{assetName}</span>}
-                  {assetFormat && <span className="text-xs uppercase border border-white/10 rounded px-1.5 py-0.5 text-cyan-400">{assetFormat}</span>}
-                </div>
               </div>
               
               {/* Asset metadata in right sidebar */}
